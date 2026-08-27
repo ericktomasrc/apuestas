@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel · Salas de apuestas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   El sistema vive de que dos lados sumen lo mismo. El panel usa
+   ese mismo lenguaje: cifras monoespaciadas que alinean en
+   columna, y la barra de balance como elemento recurrente.
+   ============================================================ */
+:root{
+  /* El verde viene del paño de las mesas de juego: es la convención
+     del rubro. Salvia desaturado — el panel se mira ocho horas
+     seguidas y un verde intenso cansa la vista. */
+  --papel:#F6F9F7;
+  --superficie:#FFFFFF;
+  --tinta:#1B2622;
+  --tenue:#6B7C75;
+  --linea:#E3EAE6;
+  --linea-fuerte:#CBD8D2;
+  --acento:#4A8F76;
+  --acento-hover:#3E7C66;
+  --acento-suave:#EDF5F1;
+  --bien:#4A8F76;
+  --bien-suave:#EDF5F1;
+  --aviso:#9A5B06;
+  --aviso-suave:#FBF0E1;
+  --mal:#A82638;
+  --mal-suave:#FBEBEE;
+  --r:6px;
+  --sombra:0 1px 2px rgba(19,26,36,.06), 0 8px 24px rgba(19,26,36,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{position:relative;
+  font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--papel);color:var(--tinta);
+  font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+/* Cifras en monoespaciado tabular: en un libro contable las
+   columnas tienen que alinearse o no se pueden leer. */
+.num{font-family:'IBM Plex Mono',ui-monospace,'Courier New',monospace;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--acento);text-decoration:none}
+
+/* ---------- accesibilidad ---------- */
+:focus-visible{outline:2px solid var(--acento);outline-offset:2px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------- ingreso ---------- */
+#ingreso{min-height:100vh;display:grid;place-items:center;padding:24px}
+.tarjeta-ingreso{
+  width:100%;max-width:360px;background:var(--superficie);
+  border:1px solid var(--linea);border-radius:var(--r);
+  padding:36px 32px;box-shadow:var(--sombra);
+}
+.marca{font-weight:700;font-size:19px;letter-spacing:-.035em;margin-bottom:4px;
+  color:var(--tinta)}
+.marca em{font-style:normal;color:var(--acento)}
+.marca-sub{color:var(--tenue);font-size:13px;margin-bottom:28px}
+
+label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--tenue);margin-bottom:6px}
+input,select,textarea{
+  width:100%;padding:9px 11px;border:1px solid var(--linea-fuerte);
+  border-radius:var(--r);background:var(--superficie);
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--acento);
+  box-shadow:0 0 0 3px var(--acento-suave)}
+.campo{margin-bottom:16px}
+
+/* Campo de contraseña con el ojito.
+   Escribir a ciegas es la causa más común de "mi clave no funciona":
+   poder verla evita el intento fallido y el bloqueo que viene después. */
+.con-ojo{position:relative}
+.con-ojo input{padding-right:42px}
+.ojo{position:absolute;right:1px;top:1px;bottom:1px;width:38px;
+  display:grid;place-items:center;color:var(--tenue);border-radius:0 var(--r) var(--r) 0;
+  transition:color .14s}
+.ojo:hover{color:var(--acento)}
+.ojo svg{pointer-events:none}
+
+.btn{background:var(--acento);color:#fff;padding:9px 16px;border-radius:var(--r);
+  font-weight:600;font-size:13px;transition:background .14s}
+.btn:hover{background:var(--acento-hover)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-ancho{width:100%;padding:11px}
+.btn-plano{background:var(--superficie);color:var(--tinta);
+  border:1px solid var(--linea-fuerte);padding:7px 13px;font-size:13px}
+.btn-plano:hover{background:var(--papel);opacity:1}
+.btn-mal{background:var(--mal)}
+.btn-chico{padding:5px 10px;font-size:12px}
+
+/* ---------- estructura ---------- */
+#panel{display:none;grid-template-columns:236px 1fr;min-height:100vh}
+#panel.visible{display:grid}
+
+aside{background:var(--superficie);border-right:1px solid var(--linea);
+  padding:22px 0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.aside-marca{padding:0 22px 22px;border-bottom:1px solid var(--linea);margin-bottom:14px}
+/* El icono va antes del nombre, alineado en una columna fija para que
+   todos los textos empiecen a la misma altura aunque los iconos tengan
+   anchos distintos. */
+nav a{display:flex;align-items:center;gap:10px;padding:8px 22px;
+  color:var(--tenue);font-size:13.5px;font-weight:500;
+  border-left:2px solid transparent}
+nav a svg{flex-shrink:0;opacity:.75}
+nav a.activo svg{opacity:1}
+nav a:hover{background:var(--papel);color:var(--tinta)}
+nav a:hover svg{opacity:1}
+nav a.activo{color:var(--acento);border-left-color:var(--acento);
+  background:var(--acento-suave);font-weight:600}
+.nav-grupo{padding:16px 22px 6px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.1em;color:var(--linea-fuerte)}
+/* El pie del menú: quién soy arriba, salir abajo y en gris.
+   Cerrar sesión no compite por la atención con el trabajo del día. */
+.aside-pie{padding:14px 14px 6px;border-top:1px solid var(--linea);margin-top:14px}
+.tarjeta-yo{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;
+  border-radius:var(--r);text-align:left;transition:background .14s}
+.tarjeta-yo:hover{background:var(--papel)}
+.inicial{width:31px;height:31px;flex-shrink:0;border-radius:50%;
+  background:var(--acento-suave);color:var(--acento);
+  display:grid;place-items:center;font-weight:700;font-size:13px;
+  text-transform:uppercase}
+.datos-yo{min-width:0;line-height:1.35}
+.datos-yo strong{display:block;font-size:13.5px;font-weight:600;color:var(--tinta);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.datos-yo small{display:block;font-size:11.5px;color:var(--tenue);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.salir{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;
+  border-radius:var(--r);color:var(--tenue);font-size:13px;transition:.14s}
+.salir:hover{background:var(--mal-suave);color:var(--mal)}
+.salir svg{flex-shrink:0}
+
+main{padding:30px 34px;max-width:1180px}
+.cabecera{display:flex;justify-content:space-between;align-items:flex-end;
+  gap:20px;margin-bottom:24px;flex-wrap:wrap}
+h1{font-size:23px;font-weight:700;letter-spacing:-.03em}
+.subtitulo{color:var(--tenue);font-size:13.5px;margin-top:3px}
+h2{font-size:15px;font-weight:600;letter-spacing:-.01em;margin-bottom:14px}
+
+/* ---------- tarjetas y cifras ---------- */
+.rejilla{display:grid;gap:14px;margin-bottom:26px}
+.rejilla-4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.rejilla-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.caja{background:var(--superficie);border:1px solid var(--linea);
+  border-radius:var(--r);padding:18px 20px}
+.dato-rotulo{font-size:10.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.09em;color:var(--tenue);margin-bottom:8px}
+.dato-cifra{font-size:27px;font-weight:600;letter-spacing:-.04em}
+.dato-nota{font-size:12px;color:var(--tenue);margin-top:5px}
+
+/* Barra de balance: el mismo lenguaje visual del producto, donde
+   los dos lados de un mercado tienen que sumar igual. */
+.balance{height:5px;background:var(--linea);border-radius:3px;overflow:hidden;margin-top:11px}
+.balance i{display:block;height:100%;background:var(--acento);border-radius:3px;
+  transition:width .25s ease}
+.balance.bien i{background:var(--bien)}
+.balance.aviso i{background:var(--aviso)}
+
+/* ---------- tablas ---------- */
+.marco{background:var(--superficie);border:1px solid var(--linea);
+  border-radius:var(--r);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;padding:10px 16px;font-size:10.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--tenue);
+  background:var(--papel);border-bottom:1px solid var(--linea);white-space:nowrap}
+td{padding:11px 16px;border-bottom:1px solid var(--linea);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--papel)}
+td.der,th.der{text-align:right}
+
+.etiqueta{display:inline-block;padding:2px 8px;border-radius:20px;
+  font-size:11px;font-weight:600;white-space:nowrap}
+.et-bien{background:var(--bien-suave);color:var(--bien)}
+.et-aviso{background:var(--aviso-suave);color:var(--aviso)}
+.et-mal{background:var(--mal-suave);color:var(--mal)}
+.et-gris{background:var(--papel);color:var(--tenue);border:1px solid var(--linea)}
+
+/* ---------- permisos ---------- */
+.area-permisos{border:1px solid var(--linea);border-radius:var(--r);
+  padding:14px 16px;margin-bottom:10px}
+.area-titulo{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--tenue);margin-bottom:10px}
+/* El nombre del menú al que pertenece: quien reparte permisos piensa
+   en pantallas, no en claves internas. */
+.chip-menu{display:inline-block;background:var(--acento-suave);color:var(--acento);
+  padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600;
+  letter-spacing:.04em;text-transform:none}
+.marca-abre{display:inline-block;background:var(--papel);color:var(--tenue);
+  border:1px solid var(--linea);padding:1px 6px;border-radius:4px;
+  font-size:10.5px;font-weight:600;margin-right:5px;vertical-align:1px}
+.permiso{display:flex;gap:9px;align-items:flex-start;padding:5px 0}
+.permiso input{width:auto;margin-top:3px;flex-shrink:0;accent-color:var(--acento)}
+.permiso label{margin:0;text-transform:none;letter-spacing:0;font-size:13.5px;
+  font-weight:500;color:var(--tinta);cursor:pointer}
+.permiso small{display:block;color:var(--tenue);font-weight:400;font-size:12px}
+
+/* ---------- modal ---------- */
+.velo{display:none;position:fixed;inset:0;background:rgba(19,26,36,.42);
+  z-index:50;padding:24px;overflow-y:auto}
+.velo.visible{display:block}
+.modal{background:var(--superficie);border-radius:8px;max-width:620px;
+  margin:40px auto;box-shadow:0 20px 60px rgba(19,26,36,.22)}
+.modal-cab{padding:20px 24px;border-bottom:1px solid var(--linea);
+  display:flex;justify-content:space-between;align-items:center}
+.modal-cuerpo{padding:24px;max-height:64vh;overflow-y:auto}
+.modal-pie{padding:16px 24px;border-top:1px solid var(--linea);
+  display:flex;gap:9px;justify-content:flex-end;background:var(--papel)}
+
+/* ---------- avisos ---------- */
+#avisos{position:fixed;bottom:22px;right:22px;z-index:80;
+  display:flex;flex-direction:column;gap:9px;max-width:360px}
+@keyframes entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.aviso{display:flex;gap:11px;align-items:flex-start;
+  background:var(--superficie);border:1px solid var(--linea);
+  border-left:3px solid var(--tenue);border-radius:var(--r);
+  padding:13px 15px;box-shadow:var(--sombra);animation:entra .18s ease}
+.aviso.bien{border-left-color:var(--bien)}
+.aviso.mal{border-left-color:var(--mal)}
+.aviso-icono{flex-shrink:0;margin-top:1px;color:var(--tenue)}
+.aviso.bien .aviso-icono{color:var(--bien)}
+.aviso.mal .aviso-icono{color:var(--mal)}
+.aviso-texto{flex:1;min-width:0}
+.aviso-texto strong{display:block;font-size:13.5px;font-weight:600;
+  color:var(--tinta);margin-bottom:1px}
+.aviso-texto span{font-size:13px;color:var(--tenue);line-height:1.45}
+.aviso-cerrar{flex-shrink:0;color:var(--linea-fuerte);font-size:17px;line-height:1;
+  padding:0 2px}
+.aviso-cerrar:hover{color:var(--tenue)}
+@media (prefers-reduced-motion:reduce){.aviso{animation:none}}
+
+.banda{background:var(--aviso-suave);border:1px solid #F0DCC0;border-radius:var(--r);
+  padding:14px 18px;margin-bottom:20px;display:flex;gap:14px;align-items:center;
+  justify-content:space-between;flex-wrap:wrap}
+.banda p{font-size:13.5px;color:var(--aviso);margin:0}
+.banda strong{display:block;color:var(--tinta);font-size:14px;margin-bottom:2px}
+.qr{display:block;margin:18px auto;border:1px solid var(--linea);border-radius:8px;
+  padding:12px;background:#fff;width:196px;height:196px}
+.codigos{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:16px 0}
+.codigos span{font-family:'IBM Plex Mono',monospace;font-size:14px;letter-spacing:1px;
+  background:var(--papel);border:1px solid var(--linea);border-radius:5px;
+  padding:9px;text-align:center}
+/* Señal de que algo está pasando.
+   Sin ella la gente pulsa dos veces, y en operaciones con dinero eso
+   es exactamente lo que no puede ocurrir. */
+@keyframes girar{to{transform:rotate(360deg)}}
+.giro{display:inline-block;width:14px;height:14px;flex-shrink:0;
+  border:2px solid currentColor;border-right-color:transparent;border-radius:50%;
+  animation:girar .6s linear infinite}
+@media (prefers-reduced-motion:reduce){
+  .giro{animation:girar 1.6s linear infinite}
+}
+.btn[data-ocupado]{opacity:.75;cursor:progress}
+.btn[data-ocupado] .giro{margin-right:7px;vertical-align:-2px}
+
+/* El modal se apaga mientras procesa: deja claro que ya no admite
+   más cambios, sin quitar de vista lo que se estaba haciendo. */
+.modal[data-ocupado] .modal-cuerpo{opacity:.5;pointer-events:none}
+.modal[data-ocupado] .modal-pie .btn-plano{opacity:.45;pointer-events:none}
+
+/* Barra fina arriba: para las esperas que no nacen de un botón. */
+#progreso{position:absolute;top:0;left:0;height:2px;width:0;
+  background:var(--acento);transition:width .25s ease;z-index:90}
+#progreso.activo{width:75%}
+#progreso.fin{width:100%;opacity:0;transition:width .15s,opacity .3s .15s}
+
+.cargando-vista{padding:64px 24px;text-align:center;color:var(--tenue);
+  font-size:13px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.cargando-vista .giro{width:22px;height:22px;border-width:2px;color:var(--linea-fuerte)}
+
+.vacio{padding:44px 24px;text-align:center;color:var(--tenue)}
+.vacio p{margin-bottom:14px}
+.cargando{padding:44px;text-align:center;color:var(--tenue);font-size:13px}
+.fila-acciones{display:flex;gap:7px;justify-content:flex-end;align-items:center}
+/* Por qué un botón no está: mejor decirlo que dejar el hueco. */
+.pista-boton{font-size:11.5px;color:var(--tenue);padding:5px 10px;
+  border:1px dashed var(--linea-fuerte);border-radius:var(--r);cursor:help;
+  white-space:nowrap}
+.filtros{display:flex;gap:9px;margin-bottom:16px;flex-wrap:wrap}
+.filtros input,.filtros select{width:auto;min-width:190px}
+.pista{font-size:12.5px;color:var(--tenue);margin-top:6px}
+
+@media(max-width:860px){
+  #panel.visible{grid-template-columns:1fr}
+  aside{position:static;height:auto;border-right:none;border-bottom:1px solid var(--linea)}
+  nav{display:flex;flex-wrap:wrap;gap:2px;padding:0 12px}
+  nav a{border-left:none;border-bottom:2px solid transparent;padding:8px 12px}
+  nav a.activo{border-left:none;border-bottom-color:var(--acento)}
+  .nav-grupo{display:none}
+  /* En móvil el menú va horizontal: solo el icono, sin texto. */
+  nav a span{display:none}
+  nav a{padding:10px 14px;gap:0}
+  .aside-pie{display:flex;gap:8px;align-items:center;padding:10px 12px;margin-top:0}
+  .tarjeta-yo{width:auto;flex:1}
+  .salir{width:auto}
+  main{padding:20px 16px}
+  th,td{padding:9px 11px;font-size:13px}
+}
+
+/* ---------- barra de deportes ----------
+   Crece sola con lo que haya en la base. Los deportes sin ligas salen
+   apagados en vez de ocultos: ver que existen explica por qué no
+   aparecen sus ligas. */
+/* Fila con etiqueta a un lado y dato al otro. La usa el buscador de
+   cuentas del modo casa. */
+.bloque-fila{display:flex;justify-content:space-between;align-items:center;
+  gap:10px;padding:9px 13px;border-top:1px solid var(--linea);
+  font-size:13.5px;text-align:left;width:100%;background:none}
+.bloque-fila:hover{background:var(--papel)}
+.bloque-fila small{display:block;color:var(--tenue);font-size:11.5px}
+
+.deportes-barra{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;
+  margin-bottom:4px}
+.deporte{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+  border:1px solid var(--linea);background:var(--superficie);
+  border-radius:99px;padding:7px 14px;font-size:13.5px;font-weight:500;
+  color:var(--tinta);transition:.14s;flex-shrink:0}
+.deporte:hover:not(:disabled){border-color:var(--acento)}
+.deporte.activo{background:var(--tinta);border-color:var(--tinta);color:#fff}
+.deporte.apagado{opacity:.45;cursor:not-allowed}
+.deporte-cuenta{background:var(--acento-suave);color:var(--acento);
+  font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px}
+.deporte.activo .deporte-cuenta{background:rgba(255,255,255,.2);color:#fff}
+.deporte-cuenta.apagada{background:var(--linea);color:var(--tenue)}
+/* Evita el parpadeo del login al recargar.
+   Sin esto, el HTML muestra el formulario, el token tarda unos cientos
+   de milisegundos en validarse, y recién ahí se oculta: la persona ve
+   aparecer y desaparecer una pantalla de ingreso que no necesitaba. */
+html.hay-sesion .oculto-hasta-saber{display:none}
+html.hay-sesion #cargando-panel{display:flex}
+#cargando-panel{display:none;position:fixed;inset:0;z-index:5;
+  align-items:center;justify-content:center;background:var(--fondo);
+  color:var(--tenue);font-size:14px}
+</style>
+<script>
+  // Antes de pintar: si hay token, se marca el documento y el CSS de
+  // arriba oculta el login. Va aquí y no en un archivo aparte porque
+  // tiene que ejecutarse sin esperar ninguna descarga.
+  if (localStorage.getItem('panel_token')
+      && !location.hash.startsWith('#recuperar=')) {
+    document.documentElement.classList.add('hay-sesion');
+  }
+</script>
+</head>
+<body>
+
+<!-- ============ INGRESO ============ -->
+<!-- Arranca oculto si hay sesión guardada.
+     El script de abajo corre ANTES de que el navegador pinte nada, así
+     que quien ya entró no ve el login parpadear mientras se valida el
+     token contra el servidor. Si el token resultara inválido, el
+     arranque lo muestra. -->
+<div id="cargando-panel">Entrando…</div>
+
+<div id="ingreso" class="oculto-hasta-saber">
+  <div class="tarjeta-ingreso">
+    <div class="marca">Panel de <em>administración</em></div>
+    <div class="marca-sub" id="sub-ingreso">Salas de apuestas P2P</div>
+
+    <form id="form-ingreso" onsubmit="ingresar(event)">
+      <div class="campo">
+        <label for="correo">Correo</label>
+        <input id="correo" type="email" required autocomplete="username">
+      </div>
+      <div class="campo">
+        <label for="clave">Contraseña</label>
+        <div class="con-ojo">
+          <input id="clave" type="password" required autocomplete="current-password">
+          <button type="button" class="ojo" onclick="alternarClave('clave', this)"
+            aria-label="Mostrar contraseña" title="Mostrar contraseña">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="campo" id="campo-totp" style="display:none">
+        <label for="totp">Código de tu aplicación</label>
+        <input id="totp" class="num" inputmode="numeric" maxlength="6"
+          placeholder="000000" autocomplete="one-time-code">
+        <p class="pista">Los 6 dígitos que muestra Google Authenticator.</p>
+      </div>
+      <button class="btn btn-ancho" type="submit">Entrar</button>
+      <p class="pista" id="pista-ingreso"></p>
+      <p class="pista" style="margin-top:14px;text-align:center">
+        <a href="#" onclick="verRecuperar(event)">Olvidé mi contraseña</a>
+      </p>
+    </form>
+
+    <form id="form-recuperar" style="display:none" onsubmit="pedirRecuperacion(event)">
+      <p class="pista" style="margin-bottom:16px">
+        Te enviaremos un enlace para elegir una contraseña nueva.</p>
+      <div class="campo">
+        <label for="rec-correo">Correo</label>
+        <input id="rec-correo" type="email" required>
+      </div>
+      <button class="btn btn-ancho" type="submit">Enviar enlace</button>
+      <p class="pista" id="pista-recuperar"></p>
+      <p class="pista" style="margin-top:14px;text-align:center">
+        <a href="#" onclick="verIngreso(event)">Volver</a>
+      </p>
+    </form>
+
+    <form id="form-restablecer" style="display:none" onsubmit="restablecer(event)">
+      <p class="pista" style="margin-bottom:16px">Elige tu contraseña nueva.</p>
+      <div class="campo">
+        <label for="res-clave">Contraseña</label>
+        <div class="con-ojo">
+          <input id="res-clave" type="password" required minlength="8"
+            autocomplete="new-password">
+          <button type="button" class="ojo" onclick="alternarClave('res-clave', this)"
+            aria-label="Mostrar contraseña" title="Mostrar contraseña">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <p class="pista">Mínimo 8 caracteres.</p>
+      </div>
+      <button class="btn btn-ancho" type="submit">Guardar y entrar</button>
+      <p class="pista" id="pista-restablecer"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ============ PANEL ============ -->
+<div id="panel">
+  <aside>
+    <div class="aside-marca">
+      <div class="marca">Panel</div>
+      <div class="marca-sub">Salas de apuestas</div>
+    </div>
+    <nav id="menu"></nav>
+    <div class="aside-pie">
+      <button class="tarjeta-yo" onclick="miCuenta()" title="Mi cuenta">
+        <span class="inicial" id="inicial"></span>
+        <span class="datos-yo">
+          <strong id="yo-alias"></strong>
+          <small id="yo-rol"></small>
+        </span>
+      </button>
+      <button class="salir" onclick="salir()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <path d="M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+        Cerrar sesión
+      </button>
+    </div>
+  </aside>
+  <main id="contenido"></main>
+</div>
+
+<div id="progreso"></div>
+<div class="velo" id="velo" onclick="if(event.target===this)cerrarModal()"></div>
+<div id="avisos"></div>
+
+<!--
+  El panel se carga por partes: el núcleo primero, después cada
+  pantalla, y el arranque al final.
+
+  Los archivos van en orden y sin `type="module"` a propósito: así
+  comparten el mismo ámbito global y una vista puede usar `esc()` o
+  `api()` sin importarlas. Con módulos habría que exportar e importar
+  cada utilidad en cada archivo, que para un panel interno es más
+  ceremonia que beneficio.
+
+  vistas.js define el objeto VISTAS y va antes que las pantallas.
+  arranque.js va al final: necesita que todas estén registradas.
+-->
+<script src="nucleo/estado.js"></script>
+<script src="nucleo/api.js"></script>
+<script src="nucleo/avisos.js"></script>
+<script src="nucleo/sesion.js"></script>
+<script src="nucleo/menu.js"></script>
+<script src="nucleo/util.js"></script>
+<script src="nucleo/vistas.js"></script>
+
+<script src="vistas/resumen.js"></script>
+<script src="vistas/ingresos.js"></script>
+<script src="vistas/usuarios.js"></script>
+<script src="vistas/roles.js"></script>
+<script src="vistas/deportes.js"></script>
+<script src="vistas/casa.js"></script>
+<script src="vistas/salas.js"></script>
+<script src="vistas/paises.js"></script>
+<script src="vistas/planes.js"></script>
+<script src="vistas/config.js"></script>
+<script src="vistas/textos.js"></script>
+<script src="vistas/ubicacion.js"></script>
+<script src="vistas/incidentes.js"></script>
+<script src="vistas/historial.js"></script>
+<script src="vistas/seguridad.js"></script>
+<script src="vistas/cuenta.js"></script>
+
+<script src="nucleo/arranque.js"></script>
+</body>
+</html>

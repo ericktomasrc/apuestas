@@ -25,7 +25,8 @@
     "crear-admin": "tsx src/herramientas/crear-admin.ts",
     "test:seguridad": "tsx src/pruebas/seguridad.test.ts",
     "test:casa": "tsx src/pruebas/casa.test.ts",
-    "ligas": "tsx src/herramientas/ligas.ts"
+    "ligas": "tsx src/herramientas/ligas.ts",
+    "migrar": "tsx src/herramientas/migrar.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

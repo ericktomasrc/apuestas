@@ -737,6 +737,7 @@ export async function anularCasa(
 export async function casaConDetalle(casaId: string, yo?: string | null): Promise<unknown> {
   const casa = await pool.query(
     `SELECT c.*, p.equipo_local, p.equipo_visitante, p.inicia_en,
+              p.logo_local, p.logo_visitante,
             p.estado AS estado_partido, l.nombre AS liga,
             u.alias AS operador, u.es_casa_oficial,
             (c.operador_id = $2::uuid) AS soy_operador
@@ -787,6 +788,7 @@ export async function casasAbiertas(pais = 'PE', limite = 40): Promise<unknown[]
   const { rows } = await pool.query(
     `SELECT c.id, c.codigo, c.estado, c.presupuesto_centavos, c.es_oficial,
             p.equipo_local, p.equipo_visitante, p.inicia_en,
+              p.logo_local, p.logo_visitante,
             l.nombre AS liga, u.alias AS operador,
             (SELECT COALESCE(SUM(cu.disponible_centavos), 0)::bigint
                FROM v_cupos_casa cu

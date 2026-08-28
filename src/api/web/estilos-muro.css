@@ -1,0 +1,354 @@
+/* =====================================================================
+   MURO — portada, tarjetas y modo visitante
+
+   Se carga desde index.html con <link>, después de estilos.css: las
+   clases de aquí usan las variables que aquel define.
+
+   Todas las clases son nuevas salvo `.marca`, que se sobrescribe a
+   propósito para pintar el logo de verde.
+
+   El verde es el mismo de siempre (--favor). Lo que cambia es cuánto se
+   usa: antes vivía solo en los montos y en el menú activo, y la pantalla
+   quedaba casi toda blanca. Aquí sostiene la portada y marca lo que se
+   puede tocar.
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   Portada
+   --------------------------------------------------------------------- */
+
+.portada{
+  position:relative;
+  overflow:hidden;
+  background:#2F6B57;
+  color:#fff;
+  border-radius:14px;
+  padding:20px 22px;
+  margin-bottom:16px;
+  display:flex;
+  align-items:center;
+  gap:20px;
+}
+
+/* El patrón de balones, apagado y a la derecha.
+   El degradado que lleva encima no es decoración: el título vive sobre
+   el lado izquierdo y ahí el fondo tiene que quedar liso. Una frase
+   sobre dibujos se lee peor por más contraste que se le ponga. */
+.portada::before{
+  content:'';
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(100deg, #2F6B57 0%, #2F6B57 40%, rgba(47,107,87,.7) 70%, rgba(47,107,87,.5) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='320' viewBox='0 0 560 320' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E %3Cg opacity='.30'%3E %3Ccircle cx='112' cy='96' r='58'/%3E %3Cpath d='M112 62l32 23-12 38h-40l-12-38z'/%3E %3Cpath d='M112 38v24M64 79l24 6M160 79l-24 6M83 152l17-33M141 152l-17-33'/%3E %3C/g%3E %3Cg opacity='.22'%3E %3Ccircle cx='318' cy='214' r='72'/%3E %3Cpath d='M318 142v144M246 214h144'/%3E %3Cpath d='M267 163c26 26 26 76 0 102M369 163c-26 26-26 76 0 102'/%3E %3C/g%3E %3Cg opacity='.26'%3E %3Ccircle cx='452' cy='84' r='40'/%3E %3Cpath d='M424 56c18 16 18 40 0 56M480 56c-18 16-18 40 0 56'/%3E %3C/g%3E %3Cg opacity='.18'%3E %3Ccircle cx='196' cy='268' r='26'/%3E %3Cpath d='M196 254l14 10-5 17h-18l-5-17z'/%3E %3C/g%3E %3Cg opacity='.16'%3E %3Ccircle cx='508' cy='236' r='34'/%3E %3Cpath d='M508 202v68M474 236h68'/%3E %3C/g%3E %3C/svg%3E");
+  background-repeat:no-repeat, no-repeat;
+  background-position:0 0, right -20px center;
+  background-size:cover, 420px 240px;
+  pointer-events:none;
+}
+.portada > *{ position:relative; z-index:1; }
+
+.portada h1{
+  flex:1; min-width:0;
+  margin:0;
+  font-size:19px;
+  font-weight:600;
+  line-height:1.25;
+  letter-spacing:-.4px;
+  color:#fff;
+}
+
+.portada-cifras{
+  display:flex;
+  align-items:center;
+  flex-shrink:0;
+}
+.portada-cifras > div{ display:flex; flex-direction:column; padding-right:20px; }
+/* Una línea fina entre las dos cifras. Pegadas se leían como un solo
+   número partido en dos. */
+.portada-cifras > div + div{
+  padding-left:20px; padding-right:0;
+  border-left:1px solid rgba(255,255,255,.18);
+}
+.portada-cifras b{
+  font-family:var(--mono, ui-monospace, 'IBM Plex Mono', Menlo, monospace);
+  font-size:23px; font-weight:600; line-height:1; letter-spacing:-.8px;
+}
+.portada-cifras span{
+  font-size:10.5px; margin-top:4px;
+  text-transform:uppercase; letter-spacing:.7px;
+  color:rgba(255,255,255,.72);
+}
+
+@media (max-width:620px){
+  /* En pantalla angosta la frase y las cifras no caben en una línea.
+     Se apilan y el patrón se apaga: ahí el texto le queda encima. */
+  .portada{ flex-direction:column; align-items:flex-start; gap:14px; padding:18px; }
+  .portada h1{ font-size:18px; }
+  .portada-cifras{ width:100%; }
+  .portada::before{ opacity:.5; background-size:cover, 300px 170px; }
+}
+
+/* ---------------------------------------------------------------------
+   La marca
+
+   El logo reemplaza al texto `salas.`. El SVG se cambia entero cuando
+   esté el definitivo: el tamaño y la alineación viven aquí, no en el
+   dibujo.
+   --------------------------------------------------------------------- */
+
+.marca{
+  display:flex; align-items:center; gap:9px;
+  background:none; border:0; padding:0;
+  color:var(--favor);
+  cursor:pointer;
+}
+.marca svg{ width:30px; height:30px; flex-shrink:0; }
+.marca-nombre{
+  font-size:18px; font-weight:700; letter-spacing:-.5px;
+  color:var(--tinta);
+}
+.marca-nombre b{ font-weight:700; color:var(--favor); }
+
+@media (max-width:420px){
+  .marca-nombre{ display:none; }   /* en pantalla angosta basta el símbolo */
+}
+
+/* ---------------------------------------------------------------------
+   Tarjeta
+   --------------------------------------------------------------------- */
+
+.tarjeta{
+  position:relative;
+  background:var(--superficie);
+  border:1px solid var(--linea);
+  border-radius:14px;
+  padding:15px 16px 13px;
+  cursor:pointer;
+  transition:border-color .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+.tarjeta:hover{
+  border-color:#BEDACD;
+  box-shadow:0 2px 4px rgba(19,26,36,.04), 0 12px 28px rgba(19,26,36,.08);
+  transform:translateY(-2px);
+}
+.tarjeta:focus-visible{ outline:2px solid var(--favor); outline-offset:2px; }
+
+.tarjeta.destacada{ border-color:#BEDACD; background:linear-gradient(180deg,var(--favor-suave) 0%,var(--superficie) 58%); }
+.tarjeta .marca-destacada{
+  position:absolute; top:-9px; left:14px;
+  background:var(--favor); color:#fff;
+  font-size:10.5px; font-weight:600; letter-spacing:.4px; text-transform:uppercase;
+  padding:3px 9px; border-radius:99px;
+}
+
+.t-cab{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.chip{
+  background:var(--favor-suave); color:#2F6B57;
+  font-size:11.5px; font-weight:600;
+  padding:3px 9px; border-radius:99px;
+  max-width:60%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.chip-tiempo{
+  font-family:var(--mono, ui-monospace, 'SF Mono', Menlo, Consolas, monospace);
+  font-size:12px; color:var(--tenue); white-space:nowrap;
+}
+
+.t-partido{
+  margin:11px 0 0;
+  font-size:17px; font-weight:600; line-height:1.25;
+  letter-spacing:-.2px;
+}
+.t-partido em{ font-style:normal; font-weight:400; color:var(--tenue); font-size:14px; }
+
+.t-meta{
+  display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  margin-top:5px; font-size:12.5px; color:var(--tenue);
+}
+.t-meta b{ color:var(--tinta); font-weight:600; }
+.t-lleno{
+  flex:1; min-width:44px; height:4px;
+  background:var(--linea); border-radius:99px; overflow:hidden;
+}
+.t-lleno i{ display:block; height:100%; background:var(--favor); }
+
+.t-pie{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  margin-top:12px; padding-top:11px;
+  border-top:1px solid var(--linea);
+  font-size:12.5px; color:var(--tenue);
+}
+.t-entrar{
+  display:inline-flex; align-items:center; gap:4px;
+  color:var(--favor); font-weight:600;
+}
+.tarjeta:hover .t-entrar{ gap:7px; }
+
+/* Partido sin sala: mismo formato, sin barra de balance. */
+.oportunidad{ border-style:dashed; }
+.oportunidad:hover{ border-style:solid; }
+.invitacion{
+  display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+  margin-top:13px; padding:11px 13px;
+  background:var(--papel); border-radius:10px;
+}
+.invitacion span{ font-size:12.5px; color:var(--tenue); }
+.invitacion b{ font-size:13.5px; color:var(--favor); }
+
+/* ---------------------------------------------------------------------
+   Encabezado de sección
+   --------------------------------------------------------------------- */
+
+.seccion{ margin:26px 0 12px; }
+.seccion-titulo{
+  margin:0; font-size:15px; font-weight:600; letter-spacing:-.2px;
+}
+.seccion-sub{
+  margin:4px 0 0; font-size:13px; color:var(--tenue); line-height:1.5;
+  max-width:52ch;
+}
+
+/* ---------------------------------------------------------------------
+   Cabecera del visitante
+   --------------------------------------------------------------------- */
+
+.btn-entrar{
+  background:none; border:1px solid var(--favor); color:var(--favor);
+  border-radius:8px; padding:7px 14px;
+  font:inherit; font-size:13.5px; font-weight:600; cursor:pointer;
+  white-space:nowrap;
+}
+.btn-entrar:hover{ background:var(--favor); color:#fff; }
+.btn-entrar.plano{ border-color:transparent; }
+.btn-entrar.plano:hover{ background:var(--favor-suave); color:var(--favor); }
+
+@media (max-width:560px){
+  .btn-entrar.plano{ display:none; }   /* en móvil basta una puerta */
+}
+
+/* ---------------------------------------------------------------------
+   Columna lateral con altura fija
+
+   Sin esto el bloque de partidos crece con su contenido y termina al
+   final de la página, lejos de las salas que acompaña.
+   --------------------------------------------------------------------- */
+
+.lateral{
+  position:sticky;
+  top:76px;
+  max-height:calc(100vh - 96px);
+  overflow-y:auto;
+  scrollbar-width:thin;
+}
+
+/* ---------------------------------------------------------------------
+   Pantalla de entrada
+
+   Foto de fondo, argumento a la izquierda, formulario a la derecha.
+
+   Mientras no haya foto, el fondo es el mismo patrón de balones del
+   muro sobre verde oscuro. Para poner una foto se cambia UNA línea:
+   la segunda capa de `background-image` en `.entrada`, por
+   url("portada.jpg"). Los velos ya están calibrados para una imagen
+   oscura; con una clara hay que subirles la opacidad o el título
+   blanco deja de leerse.
+   --------------------------------------------------------------------- */
+
+.entrada{
+  position:relative;
+  min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  padding:32px 20px;
+  box-sizing:border-box;
+  background-color:#14261F;
+  background-image:
+    linear-gradient(100deg, rgba(10,24,19,.74) 0%, rgba(10,24,19,.45) 45%, rgba(10,24,19,.82) 100%),
+    linear-gradient(135deg, #1B3A2E 0%, #2F6B57 55%, #14261F 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='560' height='320' viewBox='0 0 560 320' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E %3Cg opacity='.30'%3E %3Ccircle cx='112' cy='96' r='58'/%3E %3Cpath d='M112 62l32 23-12 38h-40l-12-38z'/%3E %3Cpath d='M112 38v24M64 79l24 6M160 79l-24 6M83 152l17-33M141 152l-17-33'/%3E %3C/g%3E %3Cg opacity='.22'%3E %3Ccircle cx='318' cy='214' r='72'/%3E %3Cpath d='M318 142v144M246 214h144'/%3E %3Cpath d='M267 163c26 26 26 76 0 102M369 163c-26 26-26 76 0 102'/%3E %3C/g%3E %3Cg opacity='.26'%3E %3Ccircle cx='452' cy='84' r='40'/%3E %3Cpath d='M424 56c18 16 18 40 0 56M480 56c-18 16-18 40 0 56'/%3E %3C/g%3E %3Cg opacity='.18'%3E %3Ccircle cx='196' cy='268' r='26'/%3E %3Cpath d='M196 254l14 10-5 17h-18l-5-17z'/%3E %3C/g%3E %3Cg opacity='.16'%3E %3Ccircle cx='508' cy='236' r='34'/%3E %3Cpath d='M508 202v68M474 236h68'/%3E %3C/g%3E %3C/svg%3E");
+  background-repeat:no-repeat, no-repeat, no-repeat;
+  background-position:center, center, center;
+  background-size:cover, cover, 900px 520px;
+}
+
+.entrada-caja{
+  display:flex; align-items:center; gap:46px;
+  width:100%; max-width:960px;
+}
+
+/* --- El argumento --- */
+
+.entrada-argumento{ flex:1; min-width:0; color:#fff; }
+
+.marca-clara{ display:inline-flex; align-items:center; gap:10px; margin-bottom:26px; }
+.marca-clara svg{ width:34px; height:34px; }
+.marca-clara .marca-nombre{ color:#fff; font-size:20px; }
+.marca-clara .marca-nombre b{ color:#fff; }
+
+.entrada-argumento h1{
+  margin:0;
+  font-size:34px; font-weight:600;
+  line-height:1.12; letter-spacing:-.9px;
+  color:#fff;
+  max-width:13ch;
+}
+.entrada-argumento > p{
+  margin:14px 0 0;
+  font-size:15.5px; line-height:1.6;
+  color:rgba(255,255,255,.82);
+  max-width:36ch;
+}
+
+.entrada-cifras{
+  display:flex; align-items:center;
+  margin-top:28px; padding-top:22px;
+  border-top:1px solid rgba(255,255,255,.16);
+}
+.entrada-cifras > div{ display:flex; flex-direction:column; padding-right:26px; }
+.entrada-cifras > div + div{
+  padding-left:26px; padding-right:0;
+  border-left:1px solid rgba(255,255,255,.16);
+}
+.entrada-cifras b{
+  font-family:var(--mono, ui-monospace, 'IBM Plex Mono', Menlo, monospace);
+  font-size:24px; font-weight:600; line-height:1; color:#fff;
+}
+.entrada-cifras span{
+  font-size:11px; margin-top:5px;
+  text-transform:uppercase; letter-spacing:.7px;
+  color:rgba(255,255,255,.7);
+}
+
+/* --- El formulario --- */
+
+.entrada-formulario{
+  width:344px; flex-shrink:0;
+  background:var(--superficie);
+  border-radius:16px;
+  padding:26px 24px;
+  box-shadow:0 20px 50px rgba(0,0,0,.3);
+}
+.entrada-formulario h2{
+  margin:0; font-size:20px; font-weight:600; letter-spacing:-.3px;
+}
+.entrada-sub{ margin:5px 0 20px; font-size:13.5px; color:var(--tenue); }
+
+@media (max-width:820px){
+  /* Apilado: primero el argumento, después el formulario. El orden
+     importa —explicar antes de pedir— y por eso no se invierte. */
+  .entrada{ align-items:flex-start; padding:26px 16px 40px; }
+  .entrada-caja{ flex-direction:column; gap:26px; max-width:420px; }
+  .entrada-argumento{ width:100%; }
+  .entrada-argumento h1{ font-size:27px; max-width:none; }
+  .entrada-formulario{ width:100%; box-sizing:border-box; }
+}
+
+/* ---------------------------------------------------------------------
+   Escudos dentro de las tarjetas nuevas
+
+   `.t-partido` es flex para que el escudo y los nombres queden
+   alineados por el centro. Sin esto los escudos se apoyan en la línea
+   de base del texto y quedan medio hundidos.
+   --------------------------------------------------------------------- */
+
+.t-partido{ display:flex; align-items:center; gap:9px; }
+.t-partido > span{ min-width:0; }
+.tarjeta .escudo{ width:26px; height:26px; }

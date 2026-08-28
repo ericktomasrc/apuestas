@@ -33,37 +33,41 @@ VISTAS.casa = async () => {
           ? `<button class="btn" onclick="interruptorCasa(true)">Encender</button>` : ''}
       </div>` : ''}
 
-    <div class="rejilla rejilla-4">
-      <div class="caja">
-        <div class="dato-rotulo">Resultado acumulado</div>
-        <div class="dato-cifra num" style="color:${
-          resultado > 0 ? 'var(--bien)' : resultado < 0 ? 'var(--mal)' : 'var(--tinta)'}">
-          ${resultado > 0 ? '+' : ''}${plata(resultado)}</div>
-        <div class="dato-nota">En ${jugadas} casa(s) liquidada(s)</div>
-      </div>
+    <div class="fichas-dato">
+      <span class="ficha-dato">
+        Resultado
+        <b style="color:${resultado > 0 ? 'var(--bien)'
+          : resultado < 0 ? 'var(--mal)' : 'var(--tinta)'}">
+          ${resultado > 0 ? '+' : ''}${plata(resultado)}</b>
+        <small>${jugadas} liquidada(s)</small>
+      </span>
 
-      <div class="caja">
-        <div class="dato-rotulo">Ganó / perdió</div>
-        <div class="dato-cifra num">${gano} · ${perdio}</div>
-        <div class="dato-nota">${jugadas > 0
+      <span class="ficha-dato">
+        Ganó / perdió
+        <b>${gano} · ${perdio}</b>
+        <small>${jugadas > 0
           ? `${Math.round(gano / jugadas * 100)}% de acierto`
-          : 'Todavía sin datos'}</div>
-      </div>
+          : 'sin datos'}</small>
+      </span>
 
-      <div class="caja">
-        <div class="dato-rotulo">Saldo disponible</div>
-        <div class="dato-cifra num">${cuenta ? plata(cuenta.disponible_centavos) : '—'}</div>
-        <div class="dato-nota">${cuenta
-          ? `${esc(cuenta.email)} · ${plata(cuenta.retenido_centavos)} comprometidos`
-          : 'Sin cuenta de casa'}</div>
-      </div>
+      <span class="ficha-dato">
+        Disponible
+        <b>${cuenta ? plata(cuenta.disponible_centavos) : '—'}</b>
+        <small>${cuenta
+          ? `${plata(cuenta.retenido_centavos)} comprometidos`
+          : 'sin cuenta'}</small>
+      </span>
 
-      <div class="caja">
-        <div class="dato-rotulo">Comisión que pagó</div>
-        <div class="dato-cifra num">${plata(b.comision_pagada ?? 0)}</div>
-        <div class="dato-nota">La casa paga como cualquiera</div>
-      </div>
+      <span class="ficha-dato">
+        Comisión pagada
+        <b>${plata(b.comision_pagada ?? 0)}</b>
+        <small>paga como cualquiera</small>
+      </span>
     </div>
+
+    ${cuenta ? `<p class="pista" style="margin:-6px 0 16px">
+      Cuenta de la casa: <strong>${esc(cuenta.email)}</strong> · ${esc(cuenta.alias)}
+    </p>` : ''}
 
     ${jugadas >= 5 && resultado < 0 ? `
       <p class="pista" style="color:var(--aviso)">
@@ -71,17 +75,17 @@ VISTAS.casa = async () => {
         esperable: a cuota 2.0 no hay ventaja, así que a la larga tiende a
         cero menos la comisión. Sirve para arrancar, no como ingreso.</p>` : ''}
 
-    <div class="rejilla rejilla-2" style="margin-top:8px">
-      <div class="caja">
-        <div class="dato-rotulo">Comprometido en total</div>
-        <div class="dato-cifra num">${plata(b.comprometido_total ?? 0)}</div>
-        <div class="dato-nota">Lo que ofreció en todas sus casas</div>
-      </div>
-      <div class="caja">
-        <div class="dato-rotulo">Realmente en juego</div>
-        <div class="dato-cifra num">${plata(b.realmente_en_juego ?? 0)}</div>
-        <div class="dato-nota">El resto volvió sin correr riesgo</div>
-      </div>
+    <div class="fichas-dato">
+      <span class="ficha-dato">
+        Comprometido
+        <b>${plata(b.comprometido_total ?? 0)}</b>
+        <small>ofrecido en total</small>
+      </span>
+      <span class="ficha-dato">
+        En juego de verdad
+        <b>${plata(b.realmente_en_juego ?? 0)}</b>
+        <small>el resto volvió sin riesgo</small>
+      </span>
     </div>
 
     ${puede('casa.gestionar') ? `

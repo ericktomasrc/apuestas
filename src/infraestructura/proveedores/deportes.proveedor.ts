@@ -19,6 +19,10 @@ export type EstadoPartido =
   | 'CANCELADO';
 
 export interface FixtureExterno {
+  /** URL del escudo en el CDN del proveedor. Opcional: no todas las
+   *  ligas los tienen, y la app funciona sin ellos. */
+  logoLocal?: string | null;
+  logoVisitante?: string | null;
   apiId: string;
   ligaApiId: string;
   equipoLocal: string;

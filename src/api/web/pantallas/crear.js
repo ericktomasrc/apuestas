@@ -48,10 +48,13 @@ PANTALLAS.crear = async () => {
           <div class="sala" onclick="elegirPartido('${p.id}')" role="button" tabindex="0"
                onkeydown="if(event.key==='Enter')elegirPartido('${p.id}')">
             <div class="sala-cab">
-              <div style="min-width:0">
+              <div style="min-width:0;display:flex;align-items:center;gap:8px">
+                ${escudosPartido(p)}
+                <div style="min-width:0">
                 <div class="partido">${esc(p.equipo_local)}
                   <span style="color:var(--tenue);font-weight:500">vs</span>
                   ${esc(p.equipo_visitante)}</div>
+                </div>
               </div>
               <div class="cuando">${cuando(p.inicia_en)}</div>
             </div>
@@ -108,6 +111,11 @@ const CATEGORIAS = [
 ];
 
 function elegirPartido(id) {
+  // La lista de partidos se puede mirar sin cuenta —es parte de
+  // entender el producto— pero definir una apuesta ya es crear algo
+  // que otros van a ver, y eso necesita un dueño.
+  if (!exigeCuenta('Estabas por abrir una sala. Necesita una cuenta que sea la anfitriona.')) return;
+
   const p = S.datos.partidos.find(x => x.id === id);
   S.datos.nueva = { partido: p, mercados: [] };
   dibujarCreacion();

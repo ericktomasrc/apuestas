@@ -199,14 +199,17 @@ export async function sincronizarFixtures(
         await c.query(
           `INSERT INTO partidos
              (api_id, deporte_id, liga_id, equipo_local, equipo_visitante,
+              logo_local, logo_visitante,
               inicia_en, inicia_en_original, estado)
-           VALUES ($1,$2,$3,$4,$5,$6,$6,$7)`,
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$8,$9)`,
           [
             f.apiId,
             liga.deporteId,
             liga.id,
             f.equipoLocal,
             f.equipoVisitante,
+            f.logoLocal ?? null,
+            f.logoVisitante ?? null,
             f.iniciaEn,
             f.estado,
           ],
@@ -219,9 +222,16 @@ export async function sincronizarFixtures(
       const cambioHora =
         new Date(p.inicia_en).getTime() !== f.iniciaEn.getTime();
 
+      // Los escudos se refrescan también: el proveedor los cambia
+      // cuando un club actualiza su imagen, y guardamos la URL
+      // justamente para no quedarnos con una vieja.
       await c.query(
-        `UPDATE partidos SET inicia_en = $2, estado = $3 WHERE id = $1`,
-        [p.id, f.iniciaEn, f.estado],
+        `UPDATE partidos
+            SET inicia_en = $2, estado = $3,
+                logo_local     = COALESCE($4, logo_local),
+                logo_visitante = COALESCE($5, logo_visitante)
+          WHERE id = $1`,
+        [p.id, f.iniciaEn, f.estado, f.logoLocal ?? null, f.logoVisitante ?? null],
       );
 
       if (cambioHora) resumen.reprogramados++;

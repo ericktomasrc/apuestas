@@ -39,13 +39,17 @@ VISTAS.deportes = async () => {
 
     ${prov ? bloqueProveedor(prov) : ''}
 
-    <div class="rejilla rejilla-4">
-      ${r.deportes.map(d => `<div class="caja">
-        <div class="dato-rotulo">${esc(d.nombre)}</div>
-        <div class="dato-cifra num">${d.ligas}</div>
-        <div class="dato-nota">${d.ligas === 1 ? 'liga cargada' : 'ligas cargadas'}${
-          d.tiene_empate ? ' · admite empate' : ''}</div>
-      </div>`).join('')}
+    <!-- Fichas, no tarjetas.
+         Con dos deportes las tarjetas grandes ya ocupaban media
+         pantalla; con seis serían inusables. Aquí lo que importa es
+         cuántas ligas hay en cada uno, no destacar el número. -->
+    <div class="fichas-dato">
+      ${r.deportes.map(d => `
+        <span class="ficha-dato">
+          ${esc(d.nombre)}
+          <b>${d.ligas}</b>
+          <small>${d.activas > 0 ? `${d.activas} activa(s)` : 'sin activar'}</small>
+        </span>`).join('')}
     </div>
 
     ${sinMercados > 0 ? `<div class="banda">
@@ -59,24 +63,32 @@ VISTAS.deportes = async () => {
     ${barraDeportes(r.deportes, f.deporte)}
 
     <div class="marco" style="padding:12px 14px;margin-bottom:12px;display:flex;
-      gap:9px;flex-wrap:wrap;align-items:flex-end">
+      gap:9px;flex-wrap:wrap;align-items:flex-end;overflow:visible">
       <div class="campo" style="margin:0;flex:1;min-width:180px">
         <label for="f_buscar">Buscar</label>
         <input id="f_buscar" value="${esc(f.buscar)}"
           placeholder="liga o país — «Peru», «Libertadores», «PE»"
           onchange="S.f.liga.buscar=this.value;S.f.liga.desde=0;VISTAS.deportes()">
       </div>
-      <div class="campo" style="margin:0;min-width:170px">
+      <!-- Campo con lista, no desplegable.
+           Con 90 países, desplegar la lista entera obliga a
+           desplazarse buscando el que se quiere. Escribiendo tres
+           letras aparece. -->
+      <div class="campo buscador-pais" style="margin:0;min-width:190px">
         <label for="f_pais">País</label>
-        <select id="f_pais"
-          onchange="S.f.liga.pais=this.value;S.f.liga.desde=0;VISTAS.deportes()">
-          <option value="">Todos</option>
-          ${r.paises.map(p => `<option value="${esc(p.pais)}"
-            ${f.pais === p.pais ? 'selected' : ''}>
-            ${esc(nombrePais(p.pais))} (${esc(p.pais)}) · ${p.ligas}${
-              p.activas ? ` · ${p.activas} activa` : ''}
-          </option>`).join('')}
-        </select>
+        <input id="f_pais" autocomplete="off" role="combobox"
+          placeholder="todos — escribe o elige"
+          value="${f.pais ? esc(nombrePais(f.pais)) : ''}"
+          oninput="filtrarPaises(this.value)"
+          onfocus="filtrarPaises('')"
+          onclick="filtrarPaises('')"
+          onkeydown="teclaPais(event)">
+        <button class="flecha-pais" onclick="alternarPaises(event)"
+          aria-label="Ver todos los países">▾</button>
+        ${f.pais ? `
+          <button class="limpia-pais" onclick="elegirPais('')"
+            aria-label="Quitar filtro">×</button>` : ''}
+        <div class="lista-paises" id="lista-paises"></div>
       </div>
       <div class="permiso" style="margin:0 0 6px">
         <input type="checkbox" id="f_activas" ${f.soloActivas ? 'checked' : ''}
@@ -574,4 +586,103 @@ const PAISES = {
 
 function nombrePais(codigo) {
   return PAISES[String(codigo ?? '').toUpperCase()] ?? codigo ?? '—';
+}
+
+/**
+ * Buscador de países con lista desplegable.
+ *
+ * Se filtra por nombre Y por código: quien escribe «Perú» y quien
+ * escribe «PE» buscan lo mismo, y el proveedor solo devuelve códigos.
+ *
+ * Sin tildes en la comparación: nadie escribe «Perú» con acento en un
+ * campo de búsqueda.
+ */
+function sinTilde(s) {
+  return String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function filtrarPaises(texto) {
+  const caja = document.getElementById('lista-paises');
+  if (!caja) return;
+
+  const paises = S.datos.catalogo?.paises ?? [];
+  const q = sinTilde(texto).trim();
+
+  const coinciden = paises.filter(p =>
+    !q || sinTilde(nombrePais(p.pais)).includes(q) || sinTilde(p.pais).includes(q));
+
+  // Índice del elemento resaltado, para poder moverse con el teclado.
+  S.datos.paisMarcado = 0;
+
+  caja.innerHTML = `
+    <button class="opcion-pais" onclick="elegirPais('')">
+      <span>Todos los países</span>
+      <b>${paises.reduce((t, p) => t + p.ligas, 0)}</b>
+    </button>
+    ${coinciden.length
+      ? coinciden.slice(0, 60).map(p => `
+          <button class="opcion-pais" onclick="elegirPais('${esc(p.pais)}')">
+            <span>${esc(nombrePais(p.pais))}
+              <small>${esc(p.pais)}</small></span>
+            <b>${p.ligas}${p.activas ? ` · ${p.activas} activa` : ''}</b>
+          </button>`).join('')
+      : `<div class="sin-paises">Ningún país coincide con «${esc(texto)}».</div>`}`;
+
+  caja.classList.add('abierta');
+}
+
+function elegirPais(codigo) {
+  S.f.liga.pais = codigo;
+  S.f.liga.desde = 0;
+  document.getElementById('lista-paises')?.classList.remove('abierta');
+  VISTAS.deportes();
+}
+
+/**
+ * Enter elige el primero de la lista; Escape la cierra.
+ *
+ * Sin esto habría que soltar el teclado y buscar el ratón para algo
+ * que ya se estaba escribiendo.
+ */
+function teclaPais(ev) {
+  const caja = document.getElementById('lista-paises');
+  if (!caja) return;
+
+  if (ev.key === 'Escape') {
+    caja.classList.remove('abierta');
+    ev.target.blur();
+    return;
+  }
+  if (ev.key === 'Enter') {
+    ev.preventDefault();
+    // El primero es «Todos», así que se toma el segundo si existe.
+    const opciones = caja.querySelectorAll('.opcion-pais');
+    (opciones[1] ?? opciones[0])?.click();
+  }
+}
+
+// Un clic fuera cierra la lista. Se registra una sola vez.
+if (!window.__paisCierraRegistrado) {
+  window.__paisCierraRegistrado = true;
+  document.addEventListener('click', (ev) => {
+    if (!ev.target.closest?.('.buscador-pais')) {
+      document.getElementById('lista-paises')?.classList.remove('abierta');
+    }
+  });
+}
+
+/** Abre o cierra la lista al pulsar la flecha. */
+function alternarPaises(ev) {
+  ev.stopPropagation();
+  const caja = document.getElementById('lista-paises');
+  if (caja?.classList.contains('abierta')) {
+    caja.classList.remove('abierta');
+  } else {
+    // Sin texto: al pulsar la flecha se espera ver TODOS, no lo que
+    // quedó filtrado de antes.
+    const campo = document.getElementById('f_pais');
+    if (campo) campo.value = '';
+    filtrarPaises('');
+    campo?.focus();
+  }
 }

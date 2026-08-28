@@ -90,10 +90,13 @@ async function elegirPartidoCasa() {
         <div class="sala" onclick="armarCasa('${p.id}')" role="button" tabindex="0"
              onkeydown="if(event.key==='Enter')armarCasa('${p.id}')">
           <div class="sala-cab">
-            <div style="min-width:0">
+            <div style="min-width:0;display:flex;align-items:center;gap:8px">
+              ${escudosPartido(p)}
+              <div style="min-width:0">
               <div class="partido">${esc(p.equipo_local)}
                 <span style="color:var(--tenue);font-weight:500">vs</span>
                 ${esc(p.equipo_visitante)}</div>
+              </div>
             </div>
             <div class="cuando">${cuando(p.inicia_en)}</div>
           </div>
@@ -355,9 +358,12 @@ function tarjetaCasa(c) {
       <div class="marca-destacada">Casa de la plataforma</div>` : ''}
 
     <div class="sala-cab">
-      <div style="min-width:0">
-        <div class="partido">${esc(c.equipo_local)} vs ${esc(c.equipo_visitante)}</div>
-        <div class="liga">${esc(c.liga)} · casa de ${esc(c.operador)}</div>
+      <div style="min-width:0;display:flex;align-items:center;gap:8px">
+        ${escudosPartido(c)}
+        <div style="min-width:0">
+          <div class="partido">${esc(c.equipo_local)} vs ${esc(c.equipo_visitante)}</div>
+          <div class="liga">${esc(c.liga)} · casa de ${esc(c.operador)}</div>
+        </div>
       </div>
       <div class="cuando">${cuando(c.inicia_en)}</div>
     </div>
@@ -403,7 +409,10 @@ PANTALLAS.casa = async (id) => {
     <button class="btn-plano btn-chico" onclick="ir('casas')" style="margin-bottom:16px">
       ← Volver</button>
 
-    <h1 class="titulo">${esc(c.equipo_local)} vs ${esc(c.equipo_visitante)}</h1>
+    <h1 class="titulo" style="display:flex;align-items:center;gap:10px">
+      ${escudosPartido(c)}
+      <span>${esc(c.equipo_local)} vs ${esc(c.equipo_visitante)}</span>
+    </h1>
     <p class="sub">${esc(c.liga ?? '')} · Empieza ${cuando(c.inicia_en)}</p>
 
     <div class="caja" style="display:flex;align-items:center;gap:11px;padding:13px 15px">

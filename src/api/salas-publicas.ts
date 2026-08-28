@@ -113,6 +113,7 @@ export function registrarRutasSalas(
 
     const { rows } = await pool.query(
       `SELECT p.id, p.equipo_local, p.equipo_visitante, p.inicia_en,
+              p.logo_local, p.logo_visitante,
               l.nombre AS liga, d.clave AS deporte, d.nombre AS deporte_nombre,
               COALESCE(array_agg(ml.tipo_mercado ORDER BY ml.tipo_mercado)
                        FILTER (WHERE ml.tipo_mercado IS NOT NULL), '{}') AS mercados,
@@ -128,6 +129,7 @@ export function registrarRutasSalas(
           AND p.inicia_en > now() + make_interval(mins => $1)
           AND ($2::text IS NULL OR d.clave = $2)
         GROUP BY p.id, p.equipo_local, p.equipo_visitante, p.inicia_en,
+              p.logo_local, p.logo_visitante,
                  l.nombre, d.clave, d.nombre
         ORDER BY p.inicia_en ASC
         LIMIT $3`,
@@ -239,7 +241,8 @@ export function registrarRutasSalas(
 
     const resultado = await enTransaccion(async (c) => {
       const partido = await c.query(
-        `SELECT p.id, p.equipo_local, p.equipo_visitante, p.inicia_en, p.liga_id
+        `SELECT p.id, p.equipo_local, p.equipo_visitante, p.inicia_en,
+              p.logo_local, p.logo_visitante, p.liga_id
            FROM v_partidos p
           WHERE p.id = $1 AND p.estado = 'PROGRAMADO'`,
         [d.partidoId],

@@ -9,7 +9,12 @@ const PANTALLAS = {};
  * Mostrar un menú que lleva a una pantalla vacía es peor que no
  * mostrarlo — la persona hace clic, no encuentra nada, y concluye que
  * la app está rota.
+ *
+ * `privada` marca las que no tienen sentido sin cuenta: no es que
+ * fallen, es que no habría nada que mostrar. A un visitante se le
+ * ocultan y, si llega por la URL, se le explica en vez de rebotarlo.
  */
+
 /**
  * La cuenta que opera la casa NO ve las salas.
  *
@@ -26,36 +31,60 @@ const NAV = [
     icono:'<path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>' },
   { id:'crear',     nombre:'Crear',      si: () => !esCasa(),
     icono:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>' },
-  { id:'mias',      nombre:'Mis salas',  si: () => !esCasa(),
+  { id:'mias',      nombre:'Mis salas',  privada: true, si: () => !esCasa(),
     icono:'<path d="M20 7l-8-4-8 4v10l8 4 8-4V7z"/><path d="M12 3v18"/>' },
-  { id:'resultados', nombre:'Resultados',
+  { id:'resultados', nombre:'Resultados', privada: true,
     icono:'<path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/>' },
-  { id:'billetera', nombre:'Billetera',
+  { id:'billetera', nombre:'Billetera',  privada: true,
     icono:'<rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20M17 14h.01"/>' },
 ];
 
+/** Qué se le explica a un visitante que llega a una pantalla privada. */
+const PORQUE_CUENTA = {
+  mias:       'Aquí van las salas que abras y aquellas donde apuestes.',
+  resultados: 'Aquí verás cuánto ganaste y cuánto perdiste.',
+  billetera:  'Aquí vive tu saldo y el detalle de cada movimiento.',
+  casas:      'Las casas de la plataforma necesitan una cuenta para entrar.',
+};
+
 function armazon(contenido, lateral) {
   const iniciales = (S.usuario?.alias ?? '??').slice(0, 2);
+  const visible = NAV.filter(n =>
+    (!n.si || n.si()) && (haySesion() || !n.privada));
 
   return `
   <header class="superior">
     <div class="superior-fila">
-      <button class="marca" onclick="ir('muro')">salas<span>.</span></button>
+      <button class="marca" onclick="ir('muro')" aria-label="Inicio">
+        <!-- Marcador de posición del logo.
+             Cuando esté el definitivo se cambia solo este SVG: el
+             tamaño y la posición ya los resuelve el CSS de .marca,
+             así que no hay que tocar nada más. -->
+        <svg viewBox="0 0 40 40" aria-hidden="true">
+          <circle cx="20" cy="20" r="17" fill="currentColor"/>
+          <path d="M22 10l-8 12h5l-2 8 8-12h-5z" fill="#fff"/>
+        </svg>
+        <span class="marca-nombre">Quick<b>Bet</b></span>
+      </button>
       <div class="superior-der">
-        <button class="saldo-chip" id="saldo-chip" onclick="ir('billetera')">
-          ${textoSaldo()}
-        </button>
-        <button class="yo" onclick="menuCuenta(event)"
-          aria-label="Mi cuenta" title="${esc(S.usuario?.alias ?? '')}">
-          ${esc(iniciales)}
-        </button>
+        ${haySesion() ? `
+          <button class="saldo-chip" id="saldo-chip" onclick="ir('billetera')">
+            ${textoSaldo()}
+          </button>
+          <button class="yo" onclick="menuCuenta(event)"
+            aria-label="Mi cuenta" title="${esc(S.usuario?.alias ?? '')}">
+            ${esc(iniciales)}
+          </button>`
+        : `
+          <button class="btn-entrar plano" onclick="pantallaEntrar('ingreso')">Entrar</button>
+          <button class="btn-entrar" onclick="pantallaEntrar('registro')">Crear cuenta</button>`}
       </div>
     </div>
   </header>
 
   <nav class="inferior">
     <div class="nav-fila">
-      ${NAV.filter(n => !n.si || n.si()).map(n => `
+      ${visible.map(n => `
         <a href="#${n.id}" class="${S.pantalla === n.id ? 'activo' : ''}"
            onclick="event.preventDefault();ir('${n.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
@@ -118,25 +147,51 @@ function cerrarMenuCuenta() {
   document.querySelector('.menu-cuenta')?.remove();
 }
 
+/**
+ * Pantalla de una sección privada vista por un visitante.
+ *
+ * Se explica qué habría ahí y se ofrece la cuenta. Rebotarlo al muro
+ * sin decir nada haría parecer que el enlace está roto.
+ */
+function pantallaPrivada(id) {
+  pintar(armazon(`
+    <div class="vacio">
+      <h3>Esto es tuyo, pero necesitas una cuenta</h3>
+      <p>${esc(PORQUE_CUENTA[id] ?? 'Esta sección es de cada persona.')}</p>
+      <button class="btn btn-favor" onclick="pantallaEntrar('registro')">Crear mi cuenta</button>
+      <button class="btn btn-plano" style="margin-top:9px"
+        onclick="pantallaEntrar('ingreso')">Ya tengo cuenta</button>
+      <button class="btn-plano btn-chico" style="margin-top:14px"
+        onclick="ir('muro')">Seguir mirando salas</button>
+    </div>`));
+}
+
 function ir(id, datos) {
   if (!PANTALLAS[id]) return;
 
+  const opcion = NAV.find(n => n.id === id);
+
   // Si el módulo se apagó mientras la persona estaba dentro, no basta
   // con esconder el menú: hay que sacarla de la pantalla.
-  const opcion = NAV.find(n => n.id === id);
   if (opcion?.si && !opcion.si()) {
     aviso('Esa sección ya no está disponible.');
     id = esCasa() ? 'casas' : 'muro';
     datos = undefined;
   }
+
   S.pantalla = id;
   S.datos.parametro = datos;
   location.hash = datos ? `${id}/${datos}` : id;
-
   cerrarMenuCuenta();
+
+  // Privada y sin cuenta: se explica en vez de fallar. La URL ya
+  // quedó fijada arriba, así que al registrarse se vuelve justo aquí.
+  if (opcion?.privada && !haySesion()) return pantallaPrivada(id);
+
   pintar(armazon(cargando()));
 
   PANTALLAS[id](datos).catch(e => {
+    if (e.codigo === 'SIN_CUENTA') return pantallaPrivada(id);
     pintar(armazon(`
       <div class="vacio">
         <h3>No se pudo cargar</h3>

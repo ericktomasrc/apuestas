@@ -1,7 +1,5 @@
 'use strict';
 
-let enCurso = 0;
-
 /**
  * Llama a la API.
  *
@@ -24,11 +22,21 @@ async function api(ruta, opciones = {}) {
   if (!r.ok) {
     const e = cuerpo.error ?? {};
 
-    // La sesión venció: no tiene sentido mostrar un error dentro de una
-    // pantalla a la que ya no se puede entrar.
     if (e.codigo === 'NO_AUTENTICADO' || e.codigo === 'TOKEN_INVALIDO') {
-      salir();
-      throw new Error('Vuelve a entrar');
+      // Con token: la sesión venció y hay que salir. Sin token: es un
+      // visitante que tocó algo privado.
+      //
+      // La diferencia importa. `salir()` recarga la página, y desde
+      // que el muro es público un visitante puede recibir un 401 sin
+      // haber iniciado sesión nunca. Recargar ahí dejaría la app en un
+      // bucle: carga, pide, 401, recarga.
+      if (S.token) {
+        salir();
+        throw new Error('Vuelve a entrar');
+      }
+      const err = new Error('Necesitas una cuenta para eso.');
+      err.codigo = 'SIN_CUENTA';
+      throw err;
     }
 
     const campos = (e.detalles ?? []).map(d => `${d.campo}: ${d.problema}`).join(' · ');

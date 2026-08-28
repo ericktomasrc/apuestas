@@ -915,6 +915,7 @@ export async function crearServidor(
               s.destacada_hasta, s.pais,
               pa.moneda, pa.simbolo, pa.decimales,
               p.equipo_local, p.equipo_visitante, p.inicia_en,
+              p.logo_local, p.logo_visitante,
               l.nombre AS liga, d.clave AS deporte,
               u.alias AS anfitrion,
               (SELECT count(DISTINCT po.usuario_id)
@@ -984,6 +985,7 @@ export async function crearServidor(
 
     const { rows } = await pool.query(
       `SELECT s.*, p.equipo_local, p.equipo_visitante, p.inicia_en,
+              p.logo_local, p.logo_visitante,
               p.estado AS estado_partido, p.goles_local, p.goles_visitante,
               l.nombre AS liga, d.nombre AS deporte,
               u.alias AS anfitrion,
@@ -1388,6 +1390,7 @@ export async function crearServidor(
       `SELECT s.id, s.codigo, s.estado, s.regresiva_termina_en,
               s.monto_minimo_centavos, s.tope_participantes,
               p.equipo_local, p.equipo_visitante, p.inicia_en,
+              p.logo_local, p.logo_visitante,
               l.nombre AS liga,
               (s.anfitrion_id = $1) AS soy_anfitrion,
               (SELECT count(DISTINCT po.usuario_id)

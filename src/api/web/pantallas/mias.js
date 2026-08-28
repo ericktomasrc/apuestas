@@ -71,11 +71,14 @@ function tarjetaMia(s) {
   return `
   <div class="sala" onclick="ir('sala','${s.id}')" role="button" tabindex="0">
     <div class="sala-cab">
-      <div style="min-width:0">
+      <div style="min-width:0;display:flex;align-items:center;gap:8px">
+        ${escudosPartido(s)}
+        <div style="min-width:0">
         <div class="partido">${esc(s.equipo_local)} vs ${esc(s.equipo_visitante)}</div>
         <div class="liga">
           ${esc(s.liga ?? '')}
           ${s.soy_anfitrion ? ' · <strong style="color:var(--favor)">tu sala</strong>' : ''}
+        </div>
         </div>
       </div>
       <span class="etiqueta ${clase}">${esc(texto)}</span>

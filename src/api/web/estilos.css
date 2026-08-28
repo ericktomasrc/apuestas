@@ -1,0 +1,574 @@
+/* ============================================================
+   Un mercado tiene exactamente DOS lados que deben sumar lo
+   mismo. Por eso la paleta tiene dos colores enfrentados —
+   verde a favor, azul pizarra en contra — y el hueco entre
+   ellos es lo que invita a entrar.
+   ============================================================ */
+:root{
+  --papel:#F7F9F8;
+  --superficie:#FFFFFF;
+  --tinta:#16211C;
+  --tenue:#6B7C75;
+  --linea:#E3EAE6;
+  --linea-fuerte:#CBD8D2;
+
+  --favor:#4A8F76;
+  --favor-suave:#EAF4F0;
+  --contra:#3D5A80;
+  --contra-suave:#EAEFF5;
+
+  --aviso:#9A5B06;
+  --aviso-suave:#FBF0E1;
+  --mal:#A82638;
+  --mal-suave:#FBEBEE;
+
+  --r:8px;
+  --sombra:0 1px 2px rgba(22,33,28,.05), 0 6px 20px rgba(22,33,28,.06);
+  --nav:58px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  background:var(--papel);color:var(--tinta);
+  /* 14px en vez de 15: en escritorio, 15px con tarjetas anchas hace
+     que quepa una sola sala por pantalla. */
+  font-size:14px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(var(--nav) + env(safe-area-inset-bottom));
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--favor);text-decoration:none}
+:focus-visible{outline:2px solid var(--favor);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Cifras en monoespaciado: el dinero se lee en columna. */
+.num{font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.display{font-family:'Bricolage Grotesque','Archivo',sans-serif;
+  font-weight:800;letter-spacing:-.03em;line-height:1.05}
+/* Rejilla de dos columnas para métricas: en resultados y billetera,
+   las cifras sueltas apiladas dejaban media pantalla vacía. */
+.metricas{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px}
+.metricas .caja{margin:0}
+.dato-rotulo{font-size:10.5px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--tenue);margin-bottom:3px}
+@media(min-width:640px){.metricas{grid-template-columns:repeat(4,1fr)}}
+
+/* ---------- estructura ----------
+   En móvil, una columna. En pantalla ancha, el feed al centro y una
+   columna lateral con lo que ayuda a decidir: qué está pasando y
+   dónde hay partidos. Sin eso el escritorio desperdicia dos tercios
+   de la pantalla. */
+.envoltura{max-width:560px;margin:0 auto;padding:0 14px}
+.doble{max-width:1040px;margin:0 auto;padding:0 14px;
+  display:grid;grid-template-columns:1fr;gap:20px}
+.lateral{display:none}
+@media(min-width:900px){
+  .doble{grid-template-columns:minmax(0,1fr) 270px;align-items:start}
+  .lateral{display:block;position:sticky;top:70px}
+  /* Lo que ya está en la columna lateral no se repite abajo. */
+  .solo-angosto{display:none}
+}
+
+header.superior{position:sticky;top:0;z-index:30;background:rgba(247,249,248,.92);
+  backdrop-filter:blur(10px);border-bottom:1px solid var(--linea)}
+.superior-fila{max-width:1040px;margin:0 auto;padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px}
+.superior-der{display:flex;align-items:center;gap:9px}
+.marca{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;
+  font-size:16px;letter-spacing:-.04em}
+.marca span{color:var(--favor)}
+.saldo-chip{display:flex;align-items:center;gap:6px;background:var(--superficie);
+  border:1px solid var(--linea);border-radius:99px;padding:5px 11px;font-size:13px}
+.saldo-chip strong{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.saldo-chip small{color:var(--tenue);font-size:10.5px}
+
+main{padding:14px 0 24px}
+h1.titulo{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;
+  font-size:21px;letter-spacing:-.04em;margin-bottom:2px}
+.sub{color:var(--tenue);font-size:13px;margin-bottom:14px}
+h2{font-size:15px;font-weight:600;letter-spacing:-.01em}
+
+/* ---------- navegación inferior ---------- */
+nav.inferior{position:fixed;bottom:0;left:0;right:0;z-index:40;
+  background:var(--superficie);border-top:1px solid var(--linea);
+  padding-bottom:env(safe-area-inset-bottom)}
+.nav-fila{max-width:560px;margin:0 auto;display:grid;
+  grid-auto-flow:column;grid-auto-columns:1fr}
+.nav-fila a{display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:8px 0 7px;color:var(--tenue);font-size:10.5px;font-weight:500}
+.nav-fila a.activo{color:var(--favor)}
+.nav-fila svg{width:19px;height:19px}
+.nav-punto{position:absolute;top:6px;margin-left:13px;width:6px;height:6px;
+  border-radius:50%;background:var(--aviso)}
+
+/* ============================================================
+   LA BARRA DE BALANCE — el elemento del producto.
+   Dos lados que se enfrentan; el hueco es la invitación.
+   ============================================================ */
+.balance{margin:10px 0 8px}
+.balance-cifras{display:flex;justify-content:space-between;align-items:baseline;
+  margin-bottom:5px;gap:8px}
+.lado{min-width:0}
+.lado-etiqueta{font-size:10px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--tenue);margin-bottom:1px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lado-monto{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px}
+.lado.der{text-align:right}
+.lado.favor .lado-monto{color:var(--favor)}
+.lado.contra .lado-monto{color:var(--contra)}
+
+.barra{height:6px;border-radius:99px;background:var(--linea);
+  display:flex;overflow:hidden;position:relative}
+.barra i{display:block;height:100%;transition:width .3s cubic-bezier(.4,0,.2,1)}
+.barra .b-favor{background:var(--favor)}
+.barra .b-contra{background:var(--contra)}
+/* El hueco: rayado, porque es lo que falta, no lo que hay. */
+.barra .b-hueco{background:repeating-linear-gradient(-45deg,
+  var(--linea-fuerte) 0 3px, transparent 3px 6px)}
+
+.falta{display:flex;align-items:center;gap:6px;margin-top:7px;
+  font-size:12.5px;color:var(--tinta)}
+.falta b{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.falta .pastilla{font-size:10px;font-weight:600;padding:1px 7px;border-radius:99px;
+  letter-spacing:.04em}
+.falta .pastilla.favor{background:var(--favor-suave);color:var(--favor)}
+.falta .pastilla.contra{background:var(--contra-suave);color:var(--contra)}
+.completa{color:var(--favor);font-size:12.5px;font-weight:500;margin-top:7px}
+
+/* ---------- escudos ----------
+   No todas las ligas los traen, así que las iniciales tienen que
+   verse bien: un hueco vacío desalinea la tarjeta entera. */
+.escudos{display:inline-flex;align-items:center;gap:-6px;flex-shrink:0}
+.escudo{width:22px;height:22px;object-fit:contain;flex-shrink:0}
+.escudo + .escudo{margin-left:-7px}
+.escudo-letras{display:grid;place-items:center;border-radius:50%;
+  background:var(--linea);color:var(--tenue);font-size:9px;font-weight:700;
+  letter-spacing:-.02em;border:1.5px solid var(--superficie)}
+
+/* ---------- contexto del partido ----------
+   Datos crudos, sin veredicto. Un porcentaje mataría el desacuerdo
+   del que depende el mercado. */
+.contexto{background:var(--papel);border:1px solid var(--linea);
+  border-radius:var(--r);padding:11px 13px;margin-bottom:12px}
+.contexto-lados{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.contexto-equipo{font-size:12px;color:var(--tenue);margin-bottom:5px}
+.racha{display:flex;gap:3px;margin-bottom:5px}
+.racha span{width:18px;height:18px;border-radius:4px;font-size:10.5px;
+  display:grid;place-items:center;font-weight:600}
+.marca-g{background:var(--favor-suave);color:var(--favor)}
+.marca-e{background:var(--linea);color:var(--tenue)}
+.marca-p{background:var(--mal-suave);color:var(--mal)}
+.contexto-goles{font-size:11px;color:var(--tenue)}
+.contexto-historial{font-size:12px;color:var(--tinta);margin-top:10px;
+  padding-top:9px;border-top:1px solid var(--linea)}
+.contexto-nota{font-size:11px;color:var(--linea-fuerte);margin-top:7px;
+  line-height:1.4}
+/* Versión para tarjetas: rachas enfrentadas y promedio de goles.
+   Va en la tarjeta del partido, donde ayuda a elegir. */
+.contexto-mini{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;
+  padding-top:8px;border-top:1px solid var(--linea)}
+.contexto-mini .racha{margin-bottom:3px}
+.contexto-mini .racha span{width:15px;height:15px;font-size:9px}
+.contexto-mini .contexto-goles{font-size:10.5px}
+.contexto-h2h{font-size:10.5px;color:var(--tenue);margin-top:5px;
+  font-family:'IBM Plex Mono',monospace}
+
+/* ---------- tarjeta de sala ---------- */
+/* Dos columnas en escritorio. Con una sola, cabía una sala por
+   pantalla y había que desplazarse para ver la siguiente. */
+.rejilla-salas{display:grid;gap:9px;margin-bottom:9px}
+@media(min-width:640px){.rejilla-salas{grid-template-columns:1fr 1fr}}
+.rejilla-salas .sala{margin-bottom:0}
+
+.sala{background:var(--superficie);border:1px solid var(--linea);
+  border-radius:var(--r);padding:11px 13px;margin-bottom:9px;
+  transition:border-color .15s, transform .15s}
+/* Los partidos para elegir son tarjetas cortas: en pantalla ancha
+   caben dos por fila y se ven ocho de un vistazo en vez de tres. */
+/* Las tarjetas se adaptan al ancho disponible en vez de partirse en
+   un número fijo de columnas: con una sola sala, ocupa lo que necesita
+   y no queda un hueco enorme al lado. */
+.rejilla-partidos{display:grid;gap:10px;margin-bottom:4px;
+  grid-template-columns:repeat(auto-fill, minmax(270px, 1fr))}
+.rejilla-partidos .sala{margin-bottom:0;padding:14px 16px}
+.sala:hover{border-color:var(--linea-fuerte)}
+.sala:active{transform:scale(.995)}
+.sala-cab{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+/* `text-wrap: balance` reparte las líneas parejo cuando el nombre no
+   cabe, en vez de dejar una palabra sola abajo. */
+.partido{font-weight:600;font-size:15px;letter-spacing:-.02em;line-height:1.3;
+  text-wrap:balance}
+.liga{font-size:11.5px;color:var(--tenue);margin-top:1px}
+.cuando{font-size:11px;color:var(--tenue);white-space:nowrap;
+  font-family:'IBM Plex Mono',monospace;padding-top:2px}
+.sala-cab{display:flex;justify-content:space-between;align-items:flex-start;
+  gap:10px}
+.mercado-nombre{font-size:12px;font-weight:500;color:var(--tenue);
+  margin-top:8px;padding-top:8px;border-top:1px solid var(--linea)}
+.sala-pie{display:flex;justify-content:space-between;align-items:center;
+  margin-top:8px;padding-top:8px;border-top:1px solid var(--linea);
+  font-size:11.5px;color:var(--tenue)}
+.gente{display:flex;align-items:center;gap:5px}
+
+.destacada{border-color:var(--favor);box-shadow:0 0 0 1px var(--favor)}
+.marca-destacada{font-size:10.5px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--favor)}
+
+/* ---------- botones ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  background:var(--tinta);color:#fff;padding:10px 17px;border-radius:var(--r);
+  font-weight:600;font-size:14px;transition:opacity .14s}
+.btn:hover{opacity:.9}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-ancho{width:100%}
+.btn-favor{background:var(--favor)}
+.btn-contra{background:var(--contra)}
+.btn-plano{background:var(--superficie);color:var(--tinta);
+  border:1px solid var(--linea-fuerte);font-weight:500}
+.btn-plano:hover{background:var(--papel);opacity:1}
+.btn-chico{padding:6px 12px;font-size:12.5px}
+
+/* Los dos lados, uno frente al otro. */
+.dos-lados{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.opcion{border:1px solid var(--linea);border-radius:var(--r);
+  padding:10px 11px;text-align:left;transition:.15s;background:var(--superficie)}
+.opcion:hover{border-color:var(--linea-fuerte)}
+.opcion.elegida.favor{border-color:var(--favor);background:var(--favor-suave)}
+.opcion.elegida.contra{border-color:var(--contra);background:var(--contra-suave)}
+.opcion-texto{font-weight:600;font-size:13px;line-height:1.3}
+.opcion-nota{font-size:11px;color:var(--tenue);margin-top:3px;
+  font-family:'IBM Plex Mono',monospace}
+.opcion.elegida.favor .opcion-nota{color:var(--favor)}
+.opcion.elegida.contra .opcion-nota{color:var(--contra)}
+
+/* ---------- selector de apuestas ----------
+   Con 47 tipos, una lista vertical obliga a desplazarse por todo para
+   encontrar uno. Buscador arriba, categorías al lado, y lo elegido
+   como fichas en el pie: la estructura no cambia con el número. */
+/* Con muchas opciones, el buscador y las categorías se quedan fijos y
+   solo la lista se desplaza. Si se moviera todo, al bajar se perdería
+   de vista el buscador — justo lo que sirve cuando hay muchas. */
+.selector{display:grid;grid-template-columns:1fr;border:1px solid var(--linea);
+  border-radius:var(--r);overflow:hidden;background:var(--superficie);
+  align-items:stretch}
+@media(min-width:520px){.selector{grid-template-columns:118px 1fr}}
+.selector-cats{border-bottom:1px solid var(--linea);padding:6px 0;
+  display:flex;overflow-x:auto;gap:2px;scrollbar-width:none}
+.selector-cats::-webkit-scrollbar{display:none}
+@media(min-width:520px){
+  .selector-cats{flex-direction:column;border-bottom:none;
+    border-right:1px solid var(--linea);overflow-y:auto;
+    max-height:min(46vh, 340px);align-self:stretch}
+}
+.cat{padding:6px 13px;font-size:12.5px;color:var(--tinta);text-align:left;
+  white-space:nowrap;border-radius:0}
+.cat:hover{background:var(--papel)}
+.cat.activa{background:var(--favor-suave);color:var(--favor);font-weight:600}
+.cat small{color:var(--linea-fuerte)}
+
+.selector-lista{padding:8px 9px;display:grid;gap:5px;align-content:start;
+  max-height:min(46vh, 340px);overflow-y:auto;scrollbar-gutter:stable}
+.tipo{display:flex;align-items:center;gap:9px;border:1px solid var(--linea);
+  border-radius:6px;padding:8px 10px;text-align:left;width:100%;
+  background:var(--superficie);transition:.12s}
+.tipo:hover{border-color:var(--linea-fuerte)}
+.tipo:disabled{opacity:.45;cursor:not-allowed;border-style:dashed}
+.tipo:disabled:hover{border-color:var(--linea)}
+.tipo.puesto{background:var(--favor-suave);border-color:var(--favor)}
+.tipo-marca{width:15px;flex-shrink:0;color:var(--tenue);font-size:14px;
+  display:grid;place-items:center}
+.tipo.puesto .tipo-marca{color:var(--favor)}
+.tipo-texto{min-width:0}
+.tipo-texto strong{display:block;font-size:13px;font-weight:500;color:var(--tinta)}
+.tipo-texto small{display:block;font-size:11px;color:var(--tenue);margin-top:1px}
+.tipo.puesto .tipo-texto small{color:var(--favor)}
+
+/* El panel que se despliega bajo un tipo de apuesta. Va dentro de la
+   lista, no en otra hoja: apilar ventanas hace perder el hilo. */
+.tipo.abierto{border-color:var(--favor);border-bottom-left-radius:0;
+  border-bottom-right-radius:0}
+.panel-tipo{border:1px solid var(--favor);border-top:none;
+  border-radius:0 0 6px 6px;padding:8px 10px;background:var(--favor-suave)}
+.mini-rotulo{font-size:10.5px;font-weight:600;color:var(--favor);margin-bottom:5px}
+.lineas{display:flex;flex-wrap:wrap;gap:4px}
+.linea{border:1px solid var(--linea-fuerte);background:var(--superficie);
+  border-radius:99px;padding:3px 9px;font-size:11.5px;
+  font-family:'IBM Plex Mono',monospace;transition:.12s}
+.linea:hover{border-color:var(--favor)}
+.linea.activa{background:var(--favor);border-color:var(--favor);color:#fff}
+.panel-tipo .pista{margin-top:5px;font-size:10.5px}
+
+.buscador{display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-bottom:1px solid var(--linea)}
+.buscador input{border:none;padding:0;font-size:14px;background:none}
+.buscador input:focus{box-shadow:none}
+
+/* Jugadas elegidas. El bloque existe siempre, vacío o lleno: uno que
+   aparece y desaparece hace saltar el resto de la pantalla. */
+.caja-jugadas{background:var(--superficie);border:1px solid var(--linea);
+  border-radius:var(--r);padding:9px 11px;margin-top:10px}
+.caja-jugadas.vacia{border-style:dashed}
+.jugadas-cab{display:flex;justify-content:space-between;align-items:baseline;
+  gap:8px;font-size:10.5px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--tenue);margin-bottom:7px}
+.jugadas-cab span{font-weight:400;letter-spacing:0;text-transform:none;
+  color:var(--linea-fuerte)}
+.puestas{display:flex;gap:5px;flex-wrap:wrap;min-width:0}
+.puesta{background:var(--favor-suave);color:var(--favor);font-size:11.5px;
+  padding:3px 8px;border-radius:99px;display:inline-flex;align-items:center;gap:5px}
+.puesta button{color:var(--favor);font-size:13px;line-height:1}
+.jugadas-vacio{font-size:12px;color:var(--linea-fuerte)}
+
+/* Aviso de límite alcanzado. Se muestra cuando choca, no antes: una
+   advertencia permanente se deja de leer. */
+.tope{display:flex;align-items:center;gap:7px;background:var(--aviso-suave);
+  border:1px solid #F0DCC0;border-radius:6px;padding:7px 10px;
+  font-size:11.5px;color:var(--aviso);line-height:1.4;margin-top:8px}
+.tope svg{flex-shrink:0}
+
+/* Solo el botón queda fijo: con todo fijo, en móvil no quedaría
+   pantalla para la lista. */
+.pie-fijo{position:sticky;bottom:0;background:var(--superficie);
+  border-top:1px solid var(--linea);padding:10px 0 0;margin-top:10px}
+
+/* ---------- armar la sala ----------
+   Cada apuesta agregada es una fila tranquila, no una tarjeta de
+   colores: son datos que se revisan, no opciones que se eligen. */
+.elegido{display:flex;justify-content:space-between;align-items:center;gap:9px;
+  background:var(--favor-suave);border:1px solid var(--favor);
+  border-radius:6px;padding:8px 10px;margin-bottom:5px}
+.elegido-texto{min-width:0}
+.elegido-texto strong{display:block;font-size:13px;font-weight:500;
+  letter-spacing:-.01em}
+.elegido-texto small{display:block;color:var(--favor);font-size:11px;margin-top:1px}
+.quitar{flex-shrink:0;width:24px;height:24px;border-radius:5px;
+  display:grid;place-items:center;color:var(--favor)}
+.quitar:hover{background:var(--mal-suave);color:var(--mal)}
+
+/* Fichas para agregar: caben varias por línea y se ve de un golpe
+   qué queda disponible. Una lista vertical de cinco opciones obliga
+   a hacer scroll para algo que se decide en un segundo. */
+.fichas{display:flex;flex-wrap:wrap;gap:7px}
+.ficha{border:1px solid var(--linea-fuerte);background:var(--superficie);
+  border-radius:8px;padding:9px 14px;font-size:13.5px;font-weight:500;
+  transition:.14s;white-space:nowrap}
+.ficha:hover{border-color:var(--favor);color:var(--favor)}
+.ficha:disabled{opacity:.4;cursor:not-allowed;border-style:dashed}
+.ficha:disabled:hover{border-color:var(--linea-fuerte);color:var(--tinta)}
+
+.rotulo{font-size:12px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--tenue);margin:18px 0 8px;
+  display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.rotulo span{font-weight:400;letter-spacing:0;text-transform:none;
+  font-size:12px;color:var(--linea-fuerte)}
+
+/* Mínimo y capacidad viven juntos: son la misma decisión sobre quién
+   puede entrar. */
+.par{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.par .campo{margin-bottom:0}
+.par input,.par select{padding:7px 10px;font-size:16px}
+.par label{font-size:10.5px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--tenue);margin-bottom:4px}
+
+/* ---------- formularios ---------- */
+label{display:block;font-size:11px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--tenue);margin-bottom:5px}
+/* 16px en los campos a propósito: por debajo de eso, iOS hace zoom
+   automático al enfocar y descoloca la pantalla. */
+input,select,textarea{width:100%;padding:9px 12px;font-size:16px;
+  border:1px solid var(--linea-fuerte);border-radius:var(--r);
+  background:var(--superficie)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--favor);
+  box-shadow:0 0 0 3px var(--favor-suave)}
+.campo{margin-bottom:12px}
+.pista{font-size:11.5px;color:var(--tenue);margin-top:5px;line-height:1.45}
+.con-ojo{position:relative}
+.con-ojo input{padding-right:46px}
+.ojo{position:absolute;right:2px;top:2px;bottom:2px;width:42px;
+  display:grid;place-items:center;color:var(--tenue)}
+.ojo:hover{color:var(--favor)}
+
+/* Monto: la cifra es el protagonista de la pantalla. */
+.monto-grande{display:flex;align-items:center;justify-content:center;gap:5px;
+  padding:14px 0 6px}
+.monto-grande span{font-size:21px;color:var(--tenue);font-weight:500}
+.monto-grande input{border:none;background:none;text-align:center;
+  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:34px;
+  letter-spacing:-.03em;padding:0;width:auto;max-width:230px}
+.monto-grande input:focus{box-shadow:none}
+.atajos{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-bottom:6px}
+.atajo{border:1px solid var(--linea-fuerte);border-radius:99px;padding:5px 13px;
+  font-size:12.5px;font-family:'IBM Plex Mono',monospace;background:var(--superficie)}
+.atajo:hover{border-color:var(--favor);color:var(--favor)}
+
+/* ---------- desglose ---------- */
+.desglose{background:var(--papel);border:1px solid var(--linea);
+  border-radius:var(--r);padding:10px 13px;margin-top:12px}
+.desglose-fila{display:flex;justify-content:space-between;align-items:baseline;
+  padding:3px 0;font-size:13px}
+.desglose-fila span{color:var(--tenue)}
+.desglose-fila b{font-family:'IBM Plex Mono',monospace;font-weight:600}
+.desglose-fila.gana b{color:var(--favor);font-size:15px}
+.desglose-fila.pierde b{color:var(--mal)}
+
+/* ---------- varios ---------- */
+.caja{background:var(--superficie);border:1px solid var(--linea);
+  border-radius:var(--r);padding:12px 14px;margin-bottom:9px}
+.etiqueta{display:inline-block;padding:2px 8px;border-radius:99px;
+  font-size:10.5px;font-weight:600}
+.et-favor{background:var(--favor-suave);color:var(--favor)}
+.et-contra{background:var(--contra-suave);color:var(--contra)}
+.et-espera{background:var(--aviso-suave);color:var(--aviso)}
+.et-gris{background:var(--papel);color:var(--tenue);border:1px solid var(--linea)}
+
+.filtros{display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;margin-bottom:12px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.filtros::-webkit-scrollbar{display:none}
+.filtro{white-space:nowrap;border:1px solid var(--linea-fuerte);border-radius:99px;
+  padding:5px 13px;font-size:12.5px;background:var(--superficie);flex-shrink:0}
+.filtro.activo{background:var(--tinta);color:#fff;border-color:var(--tinta)}
+
+.vacio{text-align:center;padding:34px 20px;color:var(--tenue)}
+.vacio h3{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;
+  font-size:16px;color:var(--tinta);margin-bottom:5px;letter-spacing:-.02em}
+.vacio p{font-size:13px;margin-bottom:14px;line-height:1.5}
+
+@keyframes girar{to{transform:rotate(360deg)}}
+.giro{display:inline-block;width:15px;height:15px;border:2px solid currentColor;
+  border-right-color:transparent;border-radius:50%;animation:girar .6s linear infinite}
+.cargando{display:flex;flex-direction:column;align-items:center;gap:14px;
+  padding:60px 20px;color:var(--linea-fuerte)}
+.cargando .giro{width:24px;height:24px}
+.cargando span{color:var(--tenue);font-size:13.5px}
+
+/* ---------- hoja inferior ---------- */
+.velo{display:none;position:fixed;inset:0;background:rgba(22,33,28,.45);z-index:60}
+.velo.visible{display:block}
+@keyframes sube{from{transform:translateY(100%)}to{transform:none}}
+@keyframes entraDer{from{transform:translateX(100%)}to{transform:none}}
+.hoja{position:fixed;bottom:0;left:0;right:0;z-index:70;background:var(--superficie);
+  border-radius:18px 18px 0 0;max-height:92vh;overflow-y:auto;
+  animation:sube .22s cubic-bezier(.32,.72,0,1);
+  padding-bottom:env(safe-area-inset-bottom)}
+
+/* La regla base va ANTES del media query.
+   Con la misma especificidad gana la última, así que declararla
+   después anulaba silenciosamente lo del escritorio: de ahí las
+   franjas blancas a los lados del panel. */
+.hoja-interior{max-width:560px;margin:0 auto;padding:8px 16px 20px}
+
+/* En escritorio entra por la derecha y ocupa toda la altura: un
+   formulario largo dentro de una hoja que sube obliga a hacer scroll
+   dentro de otro scroll. */
+@media(min-width:760px){
+  /* El panel ocupa la altura completa y el contenido se desplaza
+     dentro. Sin `overflow-y` en el interior, el flex reparte el alto
+     entre los hijos y quedan franjas vacías arriba y abajo. */
+  .hoja{top:0;left:auto;right:0;bottom:0;width:480px;max-height:none;
+    height:100vh;border-radius:0;border-left:1px solid var(--linea);
+    animation:entraDer .22s cubic-bezier(.32,.72,0,1);
+    display:flex;flex-direction:column;overflow:hidden}
+  .hoja .agarre{display:none}
+  .hoja-interior{padding:20px 20px 22px;max-width:none;margin:0;
+    flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable}
+  .hoja-pie{position:sticky;bottom:0;background:var(--superficie);
+    border-top:1px solid var(--linea);padding:12px 0 0;margin-top:10px}
+}
+.agarre{width:38px;height:4px;background:var(--linea-fuerte);border-radius:99px;
+  margin:8px auto 14px}
+.hoja h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:19px;
+  letter-spacing:-.02em;margin-bottom:3px}
+.hoja-cerrar{position:absolute;top:14px;right:16px;width:30px;height:30px;
+  border-radius:50%;display:grid;place-items:center;color:var(--tenue);
+  background:var(--papel)}
+.hoja-cerrar:hover{color:var(--tinta)}
+.hoja-pie{margin-top:18px}
+.hoja-sub{color:var(--tenue);font-size:13.5px;margin-bottom:16px}
+
+/* Quién soy: iniciales en círculo, y al tocarlas el menú de cuenta.
+   Un avatar ocupa poco y es lo que la gente busca para salir. */
+.yo{width:30px;height:30px;border-radius:50%;background:var(--favor-suave);
+  color:var(--favor);display:grid;place-items:center;font-weight:600;
+  font-size:12px;text-transform:uppercase;flex-shrink:0;
+  border:1px solid var(--linea);transition:.14s}
+.yo:hover{border-color:var(--favor)}
+
+.menu-cuenta{position:absolute;top:56px;right:16px;z-index:50;
+  background:var(--superficie);border:1px solid var(--linea);
+  border-radius:var(--r);box-shadow:var(--sombra);min-width:210px;
+  overflow:hidden}
+.menu-cuenta .quien{padding:13px 15px;border-bottom:1px solid var(--linea)}
+.menu-cuenta .quien strong{display:block;font-size:14.5px}
+.menu-cuenta .quien small{color:var(--tenue);font-size:12.5px}
+.menu-cuenta button{display:flex;align-items:center;gap:9px;width:100%;
+  padding:11px 15px;text-align:left;font-size:14px;color:var(--tinta)}
+.menu-cuenta button:hover{background:var(--papel)}
+.menu-cuenta button.salir{color:var(--mal);border-top:1px solid var(--linea)}
+
+/* ---------- columna lateral ---------- */
+.bloque{background:var(--superficie);border:1px solid var(--linea);
+  border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+.bloque h3{font-size:11px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--tenue);padding:11px 13px 7px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px}
+.bloque h3 span{font-weight:500;letter-spacing:0;text-transform:none;
+  font-size:11.5px;color:var(--linea-fuerte)}
+/* Tope de cinco: la columna acompaña, no compite con el muro. El
+   resto se ve en «Ver más», con filtros. */
+.bloque-mas{display:block;width:100%;padding:8px 13px;font-size:12px;
+  font-weight:500;color:var(--favor);border-top:1px solid var(--linea);
+  text-align:center}
+.bloque-mas:hover{background:var(--papel)}
+.bloque-vacio{padding:3px 13px 13px;font-size:12px;color:var(--tenue);
+  line-height:1.5}
+.bloque-fila{display:flex;justify-content:space-between;align-items:center;
+  gap:9px;padding:8px 13px;border-top:1px solid var(--linea);font-size:12.5px}
+.bloque-fila:hover{background:var(--papel)}
+.bloque-fila small{color:var(--tenue);font-size:11px;display:block}
+.bloque-fila b{font-family:'IBM Plex Mono',monospace;font-weight:600;
+  font-size:13px;color:var(--favor)}
+
+/* ---------- actividad ---------- */
+.actividad{display:flex;gap:9px;padding:8px 13px;border-top:1px solid var(--linea);
+  align-items:flex-start;font-size:12px;line-height:1.4}
+.actividad:first-of-type{border-top:none}
+.punto{width:22px;height:22px;border-radius:50%;flex-shrink:0;display:grid;
+  place-items:center;font-size:11px;margin-top:1px}
+.punto.creada{background:var(--favor-suave);color:var(--favor)}
+.punto.llena{background:var(--contra-suave);color:var(--contra)}
+.punto.gano{background:var(--aviso-suave);color:var(--aviso)}
+.actividad-texto{min-width:0}
+.actividad-texto strong{font-weight:600}
+.actividad-texto time{display:block;color:var(--tenue);font-size:11.5px;margin-top:2px}
+
+/* Barra de acción sobre el muro: crear una sala es la acción
+   principal, no una pestaña más del menú. */
+.llamada{display:flex;align-items:center;gap:10px;background:var(--superficie);
+  border:1px solid var(--linea);border-radius:var(--r);padding:10px 13px;
+  margin-bottom:12px;transition:.15s}
+.llamada:hover{border-color:var(--favor)}
+.llamada-texto{flex:1;min-width:0;text-align:left}
+.llamada-texto strong{display:block;font-size:13.5px;font-weight:600}
+.llamada-texto small{color:var(--tenue);font-size:11.5px}
+
+#avisos{position:fixed;bottom:calc(var(--nav) + 14px);left:16px;right:16px;z-index:80;
+  display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.aviso{background:var(--tinta);color:#fff;padding:12px 18px;border-radius:99px;
+  font-size:14px;box-shadow:var(--sombra);max-width:400px;pointer-events:auto;
+  display:flex;gap:9px;align-items:center}
+.aviso.mal{background:var(--mal)}
+.aviso.bien{background:var(--favor)}
+
+@media(min-width:640px){
+  body{padding-bottom:28px}
+  nav.inferior{position:sticky;top:0;border-top:none;border-bottom:1px solid var(--linea);
+    background:transparent}
+  .nav-fila{grid-auto-columns:auto;justify-content:center;gap:6px}
+  .nav-fila a{flex-direction:row;gap:6px;padding:7px 13px;border-radius:99px;font-size:13px}
+  .nav-fila a.activo{background:var(--favor-suave)}
+  .nav-fila svg{width:16px;height:16px}
+  #avisos{bottom:24px}
+}

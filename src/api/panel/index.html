@@ -307,6 +307,54 @@ td.der,th.der{text-align:right}
   th,td{padding:9px 11px;font-size:13px}
 }
 
+/* ---------- buscador de países ----------
+   Campo con lista desplegable en vez de un <select> con 90 opciones.
+   Escribir tres letras es más rápido que desplazarse por la lista. */
+/* El contenedor del filtro lleva `overflow:visible` en línea.
+   `.marco` lo pone en hidden para redondear las tablas, y eso
+   recortaba esta lista, que se despliega hacia abajo. */
+.buscador-pais{position:relative}
+/* La flecha abre la lista completa; la × quita el filtro. */
+.flecha-pais{position:absolute;right:9px;bottom:8px;color:var(--tenue);
+  font-size:12px;line-height:1;padding:3px;background:none}
+.flecha-pais:hover{color:var(--tinta)}
+.buscador-pais input{padding-right:30px}
+
+.limpia-pais{position:absolute;right:26px;bottom:9px;width:20px;height:20px;
+  border-radius:50%;display:grid;place-items:center;color:var(--tenue);
+  background:var(--papel);font-size:14px;line-height:1}
+.limpia-pais:hover{color:var(--tinta)}
+
+.lista-paises{display:none;position:absolute;top:100%;left:0;right:0;z-index:30;
+  background:var(--superficie);border:1px solid var(--linea);
+  border-radius:var(--r);box-shadow:var(--sombra);margin-top:4px;
+  max-height:280px;overflow-y:auto}
+.lista-paises.abierta{display:block}
+
+.opcion-pais{display:flex;justify-content:space-between;align-items:center;
+  gap:10px;width:100%;padding:8px 12px;text-align:left;font-size:13px;
+  border-bottom:1px solid var(--linea);background:none}
+.opcion-pais:last-child{border-bottom:none}
+.opcion-pais:hover{background:var(--papel)}
+.opcion-pais small{color:var(--linea-fuerte);font-size:11px;margin-left:5px;
+  font-family:'IBM Plex Mono',monospace}
+.opcion-pais b{font-size:11.5px;font-weight:500;color:var(--tenue);
+  white-space:nowrap}
+.sin-paises{padding:12px;font-size:12.5px;color:var(--tenue)}
+
+/* ---------- fichas de dato ----------
+   Para métricas que acompañan, no que protagonizan. Las tarjetas
+   grandes tienen sentido con cuatro cifras clave; con seis o más
+   ocupan la pantalla entera sin decir más. */
+.fichas-dato{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+.ficha-dato{display:inline-flex;align-items:baseline;gap:7px;
+  background:var(--superficie);border:1px solid var(--linea);
+  border-radius:99px;padding:6px 14px;font-size:12px;color:var(--tenue);
+  white-space:nowrap}
+.ficha-dato b{font-family:'IBM Plex Mono',monospace;font-size:14px;
+  font-weight:600;color:var(--tinta)}
+.ficha-dato small{font-size:11px;color:var(--linea-fuerte)}
+
 /* ---------- barra de deportes ----------
    Crece sola con lo que haya en la base. Los deportes sin ligas salen
    apagados en vez de ocultos: ver que existen explica por qué no

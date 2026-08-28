@@ -246,6 +246,8 @@ export class ProveedorApiFootball implements ProveedorDeportes {
             ligaApiId: String(f.league.id),
             equipoLocal: f.teams.home.name,
             equipoVisitante: f.teams.away.name,
+            logoLocal: f.teams.home.logo ?? null,
+            logoVisitante: f.teams.away.logo ?? null,
             // Escalonados cada 2 horas desde dentro de 1 hora.
             iniciaEn: new Date(Date.now() + (1 + i * 2) * 3600_000),
             estado: 'PROGRAMADO',
@@ -258,6 +260,10 @@ export class ProveedorApiFootball implements ProveedorDeportes {
           ligaApiId: String(f.league.id),
           equipoLocal: f.teams.home.name,
           equipoVisitante: f.teams.away.name,
+          // Las imágenes se piden directo desde el navegador, así que
+          // no consumen peticiones de la cuota.
+          logoLocal: f.teams.home.logo ?? null,
+          logoVisitante: f.teams.away.logo ?? null,
           iniciaEn: new Date(f.fixture.date),
           estado: ESTADOS[f.fixture.status.short] ?? 'PROGRAMADO',
         });

@@ -159,6 +159,36 @@ document.addEventListener('click', e => {
  * advertencia permanente se deja de leer, y ver opciones apagadas sin
  * explicación se lee como un error de la app.
  */
+/**
+ * El escudo de un equipo, o sus iniciales si no hay.
+ *
+ * No todas las ligas traen escudo, así que la alternativa tiene que
+ * verse bien: un hueco vacío desalinea la tarjeta entera.
+ *
+ * `loading="lazy"` porque el muro puede tener veinte partidos y no
+ * hace falta descargar cuarenta imágenes de golpe. `onerror` cubre el
+ * caso de que el CDN del proveedor no responda.
+ */
+function escudo(url, nombre) {
+  const iniciales = String(nombre ?? '?')
+    .split(/\s+/).slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase();
+
+  return url
+    ? `<img class="escudo" src="${esc(url)}" alt="" loading="lazy"
+         onerror="this.replaceWith(Object.assign(document.createElement('span'),
+                  {className:'escudo escudo-letras',textContent:'${esc(iniciales)}'}))">`
+    : `<span class="escudo escudo-letras">${esc(iniciales)}</span>`;
+}
+
+/** Los dos escudos con el «vs» en medio. */
+function escudosPartido(p) {
+  return `
+  <span class="escudos">
+    ${escudo(p.logo_local, p.equipo_local)}
+    ${escudo(p.logo_visitante, p.equipo_visitante)}
+  </span>`;
+}
+
 function avisoTope(texto) {
   return `
   <div class="tope">

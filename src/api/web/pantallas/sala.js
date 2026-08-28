@@ -23,7 +23,10 @@ PANTALLAS.sala = async (id) => {
     <button class="btn-plano btn-chico" onclick="ir('muro')" style="margin-bottom:16px">
       ← Volver</button>
 
-    <h1 class="titulo">${esc(s.equipo_local)} vs ${esc(s.equipo_visitante)}</h1>
+    <h1 class="titulo" style="display:flex;align-items:center;gap:10px">
+      ${escudosPartido(s)}
+      <span>${esc(s.equipo_local)} vs ${esc(s.equipo_visitante)}</span>
+    </h1>
     <p class="sub">
       ${esc(s.liga ?? '')} · Empieza ${cuando(s.inicia_en)}
     </p>
@@ -171,6 +174,13 @@ function bloqueMercado(m, sala, abierta, mia) {
  * rápida de perder la confianza de alguien.
  */
 function abrirApuesta(mercadoId, lado, sugerido) {
+  // El visitante llega hasta aquí y no más.
+  //
+  // Se le corta ANTES de abrir el panel, no al confirmar: dejarlo
+  // elegir el monto y ver cuánto ganaría para recién entonces pedirle
+  // la cuenta es prometerle algo que todavía no puede hacer.
+  if (!exigeCuenta('Estabas por entrar a una apuesta. El dinero necesita una cuenta detrás.')) return;
+
   const minimo = S.datos.minimoSala ?? (S.pais?.minimoApuesta ?? 500);
   const inicial = sugerido ?? minimo;
 
@@ -272,6 +282,8 @@ async function confirmarApuesta() {
 }
 
 async function salirDeSala(id) {
+  if (!exigeCuenta('Para salir de una sala hace falta la cuenta con la que entraste.')) return;
+
   await accion(async () => {
     await api(`/salas/${id}/salir`, { method: 'POST' });
     await refrescarSaldo();
@@ -287,7 +299,7 @@ async function salirDeSala(id) {
  */
 function compartir(codigo) {
   const url = `${location.origin}/#sala/${S.datos.parametro}`;
-  const texto = `Armé una sala de apuestas (${codigo}). Entra al lado que quieras: ${url}`;
+  const texto = `Armé una sala en QuickBet (${codigo}). Entra al lado que quieras: ${url}`;
 
   if (navigator.share) {
     navigator.share({ text: texto }).catch(() => {});

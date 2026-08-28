@@ -3,19 +3,27 @@
 /**
  * Arranque.
  *
- * Decide entre la pantalla de entrada y la app. Si hay token guardado
- * se intenta usarlo: pedir la contraseña en cada visita es la forma
- * más rápida de que alguien deje de abrir la app.
+ * La app abre SIEMPRE en el muro, haya cuenta o no.
+ *
+ * Antes lo primero que veía alguien sin sesión era un formulario de
+ * registro. Quien llega desde un enlace de WhatsApp no sabe todavía de
+ * qué se trata, y pedirle sus datos antes de mostrarle nada es pedirle
+ * confianza sin haberle dado ninguna razón. Ahora mira las salas, ve
+ * cómo funciona, y la cuenta se le pide recién cuando intenta hacer
+ * algo con dinero.
  */
 async function arrancarSesion() {
-  try {
-    await cargarSesion();
-  } catch {
-    // El token existe pero ya no vale. Se descarta sin ruido: no hay
-    // nada que la persona pueda hacer al respecto.
-    localStorage.removeItem('token');
-    S.token = null;
-    return pantallaEntrar('ingreso');
+  if (S.token) {
+    try {
+      await cargarSesion();
+    } catch {
+      // El token existe pero ya no vale. Se descarta sin ruido y se
+      // sigue como visitante: sacar a alguien de la pantalla porque
+      // venció un token no arregla nada.
+      localStorage.removeItem('token');
+      S.token = null;
+      S.usuario = null;
+    }
   }
 
   const [id, dato] = location.hash.slice(1).split('/');
@@ -24,11 +32,5 @@ async function arrancarSesion() {
 
 (async () => {
   S.token = localStorage.getItem('token');
-
-  if (!S.token) {
-    // Un enlace a una sala compartida por WhatsApp lleva a alguien sin
-    // cuenta. Se le muestra el registro, no el ingreso.
-    return pantallaEntrar(location.hash.startsWith('#sala/') ? 'registro' : 'registro');
-  }
   await arrancarSesion();
 })();

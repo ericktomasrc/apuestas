@@ -3056,3 +3056,529 @@ body.muro-activo .muro-liga-filtro::after{
   line-height:1!important;
   pointer-events:none!important;
 }
+
+
+/* ============================================================
+   V20 — REGISTRO TANDABET
+   Fondo visual aprobado + formulario HTML funcional.
+   ============================================================ */
+
+body.pantalla-registro-activa{
+  margin:0!important;
+  min-height:100vh!important;
+  overflow-x:hidden!important;
+  background:#020806!important;
+}
+
+body.pantalla-registro-activa #app{
+  min-height:100vh!important;
+}
+
+body.pantalla-registro-activa .entrada.entrada-tandabet{
+  min-height:100vh!important;
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  padding:32px clamp(28px,5vw,86px)!important;
+  background-color:#020806!important;
+  background-image:
+    linear-gradient(90deg,
+      rgba(0,6,4,.00) 0%,
+      rgba(0,6,4,.00) 65%,
+      rgba(1,8,5,.35) 82%,
+      rgba(1,8,5,.68) 100%),
+    url('registro-fondo.png')!important;
+  background-repeat:no-repeat!important;
+  background-size:auto 100vh!important;
+  background-position:left bottom!important;
+  background-attachment:fixed!important;
+  box-sizing:border-box!important;
+}
+
+body.pantalla-registro-activa .entrada-tandabet .entrada-caja{
+  width:100%!important;
+  max-width:none!important;
+  min-height:0!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:0!important;
+  margin:0!important;
+  padding:0!important;
+  background:transparent!important;
+}
+
+body.pantalla-registro-activa .entrada-tandabet .entrada-argumento{
+  display:none!important;
+}
+
+body.pantalla-registro-activa .entrada-tandabet .entrada-formulario{
+  width:min(100%,570px)!important;
+  flex:0 0 auto!important;
+  padding:38px 42px 32px!important;
+  border:1px solid rgba(117,228,63,.31)!important;
+  border-radius:28px!important;
+  background:linear-gradient(180deg,rgba(5,15,10,.95),rgba(3,10,7,.98))!important;
+  color:#f6f8f6!important;
+  box-shadow:0 30px 80px rgba(0,0,0,.52)!important;
+  backdrop-filter:blur(10px)!important;
+  -webkit-backdrop-filter:blur(10px)!important;
+}
+
+body.pantalla-registro-activa .entrada-form-head{
+  display:flex!important;
+  align-items:center!important;
+  gap:16px!important;
+  margin:0 0 28px!important;
+}
+
+body.pantalla-registro-activa .entrada-user-icon{
+  width:56px!important;
+  height:56px!important;
+  flex:0 0 56px!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid rgba(117,228,63,.62)!important;
+  border-radius:50%!important;
+  color:#75e43f!important;
+}
+
+body.pantalla-registro-activa .entrada-user-icon svg{
+  width:30px!important;
+  height:30px!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario h2{
+  margin:0!important;
+  color:#fff!important;
+  font-size:30px!important;
+  line-height:1.08!important;
+  font-weight:800!important;
+  letter-spacing:-.025em!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario .entrada-sub{
+  margin:6px 0 0!important;
+  color:#9eaaa2!important;
+  font-size:15px!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario .campo{
+  margin-bottom:18px!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario .campo label{
+  display:block!important;
+  margin:0 0 8px!important;
+  color:#75e43f!important;
+  font-size:12.5px!important;
+  font-weight:800!important;
+  letter-spacing:.045em!important;
+  text-transform:uppercase!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario input{
+  width:100%!important;
+  min-height:60px!important;
+  padding:0 16px!important;
+  border:1px solid rgba(198,215,203,.24)!important;
+  border-radius:14px!important;
+  outline:0!important;
+  background:rgba(6,15,10,.88)!important;
+  color:#f5f8f5!important;
+  font-size:16px!important;
+  box-shadow:none!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario input:hover{
+  border-color:rgba(117,228,63,.42)!important;
+  background:rgba(6,17,11,.94)!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario input:focus,
+body.pantalla-registro-activa .entrada-formulario input:focus-visible{
+  border-color:rgba(117,228,63,.72)!important;
+  outline:0!important;
+  box-shadow:0 0 0 3px rgba(117,228,63,.08)!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario input::placeholder{
+  color:#78847c!important;
+}
+
+body.pantalla-registro-activa .entrada-edad{
+  margin:7px 0 0!important;
+  color:#aab5ae!important;
+  font-size:13px!important;
+}
+
+body.pantalla-registro-activa .entrada-edad b{
+  color:#75e43f!important;
+}
+
+body.pantalla-registro-activa .entrada-cta{
+  min-height:66px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:12px!important;
+  margin-top:4px!important;
+  border:0!important;
+  border-radius:14px!important;
+  background:linear-gradient(180deg,#83e942,#49b425)!important;
+  color:#fff!important;
+  font-size:19px!important;
+  font-weight:800!important;
+  box-shadow:0 12px 28px rgba(63,188,44,.17)!important;
+}
+
+body.pantalla-registro-activa .entrada-cta:hover,
+body.pantalla-registro-activa .entrada-cta:focus{
+  background:linear-gradient(180deg,#8bef48,#51bf28)!important;
+  color:#fff!important;
+  outline:0!important;
+}
+
+body.pantalla-registro-activa .entrada-link{
+  color:#aeb8b1!important;
+  font-size:14px!important;
+}
+
+body.pantalla-registro-activa .entrada-link a{
+  color:#75e43f!important;
+  text-decoration:none!important;
+}
+
+body.pantalla-registro-activa .entrada-link a:hover{
+  color:#92f169!important;
+}
+
+@media(max-width:1099px){
+  body.pantalla-registro-activa .entrada.entrada-tandabet{
+    align-items:flex-start!important;
+    justify-content:center!important;
+    padding:46vh 18px 32px!important;
+    background-size:auto 100vh!important;
+    background-position:left top!important;
+    background-attachment:scroll!important;
+  }
+
+  body.pantalla-registro-activa .entrada-tandabet .entrada-caja{
+    justify-content:center!important;
+  }
+}
+
+@media(max-width:680px){
+  body.pantalla-registro-activa .entrada.entrada-tandabet{
+    padding:42vh 12px 24px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-tandabet .entrada-formulario{
+    padding:25px 18px 22px!important;
+    border-radius:20px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-formulario h2{
+    font-size:25px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-user-icon{
+    width:48px!important;
+    height:48px!important;
+    flex-basis:48px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-formulario input{
+    min-height:54px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-cta{
+    min-height:58px!important;
+    font-size:17px!important;
+  }
+}
+
+
+/* ============================================================
+   V21 — REGISTRO MÁS COMPACTO
+   Corrige el tamaño excesivo de la imagen y del formulario.
+   ============================================================ */
+
+body.pantalla-registro-activa .entrada.entrada-tandabet{
+  min-height:100vh!important;
+  padding:22px clamp(24px,3.5vw,58px)!important;
+
+  /* La imagen ocupa aproximadamente 60% del ancho y mantiene
+     toda su composición, incluido el balón. */
+  background-size:62vw auto!important;
+  background-position:left center!important;
+  background-attachment:scroll!important;
+
+  /* Fondo oscuro para el área derecha */
+  background-color:#020806!important;
+}
+
+/* Formulario más pequeño y proporcionado */
+body.pantalla-registro-activa .entrada-tandabet .entrada-formulario{
+  width:min(100%,470px)!important;
+  padding:26px 30px 24px!important;
+  border-radius:22px!important;
+  margin-right:0!important;
+}
+
+/* Encabezado más compacto */
+body.pantalla-registro-activa .entrada-form-head{
+  gap:13px!important;
+  margin-bottom:20px!important;
+}
+
+body.pantalla-registro-activa .entrada-user-icon{
+  width:46px!important;
+  height:46px!important;
+  flex:0 0 46px!important;
+}
+
+body.pantalla-registro-activa .entrada-user-icon svg{
+  width:24px!important;
+  height:24px!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario h2{
+  font-size:24px!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario .entrada-sub{
+  margin-top:4px!important;
+  font-size:13.5px!important;
+}
+
+/* Campos más bajos */
+body.pantalla-registro-activa .entrada-formulario .campo{
+  margin-bottom:13px!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario .campo label{
+  margin-bottom:6px!important;
+  font-size:11.5px!important;
+}
+
+body.pantalla-registro-activa .entrada-formulario input{
+  min-height:50px!important;
+  height:50px!important;
+  border-radius:12px!important;
+  font-size:14.5px!important;
+  padding-left:14px!important;
+  padding-right:14px!important;
+}
+
+body.pantalla-registro-activa .entrada-edad{
+  margin-top:6px!important;
+  margin-bottom:0!important;
+  font-size:12px!important;
+}
+
+/* Botón más compacto */
+body.pantalla-registro-activa .entrada-cta{
+  min-height:54px!important;
+  height:54px!important;
+  margin-top:1px!important;
+  border-radius:12px!important;
+  font-size:16.5px!important;
+}
+
+/* Enlaces inferiores */
+body.pantalla-registro-activa .entrada-link{
+  font-size:12.5px!important;
+}
+
+body.pantalla-registro-activa .entrada-link[style]{
+  margin-top:10px!important;
+}
+
+/* Pantallas grandes: mantener la imagen controlada y no agrandarla
+   aunque el monitor sea muy ancho. */
+@media(min-width:1600px){
+  body.pantalla-registro-activa .entrada.entrada-tandabet{
+    background-size:min(62vw,1040px) auto!important;
+  }
+}
+
+/* Laptop normal */
+@media(min-width:1100px) and (max-width:1599px){
+  body.pantalla-registro-activa .entrada.entrada-tandabet{
+    background-size:64vw auto!important;
+  }
+}
+
+/* Tablet */
+@media(max-width:1099px){
+  body.pantalla-registro-activa .entrada.entrada-tandabet{
+    min-height:100vh!important;
+    padding:42vh 16px 26px!important;
+    background-size:100% auto!important;
+    background-position:center top!important;
+  }
+
+  body.pantalla-registro-activa .entrada-tandabet .entrada-formulario{
+    width:min(100%,460px)!important;
+    margin:0 auto!important;
+  }
+}
+
+/* Móvil */
+@media(max-width:680px){
+  body.pantalla-registro-activa .entrada.entrada-tandabet{
+    padding:36vh 10px 18px!important;
+    background-size:115% auto!important;
+  }
+
+  body.pantalla-registro-activa .entrada-tandabet .entrada-formulario{
+    padding:20px 16px 18px!important;
+    border-radius:18px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-formulario h2{
+    font-size:22px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-formulario input{
+    min-height:48px!important;
+    height:48px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-cta{
+    min-height:50px!important;
+    height:50px!important;
+    font-size:16px!important;
+  }
+}
+
+/* ============================================================
+   V22 — REGISTRO A PANTALLA COMPLETA
+   Fondo ocupa todo el viewport. Formulario más compacto y
+   desplazado a la derecha para dejar visible el balón original.
+   ============================================================ */
+
+@media (min-width:1100px){
+  body.pantalla-registro-activa .entrada.entrada-tandabet{
+    min-height:100vh!important;
+    width:100%!important;
+    padding:18px clamp(28px,4vw,68px)!important;
+    justify-content:flex-end!important;
+    align-items:center!important;
+    background-image:
+      linear-gradient(90deg,
+        rgba(0,6,4,0) 0%,
+        rgba(0,6,4,0) 58%,
+        rgba(0,6,4,.08) 70%,
+        rgba(0,6,4,.22) 100%),
+      url('registro-fondo.png')!important;
+    background-size:cover!important;
+    background-position:center center!important;
+    background-repeat:no-repeat!important;
+    background-attachment:scroll!important;
+  }
+
+  body.pantalla-registro-activa .entrada-tandabet .entrada-caja{
+    width:100%!important;
+    max-width:none!important;
+    justify-content:flex-end!important;
+  }
+
+  body.pantalla-registro-activa .entrada-tandabet .entrada-formulario{
+    width:min(100%,400px)!important;
+    padding:22px 25px 20px!important;
+    margin-right:clamp(4px,1.4vw,24px)!important;
+    border-radius:20px!important;
+    background:linear-gradient(180deg,rgba(3,13,8,.93),rgba(2,9,6,.97))!important;
+    box-shadow:0 22px 60px rgba(0,0,0,.50)!important;
+  }
+
+  body.pantalla-registro-activa .entrada-form-head{
+    gap:11px!important;
+    margin-bottom:16px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-user-icon{
+    width:42px!important;
+    height:42px!important;
+    flex:0 0 42px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-user-icon svg{
+    width:22px!important;
+    height:22px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-formulario h2{
+    font-size:22px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-formulario .entrada-sub{
+    font-size:12.5px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-formulario .campo{
+    margin-bottom:10px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-formulario .campo label{
+    margin-bottom:5px!important;
+    font-size:10.5px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-formulario input{
+    min-height:44px!important;
+    height:44px!important;
+    border-radius:11px!important;
+    font-size:13.5px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-edad{
+    margin-top:5px!important;
+    font-size:11px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-cta{
+    min-height:48px!important;
+    height:48px!important;
+    border-radius:11px!important;
+    font-size:15px!important;
+  }
+
+  body.pantalla-registro-activa .entrada-link{
+    font-size:11.5px!important;
+  }
+}
+
+/* V26 - registro: fondo limpio sin duplicar formulario */
+@media (min-width:1100px){
+  body.pantalla-registro-activa,
+  body.pantalla-registro-activa #app{
+    height:100vh!important;
+    min-height:100vh!important;
+    overflow:hidden!important;
+  }
+  body.pantalla-registro-activa .entrada.entrada-tandabet{
+    height:100vh!important;
+    min-height:100vh!important;
+    box-sizing:border-box!important;
+    background-image:linear-gradient(90deg,rgba(0,6,4,0) 0%,rgba(0,6,4,0) 60%,rgba(0,6,4,.10) 72%,rgba(0,6,4,.30) 100%),url('registro-fondo.png')!important;
+    background-size:cover!important;
+    background-position:center center!important;
+    background-repeat:no-repeat!important;
+  }
+  body.pantalla-registro-activa .entrada-tandabet .entrada-caja{
+    height:100%!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+  }
+  body.pantalla-registro-activa .entrada-tandabet .entrada-formulario{
+    width:min(100%,400px)!important;
+    margin-right:clamp(8px,1.5vw,26px)!important;
+    position:relative!important;
+    z-index:2!important;
+  }
+}

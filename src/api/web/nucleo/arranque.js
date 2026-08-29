@@ -27,7 +27,15 @@ async function arrancarSesion() {
   }
 
   const [id, dato] = location.hash.slice(1).split('/');
-  ir(PANTALLAS[id] ? id : 'muro', dato);
+  const pantalla = PANTALLAS[id] ? id : 'muro';
+
+  // La clase del formulario solo debe existir mientras se muestra entrar/registro.
+  // Evita que una capa/estilo del login quede encima del muro tras iniciar sesión.
+  if (pantalla !== 'entrar') {
+    document.body.classList.remove('pantalla-registro-activa');
+  }
+
+  ir(pantalla, dato);
 }
 
 (async () => {

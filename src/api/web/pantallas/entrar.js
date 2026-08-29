@@ -18,44 +18,28 @@
 function pantallaEntrar(modo = 'registro') {
   const esRegistro = modo === 'registro';
 
+  document.body.classList.add('pantalla-registro-activa');
+
   document.getElementById('app').innerHTML = `
-    <div class="entrada">
+    <div class="entrada entrada-tandabet">
       <div class="entrada-caja">
 
-        <div class="entrada-argumento">
-          <span class="marca marca-clara">
-            <svg viewBox="0 0 40 40" aria-hidden="true">
-              <circle cx="20" cy="20" r="17" fill="#fff"/>
-              <path d="M22 10l-8 12h5l-2 8 8-12h-5z" fill="#2F6B57"/>
-            </svg>
-            <span class="marca-nombre">Tanda<b>Bet</b></span>
-          </span>
-
-          <h1>Apuesta con gente, no con una casa</h1>
-          <p>Alguien pone un lado, tú el otro. El que acierta se lleva
-             todo, sin intermediarios.</p>
-
-          <!-- Las dos promesas, no las cifras del muro.
-               «2 salas abiertas» no le dice nada a quien todavía no
-               sabe qué es una sala. Lo que sí se entiende sin contexto
-               es cuánto se paga y cuánto cuesta empezar. -->
-          <div class="entrada-cifras">
+        <div class="entrada-formulario">
+          <div class="entrada-form-head">
+            <span class="entrada-user-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M4.5 20c.7-4.1 3.2-6.2 7.5-6.2s6.8 2.1 7.5 6.2"></path>
+              </svg>
+            </span>
             <div>
-              <b>2x</b>
-              <span>lo que pongas</span>
-            </div>
-            <div>
-              <b>S/0</b>
-              <span>abrir una sala</span>
+              <h2>${esRegistro ? 'Crea tu cuenta' : 'Hola de nuevo'}</h2>
+              <p class="entrada-sub">${esRegistro
+                ? 'Toma menos de un minuto.'
+                : 'Entra para ver tus salas.'}</p>
             </div>
           </div>
-        </div>
-
-        <div class="entrada-formulario">
-          <h2>${esRegistro ? 'Crea tu cuenta' : 'Hola de nuevo'}</h2>
-          <p class="entrada-sub">${esRegistro
-            ? 'Toma menos de un minuto.'
-            : 'Entra para ver tus salas.'}</p>
 
           <form onsubmit="${esRegistro ? 'registrarse' : 'ingresar'}(event)">
             ${esRegistro ? `
@@ -79,7 +63,7 @@ function pantallaEntrar(modo = 'registro') {
               <div class="campo">
                 <label for="nacimiento">Fecha de nacimiento</label>
                 <input id="nacimiento" type="date" required>
-                <p class="pista">Tienes que ser mayor de 18 años.</p>
+                <p class="pista entrada-edad">Tienes que ser mayor de <b>18</b> años.</p>
               </div>` : ''}
 
             <div class="campo" id="campo-codigo" style="display:none">
@@ -88,24 +72,21 @@ function pantallaEntrar(modo = 'registro') {
                 placeholder="000000" autocomplete="one-time-code">
             </div>
 
-            <button class="btn btn-favor btn-ancho" type="submit">
-              ${esRegistro ? 'Crear mi cuenta' : 'Entrar'}</button>
+            <button class="btn btn-favor btn-ancho entrada-cta" type="submit">
+              ${esRegistro ? 'Únete a TandaBet' : 'Entrar'}
+              <span aria-hidden="true">→</span>
+            </button>
             <p class="pista" id="pista" style="text-align:center;min-height:18px"></p>
           </form>
 
-          <p class="pista" style="text-align:center;margin-top:14px">
+          <p class="pista entrada-link" style="text-align:center;margin-top:14px">
             ${esRegistro
               ? `¿Ya tienes cuenta? <a href="#" onclick="event.preventDefault();pantallaEntrar('ingreso')">Entra aquí</a>`
               : `¿Primera vez? <a href="#" onclick="event.preventDefault();pantallaEntrar('registro')">Crea tu cuenta</a>`}
           </p>
 
-          <!-- Salida sin cuenta.
-               Quien llegó aquí desde el muro tiene que poder volver:
-               una pantalla de registro sin puerta de salida se siente
-               una trampa, y la mayoría cierra la pestaña en vez de
-               seguir mirando. -->
-          <p class="pista" style="text-align:center;margin-top:8px">
-            <a href="#muro" onclick="event.preventDefault();ir('muro')">
+          <p class="pista entrada-link" style="text-align:center;margin-top:8px">
+            <a href="#muro" onclick="event.preventDefault();document.body.classList.remove('pantalla-registro-activa');ir('muro')">
               Seguir mirando salas sin cuenta</a>
           </p>
         </div>
@@ -182,6 +163,8 @@ async function ingresar(e) {
 
     S.token = b.token;
     localStorage.setItem('token', S.token);
+    // Al salir del login, quitar siempre el estado visual de registro/ingreso.
+    document.body.classList.remove('pantalla-registro-activa');
     await arrancarSesion();
   } catch (err) {
     pista.textContent = err.message;

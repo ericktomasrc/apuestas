@@ -55,17 +55,18 @@ function armazon(contenido, lateral) {
   return `
   <header class="superior">
     <div class="superior-fila">
-      <button class="marca" onclick="ir('muro')" aria-label="Inicio">
-        <!-- Marcador de posición del logo.
-             Cuando esté el definitivo se cambia solo este SVG: el
-             tamaño y la posición ya los resuelve el CSS de .marca,
-             así que no hay que tocar nada más. -->
-        <svg viewBox="0 0 40 40" aria-hidden="true">
-          <circle cx="20" cy="20" r="17" fill="currentColor"/>
-          <path d="M22 10l-8 12h5l-2 8 8-12h-5z" fill="#fff"/>
-        </svg>
-        <span class="marca-nombre">Quick<b>Bet</b></span>
+      <button class="marca marca-imagen" onclick="ir('muro')" aria-label="Inicio">
+        <img src="logo-tandabet.png" alt="TandaBet">
       </button>
+      <div class="nav-escritorio">
+        ${visible.map(n => `
+          <a href="#${n.id}" class="${S.pantalla === n.id ? 'activo' : ''}"
+             onclick="event.preventDefault();ir('${n.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+              stroke-linecap="round" stroke-linejoin="round">${n.icono}</svg>
+            ${n.id === 'crear' ? 'Crear sala' : n.nombre}
+          </a>`).join('')}
+      </div>
       <div class="superior-der">
         ${haySesion() ? `
           <button class="saldo-chip" id="saldo-chip" onclick="ir('billetera')">
@@ -180,6 +181,7 @@ function ir(id, datos) {
   }
 
   S.pantalla = id;
+  document.body.classList.toggle('muro-activo', id === 'muro');
   S.datos.parametro = datos;
   location.hash = datos ? `${id}/${datos}` : id;
   cerrarMenuCuenta();

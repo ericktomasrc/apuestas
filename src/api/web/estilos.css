@@ -572,3 +572,26 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--favor);
   .nav-fila svg{width:16px;height:16px}
   #avisos{bottom:24px}
 }
+
+/* TandaBet: cabecera y navegación cuando está abierto el muro. */
+body.muro-activo header.superior{
+  background:rgba(5,14,9,.94);
+  border-bottom-color:rgba(118,201,127,.14);
+  color:#eef7f0;
+}
+body.muro-activo .marca-nombre{color:#f1f7f3}
+body.muro-activo .marca-nombre b{color:#74d45f}
+body.muro-activo .btn-entrar.plano{color:#b7cabd}
+body.muro-activo .btn-entrar:not(.plano){background:#65c75a;color:#07110d;border-color:#65c75a}
+body.muro-activo .saldo-chip{background:#0c1a13;border-color:rgba(126,210,142,.17);color:#f2f8f4}
+@media(max-width:899px){
+  body.muro-activo nav.inferior{background:#07120d;border-top-color:rgba(126,210,142,.15)}
+  body.muro-activo .nav-fila a{color:#829689}
+  body.muro-activo .nav-fila a.activo{color:#78db67}
+}
+
+/* V4: amplitud de escritorio fiel al mockup TandaBet. */
+@media(min-width:900px){
+  body.muro-activo main{padding:0 0 16px!important}
+  body.muro-activo .doble{padding:0 8px!important}
+}

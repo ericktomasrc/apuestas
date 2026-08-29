@@ -299,7 +299,7 @@ async function salirDeSala(id) {
  */
 function compartir(codigo) {
   const url = `${location.origin}/#sala/${S.datos.parametro}`;
-  const texto = `Armé una sala en QuickBet (${codigo}). Entra al lado que quieras: ${url}`;
+  const texto = `Armé una sala en TandaBet (${codigo}). Entra al lado que quieras: ${url}`;
 
   if (navigator.share) {
     navigator.share({ text: texto }).catch(() => {});

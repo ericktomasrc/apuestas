@@ -28,7 +28,7 @@ function pantallaEntrar(modo = 'registro') {
               <circle cx="20" cy="20" r="17" fill="#fff"/>
               <path d="M22 10l-8 12h5l-2 8 8-12h-5z" fill="#2F6B57"/>
             </svg>
-            <span class="marca-nombre">Quick<b>Bet</b></span>
+            <span class="marca-nombre">Tanda<b>Bet</b></span>
           </span>
 
           <h1>Apuesta con gente, no con una casa</h1>

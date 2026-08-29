@@ -1,31 +1,21 @@
 'use strict';
 
 /**
- * El muro.
+ * Muro principal.
  *
- * Lo que la gente viene a hacer es encontrar una sala que necesite su
- * lado. Por eso el filtro por defecto es "les falta gente": una sala
- * completa no se puede tomar, y mostrarla arriba es hacerle perder el
- * tiempo a quien busca dónde entrar.
- *
- * Debajo de las salas van los PARTIDOS SIN SALA. Es la mitad que
- * faltaba: con una sola sala abierta y catorce partidos disponibles,
- * la pantalla parecía vacía cuando en realidad había de sobra que
- * hacer. Una sala que nadie abrió todavía no es un hueco, es el turno
- * de alguien.
- *
- * Se ve con cuenta y sin ella. La cuenta se pide al apostar o al
- * crear, no al mirar — y se pide ahí, no con un aviso permanente
- * arriba: anunciarle un problema a alguien que todavía no lo tiene
- * solo estorba.
+ * La navegación se separa en dos pestañas: salas ya creadas y partidos
+ * disponibles para crear una. Así una lista grande no empuja la otra
+ * sección cientos de tarjetas hacia abajo.
  */
 PANTALLAS.muro = async () => {
-  const filtro = S.datos.filtroMuro ?? 'faltan';
+  const seccion = S.datos.seccionMuro ?? 'salas';
+  const filtro = 'faltan';
   const consulta = filtro === 'faltan' ? '?soloNecesitanGente=true' : '';
+  const limiteSalas = S.datos.limiteSalas ?? 12;
+  const limitePartidos = S.datos.limitePartidos ?? 12;
+  const ligaSalas = S.datos.ligaSalasMuro ?? 'todas';
+  const ligaPartidos = S.datos.ligaPartidosMuro ?? 'todas';
 
-  // En paralelo: la lista de salas es lo que importa, lo demás
-  // acompaña. Si la actividad, las ligas o los partidos fallan, el
-  // muro se muestra igual.
   const [r, act, lig, par] = await Promise.all([
     api('/salas' + consulta),
     api('/actividad?limite=12').catch(() => ({ actividad: [] })),
@@ -35,90 +25,161 @@ PANTALLAS.muro = async () => {
 
   const salas = r.salas ?? [];
   const partidos = par.partidos ?? [];
+  const libres = partidos.filter(p => !p.salas_abiertas);
   S.datos.actividad = act.actividad ?? [];
   S.datos.ligas = lig.ligas ?? [];
 
-  // Un partido sin salas es una oportunidad; uno que ya tiene sala se
-  // muestra arriba, en la lista de salas, y repetirlo aquí sería
-  // ofrecer dos veces lo mismo.
-  const libres = partidos.filter(p => !p.salas_abiertas);
+  const ligasSalas = [...new Set(salas.map(s => s.liga).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'es'));
+  const ligasPartidos = [...new Set(libres.map(p => p.liga).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'es'));
+
+  const salasFiltradas = ligaSalas === 'todas'
+    ? salas
+    : salas.filter(s => s.liga === ligaSalas);
+  const libresFiltrados = ligaPartidos === 'todas'
+    ? libres
+    : libres.filter(p => p.liga === ligaPartidos);
+
+  const contenidoSalas = salasFiltradas.length === 0
+    ? vacioMuro(filtro, libres.length)
+    : `
+      <div class="muro-toolbar muro-toolbar-salas">
+        <div class="muro-toolbar-izq">
+          <div class="filtros muro-filtros">
+            <button class="filtro activo" type="button">Con cupos</button>
+          </div>
+          ${selectorLigaMuro('salas', ligasSalas, ligaSalas)}
+        </div>
+        <span class="muro-contador">${Math.min(limiteSalas, salasFiltradas.length)} de ${salasFiltradas.length}</span>
+      </div>
+      <div class="rejilla-salas rejilla-muro rejilla-salas-abiertas">${salasFiltradas.slice(0, limiteSalas).map(tarjetaSala).join('')}</div>
+      ${salasFiltradas.length > limiteSalas ? `
+        <div class="muro-mas-wrap">
+          <button class="btn btn-plano muro-mas" onclick="mostrarMasMuro('salas')">
+            Ver más salas
+          </button>
+        </div>` : ''}`;
+
+  const contenidoPartidos = libresFiltrados.length === 0
+    ? `<div class="vacio muro-vacio">
+         <h3>No hay partidos disponibles ahora</h3>
+         <p>Cuando haya partidos habilitados para crear una sala, aparecerán aquí.</p>
+       </div>`
+    : `
+      <div class="muro-toolbar">
+        <div class="muro-toolbar-izq">
+          <div>
+            <h2 class="seccion-titulo">Partidos disponibles</h2>
+            <p class="seccion-sub">Elige un partido y abre una sala.</p>
+          </div>
+          ${selectorLigaMuro('partidos', ligasPartidos, ligaPartidos)}
+        </div>
+        <span class="muro-contador">${Math.min(limitePartidos, libresFiltrados.length)} de ${libresFiltrados.length}</span>
+      </div>
+      <div class="rejilla-salas rejilla-muro rejilla-partidos-disponibles">${libresFiltrados.slice(0, limitePartidos).map(tarjetaOportunidad).join('')}</div>
+      ${libresFiltrados.length > limitePartidos ? `
+        <div class="muro-mas-wrap">
+          <button class="btn btn-plano muro-mas" onclick="mostrarMasMuro('partidos')">
+            Ver más partidos
+          </button>
+        </div>` : ''}`;
 
   pintar(armazon(`
-    ${portada(salas.length, libres.length)}
+    <div class="muro-premium">
+      ${portada(salas.length, libres.length)}
 
-    <div class="filtros">
-      ${[['faltan','Les falta gente'], ['todas','Todas']]
-        .map(([id, nombre]) => `
-          <button class="filtro ${filtro === id ? 'activo' : ''}"
-            onclick="S.datos.filtroMuro='${id}';ir('muro')">${nombre}</button>`).join('')}
-    </div>
-
-    ${salas.length === 0
-      ? vacioMuro(filtro, libres.length)
-      : `<div class="rejilla-salas">${salas.map(tarjetaSala).join('')}</div>`}
-
-    ${libres.length ? `
-      <div class="seccion">
-        <h2 class="seccion-titulo">Sin sala todavía</h2>
-        <p class="seccion-sub">
-          Nadie ha abierto una sala para estos partidos. Abrirla no cuesta
-          nada y no te obliga a apostar.</p>
+      <div class="muro-tabs-compactos" role="tablist" aria-label="Explorar TandaBet">
+        <button class="muro-tab-compacto ${seccion === 'salas' ? 'activo' : ''}"
+          role="tab" aria-selected="${seccion === 'salas'}"
+          onclick="cambiarSeccionMuro('salas')">
+          Salas disponibles <b>${salas.length}</b>
+        </button>
+        <button class="muro-tab-compacto ${seccion === 'partidos' ? 'activo' : ''}"
+          role="tab" aria-selected="${seccion === 'partidos'}"
+          onclick="cambiarSeccionMuro('partidos')">
+          Partidos disponibles <b>${libres.length}</b>
+        </button>
       </div>
-      <div class="rejilla-salas">
-        ${libres.slice(0, 6).map(tarjetaOportunidad).join('')}
-      </div>
-      ${libres.length > 6 ? `
-        <button class="btn btn-plano btn-ancho" style="margin-top:12px"
-          onclick="ir('crear')">Ver los ${libres.length} partidos</button>` : ''}
-    ` : ''}
 
-    <div class="solo-angosto" style="margin-top:22px">
-      ${bloqueActividad(act.actividad ?? [], 4)}
+      <section class="muro-feed">
+        ${seccion === 'salas' ? contenidoSalas : contenidoPartidos}
+      </section>
+
+      <div class="solo-angosto muro-actividad-movil">
+        ${bloqueActividad(act.actividad ?? [], 3)}
+      </div>
+
+      ${franjaConfianza()}
     </div>
   `,
   `
-    ${bloqueActividad(act.actividad ?? [], 5)}
+    ${bloqueSaldoMuro()}
+    ${bloqueActividad(act.actividad ?? [], 3)}
     ${bloqueLigas(lig.ligas ?? [], 5)}
+    ${promoTandaBet()}
   `));
 };
 
-/**
- * La banda de portada.
- *
- * Antes ocupaba un tercio de la pantalla para decir dos frases y dos
- * números, y empujaba la primera sala fuera de la vista. Ahora es una
- * línea: la frase a la izquierda, las cifras a la derecha.
- *
- * Las cifras se quedan porque son las dos formas de participar —entrar
- * a una sala que existe, o abrir la que falta— y porque son la única
- * señal de que aquí está pasando algo.
- *
- * Ya no hay botón: «Crear» vive en el menú, dos centímetros más
- * arriba. Dos puertas a lo mismo, una encima de la otra, no duplican
- * las creaciones; solo ocupan alto.
- */
-function portada(cuantasSalas, cuantosLibres) {
+
+function selectorLigaMuro(tipo, ligas, seleccionada) {
+  if (!ligas.length) return '';
   return `
-  <section class="portada">
-    <h1>Apuesta con gente, no con una casa</h1>
-    <div class="portada-cifras">
-      <div>
-        <b>${cuantasSalas}</b>
-        <span>${cuantasSalas === 1 ? 'sala abierta' : 'salas abiertas'}</span>
-      </div>
-      <div>
-        <b>${cuantosLibres}</b>
-        <span>${cuantosLibres === 1 ? 'partido sin sala' : 'partidos sin sala'}</span>
-      </div>
-    </div>
+    <label class="muro-liga-filtro">
+      <span>Liga</span>
+      <select onchange="cambiarLigaMuro('${tipo}', this.value)"
+              aria-label="Filtrar por liga">
+        <option value="todas"${seleccionada === 'todas' ? ' selected' : ''}>Todas las ligas</option>
+        ${ligas.map(liga => `
+          <option value="${esc(liga)}"${seleccionada === liga ? ' selected' : ''}>
+            ${esc(liga)}
+          </option>`).join('')}
+      </select>
+    </label>`;
+}
+
+function cambiarLigaMuro(tipo, liga) {
+  if (tipo === 'salas') {
+    S.datos.ligaSalasMuro = liga;
+    S.datos.limiteSalas = 12;
+  } else {
+    S.datos.ligaPartidosMuro = liga;
+    S.datos.limitePartidos = 12;
+  }
+  ir('muro');
+}
+
+function cambiarSeccionMuro(seccion) {
+  S.datos.seccionMuro = seccion;
+  S.datos.limiteSalas = 12;
+  S.datos.limitePartidos = 12;
+  ir('muro');
+}
+
+function cambiarFiltroSalas(filtro) {
+  S.datos.filtroMuro = filtro;
+  S.datos.limiteSalas = 12;
+  ir('muro');
+}
+
+function mostrarMasMuro(tipo) {
+  if (tipo === 'partidos') S.datos.limitePartidos = (S.datos.limitePartidos ?? 12) + 12;
+  else S.datos.limiteSalas = (S.datos.limiteSalas ?? 12) + 12;
+  ir('muro');
+}
+
+/** Portada deportiva: imagen aprobada en alta resolución. */
+function portada() {
+  return `
+  <section class="portada portada-tandabet portada-imagen" aria-label="TandaBet · El fútbol se vive mejor cuando compites">
+    <img src="hero-tandabet.png" alt="TandaBet · El fútbol se vive mejor cuando compites">
   </section>`;
 }
 
 /**
  * Tarjeta de sala.
- *
- * Muestra un solo mercado —el que más lejos está de completarse— para
- * que la tarjeta quepa de un vistazo. El resto se ve al entrar.
+ * Muestra el mercado con mayor diferencia para entender de un vistazo
+ * dónde existe espacio disponible.
  */
 function tarjetaSala(s) {
   const mercados = s.mercados ?? [];
@@ -129,11 +190,9 @@ function tarjetaSala(s) {
   })[0];
 
   const destacada = s.destacada_hasta && new Date(s.destacada_hasta) > new Date();
-  const lleno = s.tope_participantes
-    ? Math.round((s.participantes / s.tope_participantes) * 100) : 0;
 
   return `
-  <article class="tarjeta ${destacada ? 'destacada' : ''}"
+  <article class="tarjeta sala-card-compacta ${destacada ? 'destacada' : ''}"
        onclick="ir('sala','${s.id}')" role="button" tabindex="0"
        onkeydown="if(event.key==='Enter')ir('sala','${s.id}')">
     ${destacada ? '<div class="marca-destacada">Destacada</div>' : ''}
@@ -143,37 +202,40 @@ function tarjetaSala(s) {
       <span class="chip-tiempo">${cuando(s.inicia_en)}</span>
     </div>
 
-    <h3 class="t-partido">
+    <div class="match-visual match-visual-sala">
       ${escudosPartido(s)}
-      <span>${esc(s.equipo_local)} <em>vs</em> ${esc(s.equipo_visitante)}</span>
-    </h3>
-
-    <div class="t-meta">
-      ${s.anfitrion ? `sala de <b>${esc(s.anfitrion)}</b> · ` : ''}
-      ${s.participantes} de ${s.tope_participantes}
-      <span class="t-lleno"><i style="width:${Math.min(lleno, 100)}%"></i></span>
+      <span class="match-vs" aria-hidden="true">VS</span>
+      <span class="match-nombre match-nombre-local">${esc(s.equipo_local)}</span>
+      <span class="match-nombre match-nombre-visita">${esc(s.equipo_visitante)}</span>
     </div>
 
-    ${principal ? barraBalance({
-      total_favor: principal.totalFavor,
-      total_contra: principal.totalContra,
-      etiqueta_favor: principal.etiquetaFavor,
-      etiqueta_contra: principal.etiquetaContra,
-    }) : ''}
+    <div class="sala-card-info">
+      <div class="sala-card-meta">
+        ${s.anfitrion ? `Sala de <b>${esc(s.anfitrion)}</b> · ` : ''}
+        ${s.participantes ?? 0} de ${s.tope_participantes}
+      </div>
 
-    <div class="t-pie">
-      <span>Desde ${plata(s.monto_minimo_centavos)}${
-        mercados.length > 1 ? ` · ${mercados.length} apuestas` : ''}</span>
-      <span class="t-entrar">Entrar
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2.4" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-      </span>
+      ${principal ? `<div class="sala-card-balance">${barraBalance({
+        total_favor: principal.totalFavor,
+        total_contra: principal.totalContra,
+        etiqueta_favor: principal.etiquetaFavor,
+        etiqueta_contra: principal.etiquetaContra,
+      })}</div>` : ''}
+
+      <div class="t-pie">
+        <span>Desde ${plata(s.monto_minimo_centavos)}${
+          mercados.length > 1 ? ` · ${mercados.length} apuestas` : ''}</span>
+        <span class="t-entrar">Entrar
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.4" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+        </span>
+      </div>
     </div>
   </article>`;
 }
 
 /**
- * Tarjeta de partido sin sala.
+ * Tarjeta de partido disponible para abrir una sala.
  *
  * Deliberadamente parecida a la de sala pero sin barra de balance: no
  * hay nada que balancear todavía. El hueco donde iría la barra lo
@@ -181,7 +243,7 @@ function tarjetaSala(s) {
  */
 function tarjetaOportunidad(p) {
   return `
-  <article class="tarjeta oportunidad"
+  <article class="tarjeta oportunidad oportunidad-card-compacta"
        onclick="ir('crear')" role="button" tabindex="0"
        onkeydown="if(event.key==='Enter')ir('crear')">
     <div class="t-cab">
@@ -189,21 +251,18 @@ function tarjetaOportunidad(p) {
       <span class="chip-tiempo">${cuando(p.inicia_en)}</span>
     </div>
 
-    <h3 class="t-partido">
+    <div class="match-visual match-visual-partido">
       ${escudosPartido(p)}
-      <span>${esc(p.equipo_local)} <em>vs</em> ${esc(p.equipo_visitante)}</span>
-    </h3>
-
-    <div class="invitacion">
-      <span>Nadie ha abierto sala</span>
-      <b>Sé el primero</b>
+      <span class="match-vs" aria-hidden="true">VS</span>
+      <span class="match-nombre match-nombre-local">${esc(p.equipo_local)}</span>
+      <span class="match-nombre match-nombre-visita">${esc(p.equipo_visitante)}</span>
     </div>
 
-    <div class="t-pie">
+    <div class="t-pie partido-card-pie">
       <span>${(p.mercados ?? []).length} tipo(s) de apuesta</span>
-      <span class="t-entrar">Abrir sala
+      <span class="t-entrar">Ver mercados
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          stroke-width="2.4" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
       </span>
     </div>
   </article>`;
@@ -212,15 +271,62 @@ function tarjetaOportunidad(p) {
 function vacioMuro(filtro, libres) {
   return `
   <div class="vacio">
-    <h3>${filtro === 'faltan' ? 'Todas están completas' : 'Todavía no hay salas'}</h3>
+    <h3>${filtro === 'faltan' ? 'No hay salas con cupos ahora' : 'No hay salas disponibles'}</h3>
     <p>${filtro === 'faltan'
-      ? 'Nadie necesita contraparte ahora mismo.'
-      : 'Sé el primero: elige un partido y define la apuesta.'}
+      ? 'Las salas visibles ya están completas o no admiten nuevas posiciones.'
+      : 'Cuando haya salas abiertas, aparecerán aquí.'}
       ${libres > 0
-        ? ` Hay ${libres} partido(s) esperando que alguien abra la suya.`
+        ? ` Hay ${libres} partido(s) disponibles para crear una sala.`
         : ''}</p>
     <button class="btn btn-favor" onclick="ir('crear')">Crear una sala</button>
   </div>`;
+}
+
+
+function bloqueSaldoMuro() {
+  if (!haySesion()) {
+    return `
+    <div class="muro-wallet muro-wallet-visitante">
+      <div class="login-note-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><circle cx="24" cy="15" r="8"/><path d="M9 42c1-12 7-18 15-18s14 6 15 18"/></svg>
+      </div>
+      <div><b>Inicia sesión</b><p>para consultar tu saldo.</p></div>
+    </div>`;
+  }
+  const disponible = S.saldo?.disponibleCentavos ?? 0;
+  const retenido = S.saldo?.retenidoCentavos ?? 0;
+  return `
+  <div class="muro-wallet">
+    <div class="muro-wallet-cab">
+      <span class="wallet-icono" aria-hidden="true">
+        <svg viewBox="0 0 48 48"><path d="M7 14h28a5 5 0 0 1 5 5v19H9a5 5 0 0 1-5-5V11a5 5 0 0 1 5-5h25v8"/><path d="M31 22h12v10H31a5 5 0 0 1 0-10z"/><circle cx="34" cy="27" r="1.5"/></svg>
+      </span>
+      <div><small>Saldo disponible</small><strong>${plata(disponible)}</strong></div>
+      <button class="wallet-recargar" onclick="ir('billetera')">+ Recargar</button>
+    </div>
+    <div class="wallet-enjuego">En juego: <b>${plata(retenido)}</b></div>
+  </div>`;
+}
+
+function promoTandaBet() {
+  return `
+  <button class="muro-promo muro-promo-referencia" onclick="ir('crear')" aria-label="Crear sala ahora">
+    <img src="promo-tandabet.png" alt="Tu juego, tus reglas, tu sala">
+  </button>`;
+}
+
+function franjaConfianza() {
+  return `<div class="muro-confianza-imagen"><img src="confianza-tandabet.png" alt="Seguridad, sin comisiones, pagos al instante, ranking y disponibilidad multidispositivo"></div>`;
+}
+
+function iconoTrust(tipo){
+  const m={
+    shield:'<svg viewBox="0 0 48 48"><path d="M24 5 39 11v11c0 10-6 17-15 21C15 39 9 32 9 22V11L24 5z"/><path d="m18 24 4 4 8-9"/></svg>',
+    people:'<svg viewBox="0 0 48 48"><circle cx="18" cy="15" r="6"/><circle cx="31" cy="15" r="6"/><path d="M5 40c1-10 6-15 13-15s12 5 13 15M28 27c7 0 12 5 13 13"/></svg>',
+    bolt:'<svg viewBox="0 0 48 48"><path d="M28 4 10 28h12l-2 16 18-25H26z"/></svg>',
+    cup:'<svg viewBox="0 0 48 48"><path d="M16 7h16v11c0 8-4 13-8 13s-8-5-8-13V7z"/><path d="M16 11H8c0 9 4 14 10 14M32 11h8c0 9-4 14-10 14M24 31v7M16 41h16"/></svg>',
+    devices:'<svg viewBox="0 0 48 48"><rect x="4" y="9" width="28" height="22" rx="2"/><path d="M14 38h8M18 31v7"/><rect x="30" y="17" width="14" height="25" rx="2"/></svg>'
+  }; return `<span class="trust-icon">${m[tipo]}</span>`;
 }
 
 // ---------------------------------------------------------------------
@@ -237,21 +343,22 @@ function vacioMuro(filtro, libres) {
  * todas»: la columna tiene altura fija, así que una lista larga la
  * haría crecer hasta el final de la página.
  */
-function bloqueActividad(lista, tope) {
+function bloqueActividad(lista, tope = 3) {
   const agrupada = agruparActividad(lista);
   const hay = agrupada.length > 0;
+  const totalReal = lista.length;
 
   return `
   <div class="bloque">
-    <h3>Qué está pasando ${hay ? `<span>${agrupada.length}</span>` : ''}</h3>
+    <h3><i class="side-title-icon pulse">⌁</i> Última jugada ${hay ? `<span>${totalReal}</span>` : ''}</h3>
     ${hay
       ? agrupada.slice(0, tope).map(filaActividad).join('')
       : `<div class="bloque-vacio">
            Cuando alguien abra una sala o gane una apuesta, aparece aquí.
          </div>`}
-    ${agrupada.length > tope
-      ? `<button class="bloque-mas" onclick="verTodaActividad()">
-           Ver las ${agrupada.length}
+    ${totalReal > 3
+      ? `<button class="bloque-mas bloque-mas-actividad" onclick="verTodaActividad()">
+           Ver más
          </button>` : ''}
   </div>`;
 }
@@ -284,7 +391,7 @@ function bloqueLigas(lista, tope) {
   const partidos = lista.reduce((t, l) => t + l.partidos, 0);
   return `
   <div class="bloque">
-    <h3>Dónde hay partidos ${hay ? `<span>${partidos}</span>` : ''}</h3>
+    <h3><i class="side-title-icon live">◉</i> Partidos en vivo ${hay ? `<span>${partidos}</span>` : ''}</h3>
     ${hay
       ? lista.slice(0, tope).map(filaLiga).join('')
       : `<div class="bloque-vacio">
@@ -318,7 +425,7 @@ function filaLiga(l) {
  * salas nuevas, no quién ganó ayer.
  */
 function verTodaActividad(filtro = 'todo') {
-  const lista = agruparActividad(S.datos.actividad ?? []);
+  const lista = S.datos.actividad ?? [];
   const filtrada = filtro === 'todo' ? lista : lista.filter(a => a.tipo === filtro);
 
   const tipos = [
@@ -328,7 +435,7 @@ function verTodaActividad(filtro = 'todo') {
     ['RESULTADO_GANADOR', 'Ganadores'],
   ].filter(([id]) => id === 'todo' || lista.some(a => a.tipo === id));
 
-  hoja('Qué está pasando', `${lista.length} en las últimas horas`, `
+  hoja('Última jugada', `${lista.length} en las últimas horas`, `
     <div class="filtros">
       ${tipos.map(([id, nombre]) => `
         <button class="filtro ${filtro === id ? 'activo' : ''}"
@@ -349,7 +456,7 @@ function verTodasLigas(filtro = 'todo') {
 
   const deportes = [...new Set(lista.map(l => l.deporte_clave))];
 
-  hoja('Dónde hay partidos', `${lista.length} liga(s) con partidos por jugarse`, `
+  hoja('Partidos en vivo', `${lista.length} liga(s) con partidos por jugarse`, `
     ${deportes.length > 1 ? `
       <div class="filtros">
         <button class="filtro ${filtro === 'todo' ? 'activo' : ''}"
@@ -402,9 +509,12 @@ function filaActividad(a) {
   const clic = a.sala_id
     ? `onclick="ir('sala','${a.sala_id}')" style="cursor:pointer"` : '';
 
+  // Balón de fútbol blanco/negro, sin caja exterior ni círculo verde.
+  const balon = `<img class="actividad-balon" src="balon-futbol.png" alt="">`;
+
   return `
   <div class="actividad" ${clic}>
-    <div class="punto ${clase}">${simbolo}</div>
+    <div class="actividad-icono" aria-hidden="true">${balon}</div>
     <div class="actividad-texto">
       ${texto}
       <time>${cuandoPaso(a.fecha_crea)}</time>

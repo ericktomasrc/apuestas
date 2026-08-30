@@ -470,12 +470,27 @@ async function main(): Promise<void> {
     const soporte = roles.json().roles.find((r: { clave: string }) => r.clave === 'SOPORTE');
 
     const empleado = await cuentaDelEquipo(jefeToken, [soporte.id]);
+    // Las cuentas creadas desde el panel no declaran país en este helper.
+    // Para probar PERSONAL_NO_APUESTA debemos superar primero la validación
+    // de moneda/país de la sala.
+    await pool.query(`UPDATE usuarios SET pais = 'PE' WHERE id = $1`, [empleado.id]);
     invalidarPermisos(empleado.id);
     igual(await esPersonal(empleado.id), true, 'es personal: ');
 
     await depositar(empleado.id, 50000, `${P}:dep:emp`);
 
-    // Sala para intentar
+    // Sala para intentar. El anfitrión es un usuario normal y publica
+    // monto primero; así esta sección prueba PERSONAL_NO_APUESTA y no
+    // falla por la regla de monto máximo del creador.
+    const anfitrion = await app.inject({
+      method: 'POST', url: '/auth/registro',
+      payload: {
+        alias: `${P}host`, email: `${P}host@t.pe`,
+        password: 'contrasena123', fechaNacimiento: '1990-01-01',
+      },
+    });
+    await depositar(anfitrion.json().usuario.id, 50000, `${P}:dep:host`);
+
     const dep = await pool.query(`SELECT id FROM deportes WHERE clave='FUTBOL'`);
     const liga = await pool.query(
       `INSERT INTO ligas (deporte_id, api_id, nombre, pais)
@@ -493,7 +508,7 @@ async function main(): Promise<void> {
       `INSERT INTO salas (codigo, partido_id, anfitrion_id, tope_participantes,
                           monto_minimo_centavos, pais)
        VALUES ($1,$2,$3,10,1000,'PE') RETURNING id`,
-      [`${P}s`, partido.rows[0].id, jefeId],
+      [`${P}s`, partido.rows[0].id, anfitrion.json().usuario.id],
     );
     const mercado = await pool.query(
       `INSERT INTO mercados (sala_id, tipo_mercado, linea, etiqueta_favor, etiqueta_contra)
@@ -501,11 +516,18 @@ async function main(): Promise<void> {
       [sala.rows[0].id],
     );
 
+    const propuesta = await app.inject({
+      method: 'POST', url: `/mercados/${mercado.rows[0].id}/apostar`,
+      headers: { ...auth(anfitrion.json().token), 'idempotency-key': `${P}-host-1` },
+      payload: { lado: 'A_FAVOR', montoCentavos: 10000 },
+    });
+    igual(propuesta.statusCode, 201, 'anfitrión publica monto: ');
+
     const suToken = (await ingresar(empleado.email, empleado.clave)).cuerpo.token as string;
     const r = await app.inject({
       method: 'POST', url: `/mercados/${mercado.rows[0].id}/apostar`,
       headers: { ...auth(suToken), 'idempotency-key': `${P}-emp-1` },
-      payload: { lado: 'A_FAVOR', montoCentavos: 2000 },
+      payload: { lado: 'EN_CONTRA', montoCentavos: 2000 },
     });
 
     // Quien puede anular una sala no puede tener dinero en juego:
@@ -530,13 +552,14 @@ async function main(): Promise<void> {
     const r = await app.inject({
       method: 'POST', url: `/mercados/${S_mercado}/apostar`,
       headers: { ...auth(normal.json().token), 'idempotency-key': `${P}-nor-1` },
-      payload: { lado: 'A_FAVOR', montoCentavos: 2000 },
+      payload: { lado: 'EN_CONTRA', montoCentavos: 2000 },
     });
     igual(r.statusCode, 201, 'estado: ');
   });
 
   await prueba('quitarle el rol le devuelve el derecho a apostar', async () => {
     const empleado = await cuentaDelEquipo(jefeToken);
+    await pool.query(`UPDATE usuarios SET pais = 'PE' WHERE id = $1`, [empleado.id]);
     await depositar(empleado.id, 50000, `${P}:dep:ex`);
     const suToken = (await ingresar(empleado.email, empleado.clave)).cuerpo.token as string;
 

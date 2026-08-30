@@ -22,6 +22,7 @@ import {
   resolverMercado,
   config,
   invalidarConfig,
+  ajustarApuestaCreador,
 } from './../servicios/salas.servicio.js';
 import { invalidarPaises } from './../servicios/paises.servicio.js';
 import { limpiarDatosDePrueba } from './limpieza.js';
@@ -277,6 +278,69 @@ async function main(): Promise<void> {
     await apostar(a, mercadoId, 'A_FAVOR', 1000);
     await apostar(b, mercadoId, 'EN_CONTRA', 1000);
     await lanza('SALA_LLENA', () => apostar(c, mercadoId, 'A_FAVOR', 1000));
+  });
+
+  await prueba('max_participantes_sala limita aunque la sala pida más', async () => {
+    await pool.query(
+      `UPDATE configuracion SET valor='3' WHERE clave='max_participantes_sala'`,
+    );
+    invalidarConfig();
+    try {
+      const a = await usuario();
+      const b = await usuario();
+      const c = await usuario();
+      const d = await usuario();
+      const { mercadoId } = await sala(a, await partido(), { tope: 10 });
+      await apostar(a, mercadoId, 'A_FAVOR', 1000);
+      await apostar(b, mercadoId, 'EN_CONTRA', 1000);
+      await apostar(c, mercadoId, 'A_FAVOR', 1000);
+      await lanza('SALA_LLENA', () => apostar(d, mercadoId, 'EN_CONTRA', 1000));
+    } finally {
+      await pool.query(
+        `UPDATE configuracion SET valor='10' WHERE clave='max_participantes_sala'`,
+      );
+      invalidarConfig();
+    }
+  });
+
+  await prueba('el monto en centavos debe ser entero', async () => {
+    const a = await usuario();
+    const { mercadoId } = await sala(a, await partido());
+    await lanza('MONTO_FUERA_DE_RANGO', () => apostar(a, mercadoId, 'A_FAVOR', 1000.5));
+  });
+
+  await prueba('el anfitrión puede aumentar su propuesta respetando los límites', async () => {
+    const a = await usuario();
+    const { mercadoId } = await sala(a, await partido());
+    await pool.query(`UPDATE mercados SET usuario_crea=$2 WHERE id=$1`, [mercadoId, a]);
+    await apostar(a, mercadoId, 'A_FAVOR', 1500);
+    await ajustarApuestaCreador(a, mercadoId, 2000, `${P}:sube-ok:${++n}`);
+    const pos = await pool.query(
+      `SELECT monto_centavos FROM v_posiciones WHERE mercado_id=$1 AND usuario_id=$2`,
+      [mercadoId, a],
+    );
+    igual(Number(pos.rows[0].monto_centavos), 2000, 'aumentó su propuesta: ');
+  });
+
+  await prueba('el anfitrión solo puede bajar hasta lo ya cubierto por el otro lado', async () => {
+    const a = await usuario();
+    const b = await usuario();
+    const { mercadoId } = await sala(a, await partido(), { minimo: 500 });
+    await pool.query(`UPDATE mercados SET usuario_crea=$2 WHERE id=$1`, [mercadoId, a]);
+
+    await apostar(a, mercadoId, 'A_FAVOR', 1500);
+    await apostar(b, mercadoId, 'EN_CONTRA', 1000);
+
+    await lanza('MONTO_FUERA_DE_RANGO', () =>
+      ajustarApuestaCreador(a, mercadoId, 900, `${P}:baja-mal:${++n}`),
+    );
+    await ajustarApuestaCreador(a, mercadoId, 1000, `${P}:baja-ok:${++n}`);
+
+    const pos = await pool.query(
+      `SELECT monto_centavos FROM v_posiciones WHERE mercado_id=$1 AND usuario_id=$2`,
+      [mercadoId, a],
+    );
+    igual(Number(pos.rows[0].monto_centavos), 1000, 'bajó exactamente hasta lo cubierto: ');
   });
 
   await prueba('no se puede entrar a menos de 15 min del partido', async () => {

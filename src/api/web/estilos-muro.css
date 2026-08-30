@@ -3552,33 +3552,2285 @@ body.pantalla-registro-activa .entrada-link[style]{
   }
 }
 
-/* V26 - registro: fondo limpio sin duplicar formulario */
-@media (min-width:1100px){
-  body.pantalla-registro-activa,
-  body.pantalla-registro-activa #app{
-    height:100vh!important;
-    min-height:100vh!important;
-    overflow:hidden!important;
+
+/* ============================================================
+   DETALLE DE SALA — REDISEÑO TANDABET
+   ============================================================ */
+.sala-detalle{
+  --sd-bg:#020806;
+  --sd-card:rgba(3,13,8,.92);
+  --sd-card2:rgba(6,18,12,.88);
+  --sd-line:rgba(122,229,73,.22);
+  --sd-green:#7be545;
+  --sd-green2:#4fbe2b;
+  --sd-text:#f5f8f5;
+  --sd-muted:#9aa79e;
+  color:var(--sd-text);
+  margin:-18px -18px 0;
+  padding:0 0 40px;
+  background:#020806;
+}
+
+.sala-hero{
+  min-height:430px;
+  position:relative;
+  border-bottom:1px solid var(--sd-line);
+  background:
+    linear-gradient(180deg,rgba(0,7,5,.18),rgba(1,8,5,.52) 72%,#020806 100%),
+    linear-gradient(90deg,rgba(0,0,0,.25),transparent 25%,transparent 75%,rgba(0,0,0,.28)),
+    url('sala-futbol.jpg') center 52%/cover no-repeat;
+  overflow:hidden;
+}
+.sala-hero::after{
+  content:"";
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 50% 70%,rgba(103,224,50,.10),transparent 32%);
+  pointer-events:none;
+}
+.sala-volver{
+  position:absolute;left:22px;top:22px;z-index:3;
+  border:1px solid rgba(123,229,69,.42);
+  background:rgba(2,10,6,.72);color:#eef6ef;
+  border-radius:10px;padding:10px 14px;cursor:pointer;
+}
+.sala-volver:hover{border-color:var(--sd-green);background:rgba(8,27,14,.88)}
+
+.sala-hero-centro{
+  position:relative;z-index:2;
+  max-width:900px;margin:auto;padding:36px 26px 115px;text-align:center;
+}
+.sala-deporte{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 14px;border-radius:999px;
+  background:rgba(2,8,5,.78);border:1px solid rgba(255,255,255,.12);
+  font-size:12px;font-weight:800;
+}
+.sala-liga{margin-top:8px;font-size:14px;color:#d9e4dc}
+
+.sala-enfrentamiento{
+  margin:20px auto 0;
+  display:grid;grid-template-columns:1fr 150px 1fr;
+  gap:28px;align-items:center;max-width:780px;
+}
+.sala-equipo{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.sala-escudo{
+  width:92px;height:92px;border-radius:50%;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,#10271a,#07110c);
+  border:2px solid var(--sd-green);
+  box-shadow:0 0 0 5px rgba(0,0,0,.22),0 18px 40px rgba(0,0,0,.35);
+  font-size:27px;font-weight:900;
+}
+.sala-equipo strong{max-width:260px;font-size:20px;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis}
+.sala-equipo > span{
+  font-size:12px;color:#c3cec6;background:rgba(0,0,0,.55);
+  padding:5px 11px;border-radius:999px
+}
+.sala-vs{display:flex;flex-direction:column;align-items:center;gap:7px}
+.sala-vs-linea{display:flex;align-items:center;gap:10px}
+.sala-vs-linea i{display:block;width:30px;height:2px;background:var(--sd-green)}
+.sala-vs-linea b{font-size:32px}
+.sala-vs > strong{background:rgba(0,0,0,.68);padding:7px 13px;border-radius:999px;font-size:15px}
+.sala-vs small{color:#d7e2da}
+
+.sala-resumen{
+  position:absolute;z-index:3;left:24px;right:24px;bottom:18px;
+  display:grid;grid-template-columns:1.3fr repeat(4,1fr);
+  border:1px solid var(--sd-line);border-radius:14px;
+  background:rgba(1,9,5,.84);backdrop-filter:blur(12px);
+  overflow:hidden;
+}
+.sala-resumen-item{
+  min-height:72px;display:flex;align-items:center;gap:11px;padding:12px 18px;
+  border-right:1px solid rgba(255,255,255,.08)
+}
+.sala-resumen-item:last-child{border-right:0}
+.sala-resumen-item > span{color:var(--sd-green);font-size:22px}
+.sala-resumen-item small{display:block;color:#9daaa1;font-size:11px;margin-bottom:3px}
+.sala-resumen-item strong{display:block;font-size:14px}
+.sala-avatar{
+  width:34px;height:34px;border-radius:50%;display:grid!important;place-items:center;
+  background:#336d17;color:#dfffcf!important;font-size:11px!important;font-weight:800
+}
+
+.sala-layout{
+  max-width:1500px;margin:18px auto 0;padding:0 18px;
+  display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start
+}
+.sala-principal,.sala-lateral{min-width:0}
+.sala-tabs{
+  display:flex;gap:28px;align-items:center;border:1px solid var(--sd-line);
+  background:rgba(3,12,8,.82);border-radius:14px 14px 0 0;padding:0 18px;height:55px
+}
+.sala-tabs button{
+  height:100%;border:0;background:transparent;color:#8e9c93;cursor:default;font-weight:700
+}
+.sala-tabs button.activo{color:#fff;border-bottom:2px solid var(--sd-green)}
+.sala-aviso{
+  border:1px solid var(--sd-line);border-top:0;padding:11px 16px;
+  color:#aebbb2;background:rgba(4,13,9,.68);font-size:12.5px
+}
+.sala-mercados-titulo{font-size:15px;font-weight:800;margin:18px 2px 10px}
+.sala-mercados-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.sala-mercado{
+  min-width:0;border:1px solid rgba(255,255,255,.10);border-radius:12px;
+  background:linear-gradient(180deg,rgba(8,16,12,.93),rgba(4,11,7,.95));
+  padding:13px
+}
+.sala-mercado-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.sala-mercado-head h3{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.02em}
+.sala-estrella{font-size:20px;color:var(--sd-green)}
+.sala-opciones{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.sala-opcion{
+  min-height:70px;border:1px solid rgba(255,255,255,.12);border-radius:9px;
+  background:#07110c;color:#fff;text-align:left;padding:11px 12px;cursor:pointer;
+  display:flex;flex-direction:column;justify-content:space-between;gap:8px
+}
+.sala-opcion:hover:not(:disabled){
+  border-color:rgba(123,229,69,.65);background:#0a1b10;transform:translateY(-1px)
+}
+.sala-opcion:disabled{cursor:default;opacity:.65}
+.sala-opcion span{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sala-opcion b{align-self:flex-end;color:var(--sd-green);font-size:18px}
+.sala-participantes{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;padding-top:9px;
+  border-top:1px solid rgba(255,255,255,.08)
+}
+.sala-chip{
+  display:inline-block;margin:2px 3px 2px 0;padding:4px 7px;border-radius:999px;
+  font-size:10.5px;background:#111b15;color:#aebbb2
+}
+.sala-chip.yo{background:rgba(123,229,69,.15);color:#cfffba}
+.sala-sin-gente{font-size:10.5px;color:#69766e}
+.sala-mi-posicion,.sala-ganador{
+  margin-top:10px;padding:8px 10px;border-radius:8px;background:rgba(123,229,69,.10);
+  color:#cfe3d4;font-size:11px
+}
+.sala-completar{
+  width:100%;margin-top:9px;border:1px solid rgba(123,229,69,.4);border-radius:8px;
+  background:transparent;color:var(--sd-green);padding:8px;cursor:pointer;font-weight:700
+}
+.sala-acciones{display:flex;gap:10px;margin-top:14px}
+
+.sala-lateral{display:grid;gap:14px}
+.sala-panel{
+  border:1px solid var(--sd-line);border-radius:14px;padding:18px;
+  background:linear-gradient(180deg,rgba(5,14,9,.94),rgba(3,10,7,.96))
+}
+.sala-panel h3{font-size:12px;margin:0 0 15px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.09)}
+.sala-info-fila{display:flex;flex-direction:column;gap:3px;margin-bottom:13px}
+.sala-info-fila span{color:#8e9c93;font-size:11px}
+.sala-info-fila b{font-size:14px}
+.sala-codigo{color:var(--sd-green)!important;font-size:21px!important}
+.sala-regla{color:#a4b0a8;line-height:1.45;font-size:11.5px;margin:18px 0 0}
+.sala-panel-apuesta{text-align:center;padding:20px 18px}
+.sala-vacia-icono{font-size:38px;color:var(--sd-green);margin:6px 0 12px}
+.sala-panel-apuesta strong{display:block;font-size:13px;line-height:1.35}
+.sala-panel-apuesta p{color:#8f9b93;font-size:11.5px}
+.sala-potencial{text-align:center}
+.sala-potencial > span{display:block;color:#a9b4ac;font-size:12px}
+.sala-potencial > b{display:block;color:var(--sd-green);font-size:25px;margin:8px 0 12px}
+.sala-potencial button{
+  width:100%;border:0;border-radius:9px;padding:12px;background:#33541f;color:#718168
+}
+
+@media(max-width:1180px){
+  .sala-mercados-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sala-resumen{grid-template-columns:repeat(3,1fr)}
+  .sala-resumen-item:nth-child(3){border-right:0}
+  .sala-resumen-item:nth-child(n+4){display:none}
+}
+@media(max-width:920px){
+  .sala-layout{grid-template-columns:1fr}
+  .sala-lateral{grid-template-columns:repeat(3,1fr)}
+  .sala-enfrentamiento{grid-template-columns:1fr 105px 1fr;gap:12px}
+}
+@media(max-width:700px){
+  .sala-detalle{margin:-12px -12px 0}
+  .sala-hero{min-height:530px}
+  .sala-hero-centro{padding-top:74px}
+  .sala-enfrentamiento{grid-template-columns:1fr 74px 1fr}
+  .sala-escudo{width:68px;height:68px;font-size:20px}
+  .sala-equipo strong{font-size:13px}
+  .sala-vs-linea i{width:12px}.sala-vs-linea b{font-size:22px}
+  .sala-resumen{grid-template-columns:1fr 1fr;left:12px;right:12px}
+  .sala-resumen-item:nth-child(n+3){display:none}
+  .sala-mercados-grid{grid-template-columns:1fr}
+  .sala-lateral{grid-template-columns:1fr}
+}
+
+
+/* ============================================================
+   DETALLE DE SALA V2 — CORRECCIÓN DE ESTRUCTURA
+   La pantalla de sala ocupa todo el ancho y usa la misma cabecera
+   oscura de TandaBet. No afecta la lógica ni los endpoints.
+   ============================================================ */
+
+body.sala-activa{
+  margin:0!important;
+  background:#020806!important;
+  color:#f3f8f4!important;
+}
+
+body.sala-activa main{
+  padding:0!important;
+  margin:0!important;
+  width:100%!important;
+  max-width:none!important;
+  background:#020806!important;
+  min-height:calc(100vh - 72px)!important;
+}
+
+body.sala-activa main > .envoltura{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+}
+
+/* Cabecera igual al muro */
+body.sala-activa header.superior{
+  position:sticky!important;
+  top:0!important;
+  z-index:50!important;
+  height:72px!important;
+  display:flex!important;
+  align-items:center!important;
+  background:#020906!important;
+  border-bottom:1px solid rgba(96,210,86,.22)!important;
+  box-shadow:0 6px 24px rgba(0,0,0,.24)!important;
+  backdrop-filter:blur(14px)!important;
+}
+
+body.sala-activa .superior-fila{
+  width:100%!important;
+  max-width:1600px!important;
+  height:72px!important;
+  margin:0 auto!important;
+  padding:8px 18px!important;
+  display:grid!important;
+  grid-template-columns:310px 1fr auto!important;
+  align-items:center!important;
+  gap:20px!important;
+}
+
+body.sala-activa .marca{
+  min-width:0!important;
+  height:58px!important;
+  padding:0!important;
+  justify-content:flex-start!important;
+  background:transparent!important;
+  border:0!important;
+}
+
+body.sala-activa .marca-logo-referencia{
+  display:block!important;
+  width:268px!important;
+  height:58px!important;
+  object-fit:contain!important;
+  object-position:left center!important;
+}
+
+body.sala-activa .marca svg,
+body.sala-activa .marca-nombre{
+  display:none!important;
+}
+
+body.sala-activa .nav-escritorio{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  min-width:0!important;
+}
+
+body.sala-activa .nav-escritorio a{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  min-height:38px!important;
+  padding:0 16px!important;
+  border-radius:22px!important;
+  color:#dce5df!important;
+  font-size:13px!important;
+  font-weight:700!important;
+  text-decoration:none!important;
+  white-space:nowrap!important;
+}
+
+body.sala-activa .nav-escritorio a:hover{
+  color:#fff!important;
+  background:rgba(255,255,255,.045)!important;
+}
+
+body.sala-activa .nav-escritorio a:first-child{
+  background:linear-gradient(180deg,#164d2b,#0d351d)!important;
+  border:1px solid #2b7041!important;
+  color:#fff!important;
+}
+
+body.sala-activa .nav-escritorio svg{
+  width:18px!important;
+  height:18px!important;
+}
+
+body.sala-activa .superior-der{
+  margin-left:auto!important;
+}
+
+body.sala-activa .saldo-chip{
+  background:#07170e!important;
+  border:1px solid rgba(108,216,88,.26)!important;
+  color:#fff!important;
+  border-radius:999px!important;
+  padding:8px 14px!important;
+}
+
+body.sala-activa .yo{
+  width:36px!important;
+  height:36px!important;
+  background:#e9f6ed!important;
+  color:#28774d!important;
+  border-color:#d9e8de!important;
+}
+
+/* El nav inferior queda solo para móvil. */
+@media(min-width:760px){
+  body.sala-activa nav.inferior{
+    display:none!important;
   }
-  body.pantalla-registro-activa .entrada.entrada-tandabet{
-    height:100vh!important;
-    min-height:100vh!important;
-    box-sizing:border-box!important;
-    background-image:linear-gradient(90deg,rgba(0,6,4,0) 0%,rgba(0,6,4,0) 60%,rgba(0,6,4,.10) 72%,rgba(0,6,4,.30) 100%),url('registro-fondo.png')!important;
-    background-size:cover!important;
-    background-position:center center!important;
-    background-repeat:no-repeat!important;
+}
+
+/* Hero más ancho y parecido al mockup. */
+body.sala-activa .sala-detalle{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+}
+
+body.sala-activa .sala-hero{
+  min-height:445px!important;
+  width:100%!important;
+  border-radius:0!important;
+}
+
+body.sala-activa .sala-hero-centro{
+  max-width:1040px!important;
+}
+
+body.sala-activa .sala-resumen{
+  left:3%!important;
+  right:3%!important;
+}
+
+body.sala-activa .sala-layout{
+  width:calc(100% - 36px)!important;
+  max-width:1560px!important;
+  margin:18px auto 0!important;
+  padding:0!important;
+  grid-template-columns:minmax(0,1fr) 320px!important;
+  gap:18px!important;
+}
+
+body.sala-activa .sala-principal{
+  min-width:0!important;
+}
+
+body.sala-activa .sala-lateral{
+  min-width:0!important;
+  position:sticky!important;
+  top:88px!important;
+}
+
+/* Pantallas intermedias */
+@media(max-width:1180px){
+  body.sala-activa .superior-fila{
+    grid-template-columns:250px 1fr auto!important;
   }
-  body.pantalla-registro-activa .entrada-tandabet .entrada-caja{
-    height:100%!important;
+  body.sala-activa .marca-logo-referencia{
+    width:225px!important;
+  }
+  body.sala-activa .nav-escritorio a{
+    padding:0 10px!important;
+    font-size:12px!important;
+  }
+  body.sala-activa .sala-layout{
+    grid-template-columns:minmax(0,1fr) 285px!important;
+  }
+}
+
+/* Móvil */
+@media(max-width:759px){
+  body.sala-activa header.superior{
+    height:60px!important;
+  }
+
+  body.sala-activa .superior-fila{
+    height:60px!important;
     display:flex!important;
-    align-items:center!important;
-    justify-content:flex-end!important;
+    padding:6px 12px!important;
   }
-  body.pantalla-registro-activa .entrada-tandabet .entrada-formulario{
-    width:min(100%,400px)!important;
-    margin-right:clamp(8px,1.5vw,26px)!important;
-    position:relative!important;
-    z-index:2!important;
+
+  body.sala-activa .marca-logo-referencia{
+    width:185px!important;
+    height:48px!important;
   }
+
+  body.sala-activa .nav-escritorio{
+    display:none!important;
+  }
+
+  body.sala-activa nav.inferior{
+    display:block!important;
+  }
+
+  body.sala-activa .sala-layout{
+    width:100%!important;
+    grid-template-columns:1fr!important;
+    padding:0 12px!important;
+  }
+
+  body.sala-activa .sala-lateral{
+    position:static!important;
+  }
+}
+
+
+/* ============================================================
+   SALA V3 — AJUSTES DE INTERACCIÓN Y PANEL LATERAL
+   ============================================================ */
+
+/* El menú de cuenta debe seguir al header sticky durante el scroll. */
+body.muro-activo .menu-cuenta,
+body.sala-activa .menu-cuenta{
+  position:fixed!important;
+  top:78px!important;
+  right:max(18px, calc((100vw - 1510px) / 2 + 18px))!important;
+  z-index:120!important;
+  min-width:260px!important;
+  background:#f7f8f7!important;
+  color:#152018!important;
+  border:1px solid #d8dfda!important;
+  box-shadow:0 16px 42px rgba(0,0,0,.28)!important;
+}
+
+/* Estado habilitado / bloqueado de cada lado del mercado. */
+body.sala-activa .sala-opcion{
+  position:relative;
+  transition:border-color .14s ease, background .14s ease, opacity .14s ease;
+}
+
+body.sala-activa .sala-opcion.habilitada{
+  opacity:1!important;
+  cursor:pointer!important;
+  border-color:rgba(112,220,78,.30)!important;
+}
+
+body.sala-activa .sala-opcion.habilitada:hover{
+  border-color:#69db43!important;
+  background:#0b1c11!important;
+}
+
+body.sala-activa .sala-opcion.bloqueada{
+  opacity:.40!important;
+  cursor:not-allowed!important;
+  filter:saturate(.45);
+}
+
+body.sala-activa .sala-opcion.bloqueada b{
+  color:#738078!important;
+}
+
+body.sala-activa .sala-bloqueo{
+  display:block;
+  margin-top:2px;
+  color:#738078;
+  font-size:9px;
+  font-weight:600;
+}
+
+/* El lado derecho se distingue sutilmente sin cambiar la lógica. */
+body.sala-activa .sala-opcion-contra.habilitada{
+  border-color:rgba(74,137,224,.34)!important;
+}
+body.sala-activa .sala-opcion-contra.habilitada:hover{
+  border-color:rgba(82,151,242,.78)!important;
+}
+
+/* Panel de selección real del usuario. */
+body.sala-activa .sala-panel-apuesta{
+  text-align:left!important;
+}
+
+body.sala-activa .sala-panel-apuesta > .sala-vacia-icono,
+body.sala-activa .sala-panel-apuesta > p{
+  text-align:center;
+}
+
+body.sala-activa .sala-panel-apuesta > strong{
+  text-align:center;
+}
+
+body.sala-activa .sala-seleccion-lista{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+body.sala-activa .sala-seleccion-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:11px 10px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:9px;
+  background:#07120c;
+}
+
+body.sala-activa .sala-seleccion-item > div{
+  min-width:0;
+}
+
+body.sala-activa .sala-seleccion-item small{
+  display:block;
+  margin-bottom:3px;
+  color:#7e8d83;
+  font-size:9.5px;
+  text-transform:uppercase;
+}
+
+body.sala-activa .sala-seleccion-item strong{
+  display:block!important;
+  text-align:left!important;
+  color:#edf6ef;
+  font-size:12px!important;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+body.sala-activa .sala-seleccion-item > b{
+  flex:0 0 auto;
+  color:#72e847;
+  font-size:14px;
+}
+
+body.sala-activa .sala-total-apostado{
+  text-align:center;
+}
+
+body.sala-activa .sala-total-apostado > span{
+  display:block;
+  color:#9aa89f;
+  font-size:11px;
+  font-weight:700;
+}
+
+body.sala-activa .sala-total-apostado > b{
+  display:block;
+  margin:8px 0 3px;
+  color:#72e847;
+  font-size:28px;
+}
+
+body.sala-activa .sala-total-apostado > small{
+  color:#78867d;
+  font-size:10.5px;
+}
+
+/* Ya no existe el bloque duplicado "Información de la sala" del sidebar. */
+body.sala-activa .sala-lateral{
+  align-content:start!important;
+}
+
+@media(max-width:759px){
+  body.muro-activo .menu-cuenta,
+  body.sala-activa .menu-cuenta{
+    top:64px!important;
+    right:10px!important;
+    left:auto!important;
+    width:min(290px, calc(100vw - 20px))!important;
+  }
+}
+
+/* ============================================================
+   SALA V4 — GESTIÓN DEL CREADOR + MENÚ + CONFIRMACIÓN
+   ============================================================ */
+
+/* Escudos reales del proveedor cuando existen. */
+body.sala-activa .sala-escudo{
+  overflow:hidden!important;
+}
+body.sala-activa .sala-escudo img{
+  width:72%!important;
+  height:72%!important;
+  object-fit:contain!important;
+  display:block!important;
+}
+
+/* Cabecera del bloque de mercados y controles de gestión. */
+body.sala-activa .sala-mercados-cab{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:14px!important;
+  margin:20px 0 10px!important;
+}
+body.sala-activa .sala-mercados-cab .sala-mercados-titulo{
+  margin:0!important;
+}
+
+body.sala-activa .sala-btn-gestion,
+body.sala-activa .sala-btn-primario,
+body.sala-activa .sala-btn-secundario,
+body.sala-activa .sala-btn-peligro{
+  min-height:42px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:8px!important;
+  padding:0 16px!important;
+  border-radius:11px!important;
+  border:1px solid transparent!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  letter-spacing:.01em!important;
+  transition:transform .14s ease, border-color .14s ease, background .14s ease, box-shadow .14s ease!important;
+}
+body.sala-activa .sala-btn-gestion:hover,
+body.sala-activa .sala-btn-primario:hover,
+body.sala-activa .sala-btn-secundario:hover,
+body.sala-activa .sala-btn-peligro:hover{
+  transform:translateY(-1px)!important;
+}
+body.sala-activa .sala-btn-agregar,
+body.sala-activa .sala-btn-primario{
+  color:#071108!important;
+  background:linear-gradient(180deg,#8cf45d,#68dc3d)!important;
+  border-color:#9ef779!important;
+  box-shadow:0 8px 24px rgba(105,221,65,.14)!important;
+}
+body.sala-activa .sala-btn-secundario{
+  color:#dce8df!important;
+  background:#0b1710!important;
+  border-color:rgba(255,255,255,.12)!important;
+}
+body.sala-activa .sala-btn-secundario:hover{
+  border-color:rgba(121,231,82,.35)!important;
+  background:#0f2015!important;
+}
+body.sala-activa .sala-btn-peligro{
+  color:#ffb5b5!important;
+  background:rgba(115,24,24,.18)!important;
+  border-color:rgba(255,95,95,.30)!important;
+}
+body.sala-activa .sala-btn-peligro:hover{
+  color:#ffd0d0!important;
+  background:rgba(155,31,31,.25)!important;
+  border-color:rgba(255,95,95,.52)!important;
+}
+body.sala-activa .sala-btn-ancho{
+  width:100%!important;
+}
+
+body.sala-activa .sala-acciones{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+  margin-top:18px!important;
+}
+
+/* Acciones por mercado. */
+body.sala-activa .sala-mercado-head-acciones{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+}
+body.sala-activa .sala-icon-btn{
+  width:31px!important;
+  height:31px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:9px!important;
+  color:#b7c5ba!important;
+  background:#09140e!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  font-size:13px!important;
+}
+body.sala-activa .sala-icon-btn:hover{
+  color:#8df15e!important;
+  border-color:rgba(121,231,82,.36)!important;
+  background:#0d1e13!important;
+}
+body.sala-activa .sala-icon-btn.peligro:hover{
+  color:#ff9f9f!important;
+  border-color:rgba(255,95,95,.40)!important;
+  background:rgba(115,24,24,.18)!important;
+}
+
+/* Participantes con avatar de iniciales alineado. */
+body.sala-activa .sala-chip{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  padding:5px 8px 5px 5px!important;
+  min-height:38px!important;
+}
+body.sala-activa .sala-chip-avatar{
+  width:28px!important;
+  height:28px!important;
+  flex:0 0 28px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  color:#dffbd4!important;
+  background:linear-gradient(180deg,#1a3422,#102418)!important;
+  border:1px solid rgba(122,231,83,.30)!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:.02em!important;
+}
+body.sala-activa .sala-chip.yo .sala-chip-avatar{
+  color:#071108!important;
+  background:#78e64d!important;
+  border-color:#9cf679!important;
+}
+body.sala-activa .sala-chip-texto{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:1px!important;
+  line-height:1.1!important;
+}
+body.sala-activa .sala-chip-texto strong{
+  font-size:10px!important;
+  color:#e7efe9!important;
+  font-weight:700!important;
+}
+body.sala-activa .sala-chip-texto small{
+  font-size:9px!important;
+  color:#819087!important;
+}
+
+/* Menú de cuenta premium oscuro y fijo al header. */
+body.muro-activo .menu-cuenta,
+body.sala-activa .menu-cuenta{
+  top:70px!important;
+  min-width:286px!important;
+  overflow:hidden!important;
+  border-radius:16px!important;
+  background:linear-gradient(180deg,#0b1710,#07110b)!important;
+  color:#edf4ef!important;
+  border:1px solid rgba(126,229,89,.18)!important;
+  box-shadow:0 24px 65px rgba(0,0,0,.48), 0 0 0 1px rgba(255,255,255,.02) inset!important;
+  backdrop-filter:blur(14px)!important;
+  -webkit-backdrop-filter:blur(14px)!important;
+}
+body.muro-activo .menu-cuenta .quien,
+body.sala-activa .menu-cuenta .quien{
+  position:relative!important;
+  padding:17px 17px 15px 62px!important;
+  border-bottom:1px solid rgba(255,255,255,.07)!important;
+  background:linear-gradient(90deg,rgba(108,223,68,.08),transparent 70%)!important;
+}
+body.muro-activo .menu-cuenta .quien::before,
+body.sala-activa .menu-cuenta .quien::before{
+  content:'TB'!important;
+  position:absolute!important;
+  left:16px!important;
+  top:15px!important;
+  width:34px!important;
+  height:34px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  background:#6fe247!important;
+  color:#081108!important;
+  font-size:10px!important;
+  font-weight:900!important;
+}
+body.muro-activo .menu-cuenta .quien strong,
+body.sala-activa .menu-cuenta .quien strong{
+  color:#f2f7f3!important;
+  font-size:13.5px!important;
+  margin-bottom:3px!important;
+}
+body.muro-activo .menu-cuenta .quien small,
+body.sala-activa .menu-cuenta .quien small{
+  color:#7f9085!important;
+  font-size:11px!important;
+}
+body.muro-activo .menu-cuenta button,
+body.sala-activa .menu-cuenta button{
+  min-height:46px!important;
+  padding:0 16px!important;
+  color:#d7e2da!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  font-size:12.5px!important;
+  font-weight:650!important;
+}
+body.muro-activo .menu-cuenta button svg,
+body.sala-activa .menu-cuenta button svg{
+  color:#78e64d!important;
+}
+body.muro-activo .menu-cuenta button:hover,
+body.sala-activa .menu-cuenta button:hover{
+  color:#fff!important;
+  background:rgba(114,231,73,.08)!important;
+}
+body.muro-activo .menu-cuenta button.salir,
+body.sala-activa .menu-cuenta button.salir{
+  color:#ff9d9d!important;
+  border-top:1px solid rgba(255,255,255,.07)!important;
+  background:rgba(120,24,24,.06)!important;
+}
+body.muro-activo .menu-cuenta button.salir svg,
+body.sala-activa .menu-cuenta button.salir svg{
+  color:#ff8585!important;
+}
+
+/* Hoja lateral de apuesta y gestión: elimina el look blanco heredado. */
+body.sala-activa .velo{
+  background:rgba(0,5,3,.68)!important;
+  backdrop-filter:blur(4px)!important;
+}
+body.sala-activa .hoja{
+  color:#edf5ef!important;
+  background:linear-gradient(180deg,#0b1710 0%,#07110b 100%)!important;
+  border-color:rgba(121,231,82,.15)!important;
+  box-shadow:-28px 0 75px rgba(0,0,0,.42)!important;
+}
+body.sala-activa .hoja-interior{
+  padding:28px 24px 26px!important;
+}
+body.sala-activa .hoja h2{
+  color:#f5faf6!important;
+  font-size:22px!important;
+  margin-bottom:5px!important;
+}
+body.sala-activa .hoja-sub{
+  color:#84968a!important;
+  font-size:12.5px!important;
+  line-height:1.55!important;
+  margin-bottom:22px!important;
+}
+body.sala-activa .hoja-cerrar{
+  top:18px!important;
+  right:18px!important;
+  width:34px!important;
+  height:34px!important;
+  color:#9aaba0!important;
+  background:#101f16!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+}
+body.sala-activa .hoja-cerrar:hover{
+  color:#fff!important;
+  border-color:rgba(121,231,82,.30)!important;
+}
+body.sala-activa .monto-grande{
+  min-height:86px!important;
+  border-radius:16px!important;
+  background:#07120c!important;
+  border:1px solid rgba(121,231,82,.16)!important;
+  margin:8px 0 12px!important;
+}
+body.sala-activa .monto-grande span{
+  color:#7f9085!important;
+}
+body.sala-activa .monto-grande input{
+  color:#f2f8f3!important;
+  caret-color:#78e64d!important;
+}
+body.sala-activa .atajos{
+  gap:7px!important;
+  margin-bottom:16px!important;
+}
+body.sala-activa .atajo{
+  color:#cfe0d4!important;
+  background:#0b1910!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:9px!important;
+}
+body.sala-activa .atajo:hover{
+  color:#071108!important;
+  background:#78e64d!important;
+  border-color:#78e64d!important;
+}
+body.sala-activa .desglose{
+  background:#07120c!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  border-radius:14px!important;
+  overflow:hidden!important;
+}
+body.sala-activa .desglose-fila{
+  padding:11px 12px!important;
+  border-bottom:1px solid rgba(255,255,255,.055)!important;
+}
+body.sala-activa .desglose-fila:last-child{
+  border-bottom:0!important;
+}
+body.sala-activa .desglose-fila span{
+  color:#8d9d93!important;
+}
+body.sala-activa .desglose-fila b{
+  color:#dce7df!important;
+}
+body.sala-activa .desglose-fila.gana b{
+  color:#7aea4e!important;
+}
+body.sala-activa .desglose-fila.pierde b{
+  color:#ff8888!important;
+}
+body.sala-activa .hoja .btn-ancho{
+  min-height:50px!important;
+  border-radius:12px!important;
+  font-weight:800!important;
+}
+body.sala-activa .hoja .pista{
+  color:#718179!important;
+}
+
+/* Formularios de administración dentro de la hoja. */
+body.sala-activa .sala-form-gestion{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:9px!important;
+}
+body.sala-activa .sala-form-gestion label{
+  margin-top:5px!important;
+  color:#a8b7ad!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  text-transform:uppercase!important;
+  letter-spacing:.07em!important;
+}
+body.sala-activa .sala-form-gestion input,
+body.sala-activa .sala-form-gestion select{
+  width:100%!important;
+  min-height:48px!important;
+  padding:0 13px!important;
+  border-radius:11px!important;
+  outline:0!important;
+  color:#edf5ef!important;
+  background:#07120c!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+}
+body.sala-activa .sala-form-gestion input:focus,
+body.sala-activa .sala-form-gestion select:focus{
+  border-color:rgba(121,231,82,.48)!important;
+  box-shadow:0 0 0 3px rgba(121,231,82,.06)!important;
+}
+body.sala-activa .sala-form-gestion small,
+body.sala-activa .sala-form-nota{
+  color:#718279!important;
+  font-size:10.5px!important;
+}
+body.sala-activa .sala-form-gestion .sala-btn-ancho{
+  margin-top:12px!important;
+  min-height:50px!important;
+}
+body.sala-activa .sala-monto-editar{
+  margin-top:0!important;
+}
+
+body.sala-activa .sala-confirmacion-peligro{
+  padding:8px 0 0!important;
+  text-align:center!important;
+}
+body.sala-activa .sala-confirmacion-icono{
+  width:48px!important;
+  height:48px!important;
+  margin:0 auto 14px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  color:#ff9c9c!important;
+  background:rgba(149,29,29,.18)!important;
+  border:1px solid rgba(255,95,95,.30)!important;
+  font-size:21px!important;
+  font-weight:900!important;
+}
+body.sala-activa .sala-confirmacion-peligro p{
+  color:#a9b6ae!important;
+  font-size:13px!important;
+  line-height:1.6!important;
+  margin:0 0 20px!important;
+}
+body.sala-activa .sala-confirmacion-acciones{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:9px!important;
+}
+
+@media(max-width:759px){
+  body.sala-activa .sala-mercados-cab{
+    align-items:flex-start!important;
+    flex-direction:column!important;
+  }
+  body.sala-activa .sala-btn-gestion{
+    width:100%!important;
+  }
+  body.sala-activa .sala-acciones{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+  }
+  body.sala-activa .sala-acciones > button{
+    width:100%!important;
+  }
+  body.sala-activa .hoja-interior{
+    padding:18px 16px 22px!important;
+  }
+  body.sala-activa .sala-confirmacion-acciones{
+    grid-template-columns:1fr!important;
+  }
+  body.muro-activo .menu-cuenta,
+  body.sala-activa .menu-cuenta{
+    top:64px!important;
+  }
+}
+
+/* Avatar real del usuario dentro del menú de cuenta. */
+body.muro-activo .menu-cuenta .quien,
+body.sala-activa .menu-cuenta .quien{
+  display:flex!important;
+  align-items:center!important;
+  gap:11px!important;
+  padding:15px 16px!important;
+}
+body.muro-activo .menu-cuenta .quien::before,
+body.sala-activa .menu-cuenta .quien::before{
+  display:none!important;
+  content:none!important;
+}
+body.muro-activo .menu-cuenta .menu-avatar,
+body.sala-activa .menu-cuenta .menu-avatar{
+  width:36px!important;
+  height:36px!important;
+  flex:0 0 36px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  background:#6fe247!important;
+  color:#081108!important;
+  border:1px solid #94f472!important;
+  font-size:10px!important;
+  font-weight:900!important;
+}
+body.muro-activo .menu-cuenta .menu-identidad,
+body.sala-activa .menu-cuenta .menu-identidad{
+  min-width:0!important;
+}
+body.muro-activo .menu-cuenta .menu-identidad small,
+body.sala-activa .menu-cuenta .menu-identidad small{
+  display:block!important;
+  max-width:205px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+
+/* ============================================================
+   SALA V5 — CUPOS REALES + PARTICIPANTES COMPACTOS + APUESTA
+   ============================================================ */
+body.sala-activa .sala-opcion b{
+  font-size:18px!important;
+  line-height:1!important;
+  margin-top:5px!important;
+}
+body.sala-activa .sala-opcion .sala-restante{
+  display:block!important;
+  margin-top:5px!important;
+  font-size:9px!important;
+  font-weight:700!important;
+  color:#788a7e!important;
+}
+body.sala-activa .sala-participantes{
+  gap:10px!important;
+  padding-top:10px!important;
+}
+body.sala-activa .sala-participantes > div{
+  min-width:0!important;
+}
+body.sala-activa .sala-lado-mini{
+  display:block!important;
+  margin:0 0 6px 2px!important;
+  color:#75867b!important;
+  font-size:8px!important;
+  font-weight:800!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+body.sala-activa .sala-gente-grid{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:5px!important;
+}
+body.sala-activa .sala-chip{
+  min-width:0!important;
+  min-height:48px!important;
+  padding:4px!important;
+  gap:3px!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  border-radius:9px!important;
+  overflow:hidden!important;
+}
+body.sala-activa .sala-chip-avatar{
+  width:24px!important;
+  height:24px!important;
+  flex:0 0 24px!important;
+  border:0!important;
+  box-shadow:none!important;
+  background:#163120!important;
+  color:#d9f7cf!important;
+  font-size:8px!important;
+  line-height:24px!important;
+}
+body.sala-activa .sala-chip.yo .sala-chip-avatar{
+  border:0!important;
+  box-shadow:none!important;
+  background:#76e64c!important;
+  color:#071108!important;
+}
+body.sala-activa .sala-chip-texto{
+  width:100%!important;
+  align-items:center!important;
+  min-width:0!important;
+}
+body.sala-activa .sala-chip-texto strong{
+  width:100%!important;
+  max-width:58px!important;
+  text-align:center!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:8px!important;
+}
+body.sala-activa .sala-chip-texto small{
+  font-size:8px!important;
+  color:#9daf9f!important;
+}
+
+body.sala-activa .sala-total-compacto{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  text-align:left!important;
+  padding:14px 16px!important;
+}
+body.sala-activa .sala-total-compacto > div{
+  min-width:0!important;
+}
+body.sala-activa .sala-total-compacto > span,
+body.sala-activa .sala-total-compacto > div > span{
+  display:block!important;
+  font-size:9px!important;
+  margin:0 0 2px!important;
+}
+body.sala-activa .sala-total-compacto > div > small{
+  color:#718078!important;
+  font-size:9px!important;
+}
+body.sala-activa .sala-total-compacto > b{
+  margin:0!important;
+  font-size:19px!important;
+  white-space:nowrap!important;
+}
+
+body.sala-activa .hoja{
+  width:min(390px,100vw)!important;
+}
+body.sala-activa .hoja-interior{
+  padding:24px 21px 22px!important;
+}
+body.sala-activa .hoja h2{
+  font-size:19px!important;
+}
+body.sala-activa .sala-apuesta-resumen{
+  padding:11px 12px!important;
+  margin-bottom:12px!important;
+  border-radius:11px!important;
+  background:#0a1710!important;
+  border:1px solid rgba(119,230,78,.13)!important;
+}
+body.sala-activa .sala-apuesta-resumen small{
+  display:block!important;
+  margin-bottom:3px!important;
+  color:#6f8176!important;
+  font-size:8px!important;
+  font-weight:800!important;
+  letter-spacing:.08em!important;
+}
+body.sala-activa .sala-apuesta-resumen strong{
+  color:#eff7f1!important;
+  font-size:13px!important;
+}
+body.sala-activa .sala-atajos-compactos{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:6px!important;
+}
+body.sala-activa .sala-atajos-compactos .atajo{
+  min-height:34px!important;
+  padding:0 7px!important;
+  font-size:9.5px!important;
+}
+body.sala-activa .sala-otro-monto{
+  border-style:dashed!important;
+}
+body.sala-activa .sala-otro-monto-wrap{
+  margin-top:9px!important;
+}
+body.sala-activa .sala-otro-monto-wrap label{
+  display:block!important;
+  margin:0 0 4px 2px!important;
+  color:#7d8e83!important;
+  font-size:9px!important;
+  font-weight:800!important;
+  text-transform:uppercase!important;
+}
+body.sala-activa .sala-monto-compacto{
+  min-height:62px!important;
+  margin:0 0 10px!important;
+}
+body.sala-activa .sala-monto-compacto input{
+  font-size:25px!important;
+}
+body.sala-activa .desglose-fila{
+  padding:8px 10px!important;
+  font-size:10px!important;
+}
+body.sala-activa .sala-confirmar-apuesta{
+  min-height:42px!important;
+  font-size:11px!important;
+  transition:none!important;
+}
+/* El botón conserva exactamente su color al pasar el mouse. */
+body.sala-activa .sala-confirmar-apuesta:hover{
+  transform:none!important;
+  filter:none!important;
+  opacity:1!important;
+}
+body.sala-activa .sala-confirmar-apuesta.btn-favor:hover{
+  background:var(--favor)!important;
+  border-color:var(--favor)!important;
+}
+body.sala-activa .sala-confirmar-apuesta.btn-contra:hover{
+  background:var(--contra)!important;
+  border-color:var(--contra)!important;
+}
+
+body.sala-activa .sala-form-gestion select,
+body.sala-activa .sala-form-gestion input{
+  min-height:43px!important;
+}
+body.sala-activa .sala-form-gestion .sala-btn-primario{
+  margin-top:7px!important;
+}
+
+@media(max-width:680px){
+  body.sala-activa .sala-gente-grid{
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  }
+  body.sala-activa .sala-chip-texto strong{max-width:48px!important}
+}
+
+/* ============================================================
+   SALA V6 — 22 AJUSTES: cards compactos, anfitrión, monto y define
+   ============================================================ */
+@media(min-width:1180px){
+  body.sala-activa .sala-layout{max-width:1780px!important;grid-template-columns:minmax(0,1fr) 300px!important}
+  body.sala-activa .sala-mercados-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px!important}
+}
+body.sala-activa .sala-mercado{padding:11px!important;border-radius:11px!important}
+body.sala-activa .sala-mercado-head{margin-bottom:9px!important}
+body.sala-activa .sala-mercado-head h3{font-size:10.5px!important}
+body.sala-activa .sala-opciones{gap:7px!important}
+body.sala-activa .sala-opcion{min-height:61px!important;padding:9px 10px!important;gap:5px!important}
+body.sala-activa .sala-opcion span{font-size:10.5px!important}
+body.sala-activa .sala-opcion b{font-size:16px!important}
+body.sala-activa .sala-opcion .sala-bloqueo,
+body.sala-activa .sala-opcion .sala-restante{font-size:7.5px!important;margin-top:2px!important}
+body.sala-activa .sala-participantes-compactos{margin-top:8px!important;padding-top:7px!important;gap:7px!important;min-height:0!important}
+body.sala-activa .sala-lado-mini{margin-bottom:4px!important;font-size:7px!important}
+body.sala-activa .sala-gente-grid{display:flex!important;flex-wrap:wrap!important;gap:4px!important;align-items:flex-start!important}
+body.sala-activa .sala-chip{
+  display:inline-flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;
+  width:auto!important;max-width:100%!important;min-width:0!important;min-height:0!important;height:29px!important;
+  padding:3px 6px 3px 3px!important;gap:4px!important;border-radius:999px!important;
+  background:#101a14!important;color:#c7d5cb!important;border:1px solid rgba(255,255,255,.055)!important
+}
+body.sala-activa .sala-chip-avatar{
+  width:21px!important;height:21px!important;flex:0 0 21px!important;line-height:21px!important;border-radius:50%!important;
+  background:#183522!important;color:#c9f5c0!important;font-size:7px!important;border:1px solid rgba(119,230,78,.24)!important
+}
+body.sala-activa .sala-chip-texto{display:grid!important;grid-template-columns:auto!important;gap:0!important;width:auto!important;min-width:0!important;align-items:start!important}
+body.sala-activa .sala-chip-texto strong{max-width:52px!important;width:auto!important;font-size:7.5px!important;line-height:9px!important;text-align:left!important}
+body.sala-activa .sala-chip-texto small{font-size:7px!important;line-height:8px!important;text-align:left!important;color:#8fa096!important}
+/* mismo avatar para todos; anfitrión solo cambia de color */
+body.sala-activa .sala-chip.anfitrion{background:rgba(237,167,55,.10)!important;border-color:rgba(237,167,55,.24)!important}
+body.sala-activa .sala-chip.anfitrion .sala-chip-avatar{background:#6d4614!important;color:#ffe2a5!important;border-color:#c9872b!important}
+body.sala-activa .sala-chip.yo:not(.anfitrion) .sala-chip-avatar{background:#234d2d!important;color:#d9ffd2!important;border-color:#6ee747!important}
+body.sala-activa .sala-sin-gente{display:inline-flex!important;align-items:center!important;height:29px!important;font-size:8px!important;color:#66756b!important}
+body.sala-activa .sala-mi-posicion{margin-top:7px!important;padding:6px 8px!important;font-size:9px!important}
+body.sala-activa .sala-completar{margin-top:7px!important;padding:7px!important;font-size:10px!important}
+
+/* El botón confirmar SÍ cambia de color al hover. */
+body.sala-activa .sala-confirmar-apuesta{transition:background .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease!important}
+body.sala-activa .sala-confirmar-apuesta.btn-favor:hover{background:#8df35b!important;border-color:#a9ff82!important;color:#071207!important;box-shadow:0 8px 25px rgba(116,235,69,.26)!important;transform:translateY(-1px)!important}
+body.sala-activa .sala-confirmar-apuesta.btn-contra:hover{background:#4b9fff!important;border-color:#77b7ff!important;color:#06111d!important;box-shadow:0 8px 25px rgba(70,153,255,.24)!important;transform:translateY(-1px)!important}
+body.sala-activa .sala-atajos-compactos{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+body.sala-activa .sala-otro-monto{display:none!important}
+body.sala-activa .sala-otro-monto-wrap{display:block!important}
+body.sala-activa .sala-form-gestion button:disabled{opacity:.45!important;cursor:not-allowed!important}
+
+/* Hoja Define tu apuesta */
+body.sala-activa .hoja.define-mercados-hoja{width:min(720px,96vw)!important}
+body.sala-activa .hoja.define-mercados-hoja .hoja-interior{padding:24px!important}
+body.sala-activa .define-apuesta{display:grid;gap:13px}
+body.sala-activa .define-busqueda{height:43px;display:flex;align-items:center;gap:9px;border:1px solid #213a2a;border-radius:10px;background:#07110c;padding:0 12px}
+body.sala-activa .define-busqueda span{color:#7d9183;font-size:18px}
+body.sala-activa .define-busqueda input{width:100%;border:0!important;outline:0!important;background:transparent!important;color:#eef7f0!important;font-size:12px!important;min-height:0!important;padding:0!important}
+body.sala-activa .define-cuerpo{display:grid;grid-template-columns:128px minmax(0,1fr);border:1px solid #1e3426;border-radius:11px;overflow:hidden;min-height:280px}
+body.sala-activa .define-categorias{background:#06100b;border-right:1px solid #1e3426;padding:8px 0}
+body.sala-activa .define-categorias button{width:100%;border:0;background:transparent;color:#a8b6ac;text-align:left;padding:10px 13px;font-size:11px;cursor:pointer}
+body.sala-activa .define-categorias button:hover{background:#0b1a11;color:#eaf5ec}
+body.sala-activa .define-categorias button.activo{background:#123020;color:#9cf17c;font-weight:800;border-left:2px solid #70e747}
+body.sala-activa .define-lista{padding:9px;display:grid;gap:6px;align-content:start;max-height:330px;overflow:auto}
+body.sala-activa .define-opcion{width:100%;display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:8px;text-align:left;border:1px solid #20352a;border-radius:9px;background:#08130d;color:#eef5f0;padding:9px 10px;cursor:pointer}
+body.sala-activa .define-opcion:hover{border-color:#3f774a;background:#0b1b11}
+body.sala-activa .define-opcion.seleccionada{border-color:#55b53c;background:#102419}
+body.sala-activa .define-marca{width:21px;height:21px;border-radius:50%;display:grid;place-items:center;background:#14251a;color:#93e77d;font-weight:900}
+body.sala-activa .define-opcion strong{display:block;font-size:11px}
+body.sala-activa .define-opcion small{display:block;margin-top:2px;color:#77887d;font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.sala-activa .define-opcion em{font-style:normal;font-size:7.5px;color:#9add86;border:1px solid rgba(112,231,71,.22);padding:3px 5px;border-radius:999px}
+body.sala-activa .define-seleccion{border:1px dashed #28422f;border-radius:10px;padding:11px;background:#07110c}
+body.sala-activa .define-seleccion-cab>div{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
+body.sala-activa .define-seleccion-cab strong{font-size:9px;color:#829388;letter-spacing:.04em}
+body.sala-activa .define-seleccion-cab small{font-size:9px;color:#6ee747}
+body.sala-activa .define-seleccion-lista{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+body.sala-activa .define-seleccion-item{border:1px solid #1e3827;border-radius:9px;padding:9px;background:#0a1710;display:grid;gap:7px}
+body.sala-activa .define-seleccion-item.nuevo{border-color:rgba(112,231,71,.35)}
+body.sala-activa .define-seleccion-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+body.sala-activa .define-seleccion-top strong{display:block;font-size:10px}
+body.sala-activa .define-seleccion-top small{display:block;margin-top:2px;font-size:7.5px;color:#74877a}
+body.sala-activa .define-seleccion-top button{width:24px;height:24px;border-radius:50%;border:1px solid #284431;background:#0e1b13;color:#9aac9e;cursor:pointer}
+body.sala-activa .define-seleccion-item label{display:grid;gap:3px;color:#76877c;font-size:8px;text-transform:uppercase;font-weight:800}
+body.sala-activa .define-seleccion-item input,body.sala-activa .define-seleccion-item select{min-height:34px!important;border:1px solid #284330!important;border-radius:7px!important;background:#07110c!important;color:#edf6ef!important;padding:0 8px!important;font-size:10px!important}
+body.sala-activa .define-eliminados{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px;padding-top:8px;border-top:1px solid #18291e}
+body.sala-activa .define-eliminados>small{width:100%;font-size:7.5px;color:#aa765f}
+body.sala-activa .define-eliminados span{display:inline-flex;align-items:center;gap:5px;border-radius:999px;background:#24130f;color:#e2b3a3;padding:4px 6px;font-size:8px}
+body.sala-activa .define-eliminados button{border:0;background:transparent;color:#ffb49a;text-decoration:underline;cursor:pointer;font-size:8px}
+body.sala-activa .define-vacio,body.sala-activa .define-vacio-seleccion{color:#66776c;font-size:10px;margin:8px}
+body.sala-activa .define-guardar{margin-top:0!important;min-height:44px!important}
+
+@media(max-width:1179px) and (min-width:760px){
+  body.sala-activa .sala-mercados-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+  body.sala-activa .hoja.define-mercados-hoja{width:100vw!important}
+  body.sala-activa .define-cuerpo{grid-template-columns:1fr}
+  body.sala-activa .define-categorias{display:flex;overflow:auto;border-right:0;border-bottom:1px solid #1e3426;padding:0}
+  body.sala-activa .define-categorias button{width:auto;white-space:nowrap;padding:9px 11px}
+  body.sala-activa .define-seleccion-lista{grid-template-columns:1fr}
+}
+
+/* ============================================================
+   SALA V7 — reutiliza selector original + participantes compactos
+   ============================================================ */
+body.sala-activa .sala-participantes-resumen{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:6px!important;margin-top:7px!important;padding-top:7px!important;
+  border-top:1px solid rgba(255,255,255,.07)!important;min-height:31px!important
+}
+body.sala-activa .sala-participantes-chips{
+  display:flex!important;align-items:center!important;gap:4px!important;min-width:0!important;overflow:hidden!important
+}
+body.sala-activa .sala-participantes-resumen .sala-chip{flex:0 1 auto!important;max-width:92px!important}
+body.sala-activa .sala-mas-participantes{
+  flex:0 0 auto!important;border:1px solid rgba(113,231,72,.24)!important;background:#0d1b12!important;
+  color:#8eea72!important;border-radius:999px!important;padding:5px 7px!important;font-size:7.5px!important;
+  font-weight:800!important;cursor:pointer!important
+}
+body.sala-activa .sala-mas-participantes:hover{background:#17301d!important;border-color:#6fe647!important;color:#d9ffd0!important}
+body.sala-activa .sala-lista-participantes-modal{display:grid!important;gap:6px!important;max-height:62vh!important;overflow:auto!important}
+body.sala-activa .sala-participante-modal{
+  display:grid!important;grid-template-columns:28px minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;
+  border:1px solid #1b3323!important;background:#09150e!important;border-radius:10px!important;padding:7px 9px!important
+}
+body.sala-activa .sala-participante-modal .sala-chip-avatar{width:28px!important;height:28px!important;line-height:28px!important}
+body.sala-activa .sala-participante-modal strong{display:block!important;font-size:10px!important;color:#eef7f0!important}
+body.sala-activa .sala-participante-modal small{display:block!important;margin-top:2px!important;font-size:8px!important;color:#7d9083!important}
+body.sala-activa .sala-participante-modal>b{font-size:10px!important;color:#cfe6d3!important;white-space:nowrap!important}
+body.sala-activa .sala-participante-modal.anfitrion{border-color:rgba(237,167,55,.28)!important;background:rgba(109,70,20,.10)!important}
+body.sala-activa .sala-participante-modal.anfitrion .sala-chip-avatar{background:#6d4614!important;color:#ffe2a5!important;border-color:#c9872b!important}
+
+/* El selector de mercados es literalmente el mismo de "Define la apuesta"
+   de crear.js; aquí solo recibe la piel oscura de la sala. */
+body.sala-activa .hoja.selector-original-sala{width:min(640px,96vw)!important}
+body.sala-activa .hoja.selector-original-sala .hoja-interior{padding:22px!important}
+body.sala-activa .selector-original-sala .selector{
+  display:grid!important;grid-template-columns:135px minmax(0,1fr)!important;
+  border:1px solid #1d3526!important;border-radius:11px!important;overflow:hidden!important;background:#07110c!important
+}
+body.sala-activa .selector-original-sala .buscador{background:#09150e!important;border-bottom:1px solid #1d3526!important;padding:0 12px!important;height:43px!important}
+body.sala-activa .selector-original-sala .buscador input{background:transparent!important;color:#eef7f0!important;border:0!important;outline:0!important;font-size:12px!important}
+body.sala-activa .selector-original-sala .selector-cats{background:#06100b!important;border-right:1px solid #1d3526!important}
+body.sala-activa .selector-original-sala .cat{color:#a6b5aa!important;background:transparent!important;border:0!important}
+body.sala-activa .selector-original-sala .cat:hover{background:#0d1b12!important;color:#eef7f0!important}
+body.sala-activa .selector-original-sala .cat.activa{background:#122b1b!important;color:#8eea72!important}
+body.sala-activa .selector-original-sala .selector-lista{background:#07110c!important;max-height:380px!important;overflow:auto!important;padding:8px!important}
+body.sala-activa .selector-original-sala .tipo{background:#09150e!important;border:1px solid #1d3526!important;color:#eef7f0!important;border-radius:9px!important}
+body.sala-activa .selector-original-sala .tipo:hover{background:#0d1c12!important;border-color:#396e45!important}
+body.sala-activa .selector-original-sala .tipo.puesto,
+body.sala-activa .selector-original-sala .tipo.abierto{background:#10251a!important;border-color:#4a9b57!important}
+body.sala-activa .selector-original-sala .tipo-texto small{color:#7e9184!important}
+body.sala-activa .selector-original-sala .tipo-marca{color:#82e869!important}
+body.sala-activa .selector-original-sala .panel-tipo{background:#0d2116!important;border-color:#3f8250!important;color:#eef7f0!important}
+body.sala-activa .selector-original-sala .mini-rotulo{color:#85b995!important}
+body.sala-activa .selector-original-sala .linea{background:#08140d!important;color:#e8f4eb!important;border-color:#294733!important}
+body.sala-activa .selector-original-sala .linea.activa{background:#4f9b7d!important;color:white!important;border-color:#63b494!important}
+body.sala-activa .selector-original-sala .caja-jugadas{background:#07110c!important;border-color:#1d3526!important;color:#eaf4ec!important}
+body.sala-activa .selector-original-sala .jugadas-vacio{color:#65766b!important}
+body.sala-activa .selector-original-sala .puesta{background:#10251a!important;border-color:#335b3d!important;color:#cce8d2!important}
+body.sala-activa .selector-original-sala .puesta button{color:#9edb91!important}
+body.sala-activa .selector-guardar-cambios{margin-top:10px!important;padding:10px!important}
+body.sala-activa .selector-original-sala .btn-favor{background:#6ee747!important;color:#081108!important;border-color:#6ee747!important}
+body.sala-activa .selector-original-sala .btn-favor:hover{background:#8df35b!important;border-color:#a7ff80!important}
+
+/* Montos perfectamente alineados dentro de las dos opciones. */
+body.sala-activa .sala-opcion{display:grid!important;grid-template-rows:minmax(24px,auto) 22px 12px!important;align-content:start!important}
+body.sala-activa .sala-opcion>b{align-self:end!important;justify-self:end!important;line-height:22px!important;margin:0!important}
+body.sala-activa .sala-opcion>small{align-self:end!important;min-height:10px!important}
+
+@media(max-width:760px){
+  body.sala-activa .selector-original-sala .selector{grid-template-columns:1fr!important}
+  body.sala-activa .selector-original-sala .selector-cats{display:flex!important;overflow:auto!important;border-right:0!important;border-bottom:1px solid #1d3526!important}
+  body.sala-activa .selector-original-sala .cat{white-space:nowrap!important;width:auto!important}
+  body.sala-activa .sala-participantes-resumen .sala-chip{max-width:76px!important}
+}
+
+/* ==============================================================
+   Ajuste visual: "Define tu apuesta" más sobrio / premium
+   ============================================================== */
+body.sala-activa .selector-original-sala{
+  border-color:#1b3023!important;
+  background:#06110c!important;
+  box-shadow:0 18px 44px rgba(0,0,0,.24)!important;
+}
+body.sala-activa .selector-original-sala .buscador{
+  background:#08130d!important;
+  border-bottom-color:#1b3023!important;
+}
+body.sala-activa .selector-original-sala .buscador input{
+  color:#dce8df!important;
+}
+body.sala-activa .selector-original-sala .selector-cats{
+  background:#07110c!important;
+  border-right-color:#182d20!important;
+}
+body.sala-activa .selector-original-sala .cat{
+  color:#98a79d!important;
+}
+body.sala-activa .selector-original-sala .cat:hover{
+  background:#0b1810!important;
+  color:#d8e5db!important;
+}
+body.sala-activa .selector-original-sala .cat.activa{
+  background:#10231a!important;
+  color:#a9cdb4!important;
+  box-shadow:inset 2px 0 0 #4f8f67!important;
+}
+body.sala-activa .selector-original-sala .selector-lista{
+  background:#07110c!important;
+}
+body.sala-activa .selector-original-sala .tipo{
+  background:#09140e!important;
+  border-color:#1b3023!important;
+  color:#dce7df!important;
+}
+body.sala-activa .selector-original-sala .tipo:hover{
+  background:#0c1911!important;
+  border-color:#355944!important;
+}
+body.sala-activa .selector-original-sala .tipo.abierto{
+  background:#0d1d14!important;
+  border-color:#426e52!important;
+}
+body.sala-activa .selector-original-sala .panel-tipo{
+  background:#0b1911!important;
+  border-color:#315941!important;
+  color:#dfe9e1!important;
+}
+body.sala-activa .selector-original-sala .linea{
+  background:#08130d!important;
+  color:#cdd9d0!important;
+  border-color:#263d2f!important;
+}
+body.sala-activa .selector-original-sala .linea:hover{
+  border-color:#4f7960!important;
+}
+body.sala-activa .selector-original-sala .linea.activa{
+  background:#3f7560!important;
+  color:#f4faf6!important;
+  border-color:#568a72!important;
+  box-shadow:none!important;
+}
+body.sala-activa .selector-original-sala .btn-favor,
+body.sala-activa .define-apuesta .sala-btn-primario{
+  background:#4f8f72!important;
+  border-color:#4f8f72!important;
+  color:#f7fbf8!important;
+  box-shadow:none!important;
+}
+body.sala-activa .selector-original-sala .btn-favor:hover,
+body.sala-activa .define-apuesta .sala-btn-primario:hover{
+  background:#5b9d7f!important;
+  border-color:#68aa8d!important;
+  color:#fff!important;
+  box-shadow:0 8px 22px rgba(31,84,61,.22)!important;
+  transform:translateY(-1px)!important;
+}
+body.sala-activa .selector-original-sala .caja-jugadas,
+body.sala-activa .define-seleccion{
+  background:#08130d!important;
+  border-color:#21382a!important;
+}
+body.sala-activa .selector-original-sala .puesta{
+  background:#102019!important;
+  border-color:#2f4d3a!important;
+  color:#bdd5c5!important;
+}
+
+/* ==============================================================
+   SALA V9 — participantes separados por lado
+   ============================================================= */
+body.sala-activa .sala-participantes-por-lado{
+  display:grid!important;
+  grid-template-columns:1fr 1fr!important;
+  gap:8px!important;
+  margin-top:7px!important;
+  padding-top:7px!important;
+  border-top:1px solid rgba(255,255,255,.07)!important;
+}
+body.sala-activa .sala-lado-participantes{min-width:0!important}
+body.sala-activa .sala-lado-titulo{
+  display:block!important;
+  margin-bottom:5px!important;
+  color:#5f9f7a!important;
+  font-size:7px!important;
+  font-weight:800!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+body.sala-activa .sala-lado-personas{
+  display:flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  min-width:0!important;
+  min-height:29px!important;
+  overflow:hidden!important;
+}
+body.sala-activa .sala-lado-anfitrion .sala-lado-personas{justify-content:flex-start!important}
+body.sala-activa .sala-lado-apostadores-fila{flex-wrap:nowrap!important}
+body.sala-activa .sala-lado-personas .sala-chip{
+  flex:0 1 auto!important;
+  min-width:0!important;
+  max-width:84px!important;
+  padding:3px 5px 3px 3px!important;
+}
+body.sala-activa .sala-lado-personas .sala-chip-avatar{
+  flex:0 0 23px!important;
+  width:23px!important;height:23px!important;line-height:23px!important;
+  font-size:7px!important;
+}
+body.sala-activa .sala-lado-personas .sala-chip-texto{
+  display:block!important;
+  min-width:0!important;
+  overflow:hidden!important;
+}
+body.sala-activa .sala-lado-personas .sala-chip-texto strong{
+  display:block!important;
+  width:100%!important;
+  max-width:52px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:7px!important;
+  line-height:9px!important;
+}
+body.sala-activa .sala-lado-personas .sala-chip-texto small{
+  display:block!important;
+  font-size:6.7px!important;
+  line-height:8px!important;
+  white-space:nowrap!important;
+}
+body.sala-activa .sala-lado-personas .sala-mas-participantes{
+  flex:0 0 auto!important;
+  padding:4px 6px!important;
+  font-size:7px!important;
+}
+body.sala-activa .sala-lado-personas .sala-sin-gente{
+  font-size:7.5px!important;
+  color:#567062!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+body.sala-activa .sala-mi-posicion{
+  margin-top:7px!important;
+  padding:7px 9px!important;
+  font-size:8px!important;
+}
+@media(max-width:760px){
+  body.sala-activa .sala-participantes-por-lado{grid-template-columns:1fr 1fr!important;gap:6px!important}
+  body.sala-activa .sala-lado-personas .sala-chip{max-width:72px!important}
+  body.sala-activa .sala-lado-personas .sala-chip-texto strong{max-width:42px!important}
+}
+\n\n/* ==============================================================\n   SALA V10 — participantes compactos en una sola franja\n   Reemplaza visualmente el bloque V9 sin repetir los nombres\n   de las opciones debajo de los botones.\n   ============================================================== */\nbody.sala-activa .sala-participantes-por-lado{display:none!important}\n\nbody.sala-activa .sala-participantes-compactos{\n  display:grid!important;\n  grid-template-columns:minmax(70px,.82fr) 1px minmax(0,1.55fr)!important;\n  align-items:center!important;\n  gap:7px!important;\n  min-width:0!important;\n  margin-top:7px!important;\n  padding-top:7px!important;\n  border-top:1px solid rgba(255,255,255,.07)!important;\n}\nbody.sala-activa .sala-participante-host,\nbody.sala-activa .sala-participantes-apostadores{\n  display:flex!important;\n  align-items:center!important;\n  min-width:0!important;\n}\nbody.sala-activa .sala-participante-host{justify-content:flex-start!important}\nbody.sala-activa .sala-participantes-apostadores{\n  justify-content:flex-start!important;\n  gap:4px!important;\n  overflow:hidden!important;\n  flex-wrap:nowrap!important;\n}\nbody.sala-activa .sala-participantes-separador{\n  display:block!important;\n  width:1px!important;\n  height:31px!important;\n  background:rgba(255,255,255,.12)!important;\n}\nbody.sala-activa .sala-participantes-compactos .sala-chip{\n  display:flex!important;\n  align-items:center!important;\n  flex:0 1 auto!important;\n  min-width:0!important;\n  max-width:83px!important;\n  padding:2px 4px 2px 2px!important;\n  gap:4px!important;\n  border:0!important;\n  background:transparent!important;\n}\nbody.sala-activa .sala-participantes-compactos .sala-chip-avatar{\n  flex:0 0 25px!important;\n  width:25px!important;\n  height:25px!important;\n  line-height:25px!important;\n  font-size:7.5px!important;\n}\nbody.sala-activa .sala-participantes-compactos .sala-chip-texto{\n  display:block!important;\n  min-width:0!important;\n  overflow:hidden!important;\n}\nbody.sala-activa .sala-participantes-compactos .sala-chip-texto strong{\n  display:block!important;\n  max-width:45px!important;\n  overflow:hidden!important;\n  text-overflow:ellipsis!important;\n  white-space:nowrap!important;\n  font-size:7.5px!important;\n  line-height:9px!important;\n  color:#e9f3ed!important;\n}\nbody.sala-activa .sala-participantes-compactos .sala-chip-texto small{\n  display:block!important;\n  margin-top:1px!important;\n  font-size:7px!important;\n  line-height:8px!important;\n  white-space:nowrap!important;\n  color:#77db57!important;\n}\nbody.sala-activa .sala-participantes-compactos .sala-chip.anfitrion .sala-chip-avatar{\n  background:#5a3b12!important;\n  border-color:#d08b1f!important;\n  color:#ffe2a5!important;\n}\nbody.sala-activa .sala-participantes-compactos .sala-chip.anfitrion .sala-chip-texto small{color:#f5c466!important}\nbody.sala-activa .sala-participantes-compactos .sala-chip.yo:not(.anfitrion) .sala-chip-avatar{\n  background:#234d2d!important;\n  border-color:#6ee747!important;\n  color:#d9ffd2!important;\n}\nbody.sala-activa .sala-participantes-compactos .sala-mas-participantes{\n  flex:0 0 auto!important;\n  min-width:28px!important;\n  height:28px!important;\n  padding:0 5px!important;\n  border-radius:8px!important;\n  border:1px solid rgba(255,255,255,.10)!important;\n  background:rgba(255,255,255,.045)!important;\n  color:#dce8e0!important;\n  font-size:8px!important;\n  font-weight:800!important;\n}\nbody.sala-activa .sala-participantes-compactos .sala-mas-participantes:hover{\n  background:rgba(123,229,69,.10)!important;\n  border-color:rgba(123,229,69,.30)!important;\n  color:#bdf5a4!important;\n}\nbody.sala-activa .sala-participantes-compactos .sala-sin-gente{\n  font-size:7.5px!important;\n  color:#607269!important;\n  white-space:nowrap!important;\n}\nbody.sala-activa .sala-mi-posicion{\n  margin-top:6px!important;\n  padding:6px 8px!important;\n  min-height:0!important;\n  border-radius:7px!important;\n  font-size:7.5px!important;\n  line-height:10px!important;\n}\n@media(max-width:760px){\n  body.sala-activa .sala-participantes-compactos{\n    grid-template-columns:minmax(62px,.78fr) 1px minmax(0,1.62fr)!important;\n    gap:5px!important;\n  }\n  body.sala-activa .sala-participantes-compactos .sala-chip{max-width:70px!important}\n  body.sala-activa .sala-participantes-compactos .sala-chip-texto strong{max-width:36px!important}\n}\n
+/* ==============================================================
+   SALA V11 — jerarquía clara de participantes + cabecera compacta
+   ============================================================== */
+body.sala-activa .sala-mercados-cab{
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin:16px 0 10px!important;
+  min-height:0!important;
+}
+body.sala-activa .sala-mercados-titulo-wrap{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:2px!important;
+  min-width:0!important;
+}
+body.sala-activa .sala-mercados-titulo-wrap small{
+  color:#6f8276!important;
+  font-size:8px!important;
+  line-height:11px!important;
+}
+body.sala-activa .sala-btn-agregar-compacto{
+  flex:0 0 auto!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  height:31px!important;
+  padding:0 10px!important;
+  border-radius:8px!important;
+  border:1px solid rgba(113,231,72,.28)!important;
+  background:#0b1710!important;
+  color:#9be985!important;
+  font-size:9px!important;
+  font-weight:800!important;
+  cursor:pointer!important;
+  box-shadow:none!important;
+  transition:background .14s ease,border-color .14s ease,transform .14s ease!important;
+}
+body.sala-activa .sala-btn-agregar-compacto span{font-size:13px!important;line-height:1!important}
+body.sala-activa .sala-btn-agregar-compacto:hover{
+  background:#11251a!important;
+  border-color:#6ee747!important;
+  transform:translateY(-1px)!important;
+}
+
+/* El bloque ya no reserva una mitad vacía: cada grupo ocupa lo que necesita. */
+body.sala-activa .sala-participantes-compactos{
+  display:flex!important;
+  align-items:flex-start!important;
+  gap:10px!important;
+  min-width:0!important;
+  margin-top:7px!important;
+  padding-top:7px!important;
+  border-top:1px solid rgba(255,255,255,.07)!important;
+}
+body.sala-activa .sala-grupo-personas{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+  min-width:0!important;
+}
+body.sala-activa .sala-grupo-anfitrion{
+  flex:0 0 auto!important;
+  padding-right:9px!important;
+  border-right:1px solid rgba(255,255,255,.09)!important;
+}
+body.sala-activa .sala-grupo-apostadores{
+  flex:1 1 auto!important;
+  overflow:hidden!important;
+}
+body.sala-activa .sala-grupo-etiqueta{
+  display:block!important;
+  color:#708279!important;
+  font-size:6.4px!important;
+  line-height:8px!important;
+  font-weight:900!important;
+  letter-spacing:.04em!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+}
+body.sala-activa .sala-grupo-anfitrion .sala-grupo-etiqueta{color:#d8a442!important}
+body.sala-activa .sala-grupo-apostadores .sala-grupo-etiqueta{color:#72c95b!important}
+body.sala-activa .sala-grupo-contenido{
+  display:flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  min-height:27px!important;
+  min-width:0!important;
+}
+body.sala-activa .sala-participantes-apostadores{
+  justify-content:flex-start!important;
+  overflow:hidden!important;
+  flex-wrap:nowrap!important;
+}
+body.sala-activa .sala-participantes-compactos .sala-chip{
+  flex:0 1 auto!important;
+  max-width:86px!important;
+  min-width:0!important;
+}
+body.sala-activa .sala-grupo-anfitrion .sala-chip{max-width:104px!important}
+body.sala-activa .sala-participantes-compactos .sala-sin-gente{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:25px!important;
+  padding:0 7px!important;
+  border-radius:999px!important;
+  border:1px dashed rgba(255,255,255,.09)!important;
+  color:#65766c!important;
+  font-size:7px!important;
+  white-space:nowrap!important;
+}
+
+/* Modal: anfitrión separado y siempre arriba; Tú primero en apostadores. */
+body.sala-activa .sala-participantes-modal-grupos{
+  display:grid!important;
+  gap:12px!important;
+}
+body.sala-activa .sala-participantes-modal-grupo{
+  display:grid!important;
+  gap:6px!important;
+}
+body.sala-activa .sala-participantes-modal-cab{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  padding:0 2px!important;
+}
+body.sala-activa .sala-participantes-modal-cab span{
+  color:#83d66d!important;
+  font-size:8.5px!important;
+  font-weight:900!important;
+  letter-spacing:.035em!important;
+  text-transform:uppercase!important;
+}
+body.sala-activa .sala-participantes-modal-grupo.anfitrion .sala-participantes-modal-cab span{color:#e4ad47!important}
+body.sala-activa .sala-participantes-modal-cab small{
+  min-width:22px!important;
+  height:18px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:999px!important;
+  color:#8ca095!important;
+  font-size:7px!important;
+}
+body.sala-activa .sala-participante-modal{
+  grid-template-columns:30px minmax(0,1fr) auto!important;
+  padding:8px 10px!important;
+  border-radius:10px!important;
+}
+body.sala-activa .sala-participante-modal.yo{
+  border-color:rgba(110,231,71,.34)!important;
+  background:rgba(36,96,42,.13)!important;
+}
+body.sala-activa .sala-participante-modal-texto{min-width:0!important}
+body.sala-activa .sala-participante-modal-texto strong{
+  display:block!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body.sala-activa .sala-participantes-vacio{
+  margin:0!important;
+  padding:10px!important;
+  border:1px dashed rgba(255,255,255,.09)!important;
+  border-radius:9px!important;
+  color:#687c70!important;
+  font-size:8px!important;
+}
+
+@media(max-width:760px){
+  body.sala-activa .sala-mercados-cab{
+    flex-direction:row!important;
+    align-items:flex-end!important;
+  }
+  body.sala-activa .sala-btn-agregar-compacto{
+    width:31px!important;
+    min-width:31px!important;
+    padding:0!important;
+  }
+  body.sala-activa .sala-btn-agregar-compacto b{display:none!important}
+  body.sala-activa .sala-participantes-compactos{gap:7px!important}
+  body.sala-activa .sala-grupo-anfitrion{padding-right:7px!important}
+  body.sala-activa .sala-participantes-compactos .sala-chip{max-width:72px!important}
+}
+
+/* ============================================================
+   SALA V11 — ajuste visual final
+   - Agregar mercado NO se modifica.
+   - Botones de hojas/modales compactos.
+   - Participantes sin cruces.
+   - Usuario conectado primero entre apostadores.
+   ============================================================ */
+
+/* Botones de acción de los modales: misma línea compacta que Agregar mercado,
+   sin alterar .sala-btn-agregar-compacto. */
+body.sala-activa .hoja .sala-form-gestion .sala-btn-primario,
+body.sala-activa .hoja .define-apuesta .sala-btn-primario,
+body.sala-activa .hoja .selector-guardar-cambios .sala-btn-primario,
+body.sala-activa .hoja .define-guardar{
+  width:auto!important;
+  min-width:132px!important;
+  min-height:34px!important;
+  height:34px!important;
+  padding:0 16px!important;
+  margin:10px 0 0 auto!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:9px!important;
+  border:1px solid rgba(113,231,72,.32)!important;
+  background:#0b1710!important;
+  color:#a0ed89!important;
+  font-size:10px!important;
+  font-weight:850!important;
+  box-shadow:none!important;
+}
+body.sala-activa .hoja .sala-form-gestion .sala-btn-primario:hover,
+body.sala-activa .hoja .define-apuesta .sala-btn-primario:hover,
+body.sala-activa .hoja .selector-guardar-cambios .sala-btn-primario:hover,
+body.sala-activa .hoja .define-guardar:hover{
+  background:#11251a!important;
+  border-color:#6ee747!important;
+  color:#d9ffd0!important;
+  transform:translateY(-1px)!important;
+}
+body.sala-activa .hoja .sala-form-gestion .sala-btn-ancho{width:auto!important}
+body.sala-activa .selector-guardar-cambios{
+  display:flex!important;
+  justify-content:flex-end!important;
+  padding:8px 0 0!important;
+  background:transparent!important;
+  border:0!important;
+}
+
+/* Cards: grupos fluidos. No reservar un rectángulo vacío cuando hay pocos. */
+body.sala-activa .sala-participantes-compactos{
+  display:grid!important;
+  grid-template-columns:max-content minmax(0,1fr)!important;
+  align-items:start!important;
+  column-gap:10px!important;
+}
+body.sala-activa .sala-grupo-personas{width:auto!important;max-width:100%!important}
+body.sala-activa .sala-grupo-apostadores{min-width:0!important;width:100%!important}
+body.sala-activa .sala-participantes-apostadores{
+  display:flex!important;
+  width:100%!important;
+  min-width:0!important;
+  gap:5px!important;
+  overflow:hidden!important;
+}
+body.sala-activa .sala-participantes-apostadores .sala-chip{
+  min-width:0!important;
+  max-width:82px!important;
+}
+body.sala-activa .sala-participantes-apostadores .sala-chip.yo{
+  order:-10!important;
+  border-color:rgba(110,231,71,.55)!important;
+  background:rgba(42,103,48,.20)!important;
+}
+
+/* Modal participantes: neutralizar estilos heredados que hacían cruzar avatar/texto. */
+body.sala-activa .sala-participantes-modal-grupos{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:14px!important;
+  width:100%!important;
+}
+body.sala-activa .sala-participantes-modal-grupo,
+body.sala-activa .sala-lista-participantes-modal{width:100%!important;min-width:0!important}
+body.sala-activa .sala-lista-participantes-modal{display:flex!important;flex-direction:column!important;gap:7px!important}
+body.sala-activa .sala-participante-modal{
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:32px minmax(0,1fr) max-content!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:100%!important;
+  min-height:52px!important;
+  padding:8px 12px!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+body.sala-activa .sala-participante-modal .sala-chip-avatar{
+  position:static!important;
+  inset:auto!important;
+  transform:none!important;
+  float:none!important;
+  margin:0!important;
+  width:32px!important;
+  min-width:32px!important;
+  height:32px!important;
+  line-height:30px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  box-sizing:border-box!important;
+  z-index:auto!important;
+}
+body.sala-activa .sala-participante-modal-texto{
+  position:static!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  line-height:1.15!important;
+}
+body.sala-activa .sala-participante-modal-texto strong{
+  margin:0!important;
+  font-size:10px!important;
+  line-height:14px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body.sala-activa .sala-participante-modal-texto small{
+  margin:2px 0 0!important;
+  font-size:8px!important;
+  line-height:11px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body.sala-activa .sala-participante-modal>b{
+  position:static!important;
+  margin:0!important;
+  align-self:center!important;
+  font-size:10px!important;
+  line-height:14px!important;
+  white-space:nowrap!important;
+}
+body.sala-activa .sala-participante-modal.yo{
+  order:-10!important;
+  border-color:rgba(110,231,71,.48)!important;
+  background:rgba(42,103,48,.18)!important;
+}
+
+@media(max-width:560px){
+  body.sala-activa .hoja .sala-form-gestion .sala-btn-primario,
+  body.sala-activa .hoja .define-apuesta .sala-btn-primario,
+  body.sala-activa .hoja .selector-guardar-cambios .sala-btn-primario,
+  body.sala-activa .hoja .define-guardar{
+    min-width:118px!important;
+    height:33px!important;
+    min-height:33px!important;
+    padding:0 13px!important;
+  }
+  body.sala-activa .sala-participantes-compactos{
+    grid-template-columns:max-content minmax(0,1fr)!important;
+    column-gap:7px!important;
+  }
+  body.sala-activa .sala-participante-modal{
+    grid-template-columns:30px minmax(0,1fr) max-content!important;
+    gap:8px!important;
+    min-height:48px!important;
+    padding:7px 9px!important;
+  }
+}
+
+/* ============================================================
+   SALA V12 — compactación uniforme de botones + 2 avatares
+   Referencia visual: botón "Agregar mercado".
+   IMPORTANTE: .sala-btn-agregar-compacto NO se modifica.
+   ============================================================ */
+
+/* Botones de texto de la sala: compactos, no a ancho completo. */
+body.sala-activa .sala-btn-primario,
+body.sala-activa .sala-btn-secundario,
+body.sala-activa .sala-btn-peligro,
+body.sala-activa .sala-btn-gestion,
+body.sala-activa .hoja .btn-ancho,
+body.sala-activa .hoja .sala-btn-ancho,
+body.sala-activa .selector-original-sala .btn-ancho,
+body.sala-activa .sala-confirmar-apuesta{
+  width:auto!important;
+  min-width:0!important;
+  min-height:34px!important;
+  height:34px!important;
+  padding:0 14px!important;
+  border-radius:9px!important;
+  font-size:10px!important;
+  line-height:1!important;
+  font-weight:800!important;
+  box-shadow:none!important;
+}
+
+/* Primarios: mismo lenguaje sobrio/contorneado del botón Agregar mercado. */
+body.sala-activa .sala-btn-primario,
+body.sala-activa .hoja .sala-btn-primario,
+body.sala-activa .define-apuesta .sala-btn-primario,
+body.sala-activa .selector-original-sala .btn-favor{
+  background:#07120c!important;
+  color:#86eb69!important;
+  border:1px solid rgba(103,224,67,.48)!important;
+}
+body.sala-activa .sala-btn-primario:hover,
+body.sala-activa .hoja .sala-btn-primario:hover,
+body.sala-activa .define-apuesta .sala-btn-primario:hover,
+body.sala-activa .selector-original-sala .btn-favor:hover{
+  background:#102318!important;
+  color:#c9ffb9!important;
+  border-color:#78e956!important;
+  transform:translateY(-1px)!important;
+  box-shadow:none!important;
+}
+
+/* Guardar cambios / Guardar monto alineados a la derecha y sin barra gigante. */
+body.sala-activa .selector-guardar-cambios,
+body.sala-activa .sala-form-gestion{
+  align-items:stretch!important;
+}
+body.sala-activa .selector-guardar-cambios .sala-btn-primario,
+body.sala-activa .define-guardar,
+body.sala-activa #guardar_monto_btn{
+  align-self:flex-end!important;
+  margin:10px 0 0 auto!important;
+  width:auto!important;
+  min-width:118px!important;
+  height:34px!important;
+  min-height:34px!important;
+  padding:0 14px!important;
+}
+
+/* Confirmaciones destructivas: dos botones compactos, no columnas enormes. */
+body.sala-activa .sala-confirmacion-acciones{
+  display:flex!important;
+  justify-content:flex-end!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  margin-top:14px!important;
+}
+body.sala-activa .sala-confirmacion-acciones .sala-btn-ancho{
+  width:auto!important;
+  min-width:100px!important;
+  margin:0!important;
+}
+
+/* Acciones inferiores Compartir / Eliminar / Salir: también compactas. */
+body.sala-activa .sala-acciones .sala-btn-secundario,
+body.sala-activa .sala-acciones .sala-btn-peligro{
+  width:auto!important;
+  min-height:34px!important;
+  height:34px!important;
+  padding:0 14px!important;
+  border-radius:9px!important;
+}
+
+/* Botón de confirmación de apuesta: compacto y centrado a la derecha. */
+body.sala-activa .hoja .sala-confirmar-apuesta{
+  display:flex!important;
+  margin:12px 0 0 auto!important;
+  min-width:132px!important;
+}
+
+/* El selector de mercados no debe volver a convertir "Guardar cambios" en barra. */
+body.sala-activa .define-apuesta .selector-guardar-cambios,
+body.sala-activa .selector-original-sala .selector-guardar-cambios{
+  display:flex!important;
+  justify-content:flex-end!important;
+  padding:8px 0 0!important;
+}
+
+/* Cards: máximo 2 apostadores visibles; el +N ocupa su propio chip. */
+body.sala-activa .sala-participantes-apostadores{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  overflow:visible!important;
+  flex-wrap:nowrap!important;
+}
+body.sala-activa .sala-participantes-apostadores .sala-chip{
+  flex:0 1 86px!important;
+  width:auto!important;
+  min-width:0!important;
+  max-width:86px!important;
+}
+body.sala-activa .sala-participantes-apostadores .sala-chip-texto{
+  min-width:0!important;
+  max-width:50px!important;
+}
+body.sala-activa .sala-mas-participantes{
+  flex:0 0 30px!important;
+  width:30px!important;
+  min-width:30px!important;
+  height:30px!important;
+  padding:0!important;
+  border-radius:999px!important;
+  font-size:9px!important;
+  white-space:nowrap!important;
+}
+
+@media(max-width:560px){
+  body.sala-activa .sala-btn-primario,
+  body.sala-activa .sala-btn-secundario,
+  body.sala-activa .sala-btn-peligro,
+  body.sala-activa .hoja .btn-ancho,
+  body.sala-activa .hoja .sala-btn-ancho,
+  body.sala-activa .sala-confirmar-apuesta{
+    height:33px!important;
+    min-height:33px!important;
+    padding:0 12px!important;
+    font-size:9.5px!important;
+  }
+  body.sala-activa .sala-participantes-apostadores .sala-chip{
+    max-width:76px!important;
+  }
+  body.sala-activa .sala-participantes-apostadores .sala-chip-texto{
+    max-width:42px!important;
+  }
+}
+
+/* ============================================================
+   SALA V13 — cabecera inline + 1 apostador visible + reparto 50/50
+   ============================================================ */
+body.sala-activa .sala-mercados-cab{
+  display:block!important;
+  margin:16px 0 10px!important;
+}
+body.sala-activa .sala-mercados-titulo-wrap{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  gap:3px!important;
+}
+body.sala-activa .sala-mercados-titulo-linea{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  min-width:0!important;
+  flex-wrap:wrap!important;
+}
+body.sala-activa .sala-mercados-titulo-linea .sala-mercados-titulo{
+  margin:0!important;
+  flex:0 1 auto!important;
+}
+body.sala-activa .sala-mercados-titulo-linea .sala-btn-agregar-compacto{
+  flex:0 0 auto!important;
+  margin:0!important;
+}
+
+/* Anfitrión y apostador comparten exactamente la mitad del ancho del card. */
+body.sala-activa .sala-participantes-compactos{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  align-items:stretch!important;
+  gap:0!important;
+  min-width:0!important;
+}
+body.sala-activa .sala-grupo-personas{
+  min-width:0!important;
+  width:100%!important;
+  padding:0 9px!important;
+  box-sizing:border-box!important;
+}
+body.sala-activa .sala-grupo-anfitrion{
+  padding-left:0!important;
+  border-right:1px solid rgba(255,255,255,.10)!important;
+}
+body.sala-activa .sala-grupo-apostadores{
+  padding-right:0!important;
+}
+body.sala-activa .sala-grupo-contenido{
+  min-width:0!important;
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  overflow:hidden!important;
+}
+body.sala-activa .sala-participantes-apostadores{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  overflow:visible!important;
+}
+body.sala-activa .sala-participantes-compactos .sala-chip{
+  max-width:calc(100% - 42px)!important;
+  min-width:0!important;
+}
+body.sala-activa .sala-grupo-anfitrion .sala-chip{
+  max-width:100%!important;
+}
+body.sala-activa .sala-participantes-compactos .sala-chip-texto strong{
+  max-width:76px!important;
+}
+body.sala-activa .sala-mas-participantes{
+  flex:0 0 31px!important;
+  width:31px!important;
+  min-width:31px!important;
+  height:31px!important;
+  padding:0!important;
+  border-radius:50%!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:9px!important;
+}
+
+@media(max-width:760px){
+  body.sala-activa .sala-mercados-titulo-linea{gap:7px!important}
+  body.sala-activa .sala-mercados-titulo-linea .sala-btn-agregar-compacto{
+    width:auto!important;
+    min-width:31px!important;
+    padding:0 9px!important;
+  }
+  body.sala-activa .sala-mercados-titulo-linea .sala-btn-agregar-compacto b{
+    display:inline!important;
+  }
+  body.sala-activa .sala-grupo-personas{padding:0 6px!important}
+  body.sala-activa .sala-grupo-anfitrion{padding-left:0!important}
+  body.sala-activa .sala-grupo-apostadores{padding-right:0!important}
+  body.sala-activa .sala-participantes-compactos .sala-chip-texto strong{max-width:48px!important}
+}
+
+/* ============================================================
+   SALA V14 — anfitrión del mismo tamaño que el apostador
+   ============================================================ */
+body.sala-activa .sala-participantes-compactos .sala-grupo-anfitrion .sala-chip,
+body.sala-activa .sala-participantes-compactos .sala-participantes-apostadores .sala-chip{
+  width:calc(100% - 42px)!important;
+  max-width:calc(100% - 42px)!important;
+  min-width:0!important;
+  height:31px!important;
+  box-sizing:border-box!important;
+  flex:1 1 auto!important;
+}
+body.sala-activa .sala-participantes-compactos .sala-grupo-anfitrion .sala-chip-avatar,
+body.sala-activa .sala-participantes-compactos .sala-participantes-apostadores .sala-chip-avatar{
+  flex:0 0 25px!important;
+  width:25px!important;
+  height:25px!important;
+  line-height:25px!important;
 }

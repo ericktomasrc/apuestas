@@ -55,18 +55,20 @@ function armazon(contenido, lateral) {
   return `
   <header class="superior">
     <div class="superior-fila">
-      <button class="marca marca-imagen" onclick="ir('muro')" aria-label="Inicio">
-        <img src="logo-tandabet.png" alt="TandaBet">
+      <button class="marca" onclick="ir('muro')" aria-label="Inicio">
+        <img class="marca-logo-referencia" src="logo-tandabet.png" alt="TandaBet">
       </button>
-      <div class="nav-escritorio">
+
+      <nav class="nav-escritorio" aria-label="Navegación principal">
         ${visible.map(n => `
           <a href="#${n.id}" class="${S.pantalla === n.id ? 'activo' : ''}"
              onclick="event.preventDefault();ir('${n.id}')">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
               stroke-linecap="round" stroke-linejoin="round">${n.icono}</svg>
-            ${n.id === 'crear' ? 'Crear sala' : n.nombre}
+            ${n.nombre}
           </a>`).join('')}
-      </div>
+      </nav>
+
       <div class="superior-der">
         ${haySesion() ? `
           <button class="saldo-chip" id="saldo-chip" onclick="ir('billetera')">
@@ -119,8 +121,11 @@ function menuCuenta(e) {
   d.className = 'menu-cuenta';
   d.innerHTML = `
     <div class="quien">
-      <strong>${esc(S.usuario?.alias ?? '')}</strong>
-      <small>${esc(S.usuario?.email ?? '')}</small>
+      <span class="menu-avatar">${esc(String(S.usuario?.alias ?? '?').slice(0, 2).toUpperCase())}</span>
+      <div class="menu-identidad">
+        <strong>${esc(S.usuario?.alias ?? '')}</strong>
+        <small>${esc(S.usuario?.email ?? '')}</small>
+      </div>
     </div>
     <button onclick="cerrarMenuCuenta();ir('billetera')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -182,6 +187,8 @@ function ir(id, datos) {
 
   S.pantalla = id;
   document.body.classList.toggle('muro-activo', id === 'muro');
+  document.body.classList.toggle('sala-activa', id === 'sala');
+  document.body.classList.remove('pantalla-registro-activa');
   S.datos.parametro = datos;
   location.hash = datos ? `${id}/${datos}` : id;
   cerrarMenuCuenta();

@@ -48,6 +48,7 @@ export interface Configuracion {
   horasVentanaReprogramacion: number;
   maxSalasSimultaneas: number;
   maxMercadosPorSala: number;
+  maxParticipantesSala: number;
   minimoPlataformaCentavos: number;
 }
 
@@ -75,6 +76,7 @@ export async function config(cliente?: Cliente): Promise<Configuracion> {
     horasVentanaReprogramacion: num('horas_ventana_reprogramacion', 48),
     maxSalasSimultaneas: num('max_salas_simultaneas', 10),
     maxMercadosPorSala: num('max_mercados_por_sala', 3),
+    maxParticipantesSala: num('max_participantes_sala', 10),
     minimoPlataformaCentavos: num('minimo_plataforma_centavos', 500),
   };
   cache = { valor, expira: Date.now() + 60_000 };
@@ -238,6 +240,22 @@ async function verificarSalaOperable(
   return sala;
 }
 
+/** Gestión del creador: se permite hasta que realmente empieza el partido. */
+async function verificarSalaAdministrable(
+  c: Cliente,
+  salaId: string,
+): Promise<DatosSala> {
+  const sala = await leerSala(c, salaId);
+  if (sala.estado !== 'ABIERTA' && sala.estado !== 'CUENTA_REGRESIVA') {
+    throw new ErrorSala('SALA_CERRADA', 'La sala ya no acepta cambios');
+  }
+  if (minutosHasta(sala.iniciaEn) <= 0) {
+    throw new ErrorSala('CIERRE_INMINENTE', 'El partido ya comenzó');
+  }
+  return sala;
+}
+
+
 // =====================================================================
 //  Entrar a un mercado (sec. 9.2)
 // =====================================================================
@@ -262,6 +280,7 @@ export async function apostar(
   lado: Lado,
   montoCentavos: number,
   claveIdempotencia: string = `apuesta:${randomUUID()}`,
+  opciones: { reglasPublicas?: boolean } = {},
 ): Promise<void> {
   const cfg = await config();
 
@@ -272,18 +291,51 @@ export async function apostar(
   // comprometido sin nada que lo respaldara. Cualquier operación con
   // dinero entra completa o no entra.
   await enTransaccion(async (c) => {
+    // Bloqueamos mercado y sala base: así dos personas que intenten tomar
+    // el último cupo o el último monto disponible no pueden entrar a la vez.
     const { rows } = await c.query(
-      `SELECT sala_id, estado FROM v_mercados WHERE id = $1`,
+      `SELECT sala_id, estado
+         FROM mercados
+        WHERE id = $1 AND eliminado_en IS NULL
+        FOR UPDATE`,
       [mercadoId],
     );
     if (rows.length === 0) {
       throw new ErrorSala('MERCADO_NO_EXISTE', `No existe el mercado ${mercadoId}`);
     }
+    await c.query(
+      `SELECT id FROM salas WHERE id = $1 AND eliminado_en IS NULL FOR UPDATE`,
+      [rows[0].sala_id],
+    );
     const sala = await verificarSalaOperable(c, rows[0].sala_id);
+
+    // El personal se bloquea antes de cualquier otra regla pública.
+    // Así la API siempre responde PERSONAL_NO_APUESTA y no un error
+    // accidental de país/lado.
+    await exigirQueNoSeaPersonal(usuarioId, c);
+
+    if (opciones.reglasPublicas) {
+      const esCreador = sala.anfitrionId === usuarioId;
+      if ((esCreador && lado !== 'A_FAVOR') || (!esCreador && lado !== 'EN_CONTRA')) {
+        throw new ErrorSala(
+          'SIN_PERMISO',
+          esCreador
+            ? 'Como creador solo puedes usar el lado izquierdo.'
+            : 'En esta sala puedes participar por el lado derecho.',
+        );
+      }
+    }
 
     // El usuario y la sala deben compartir país: una sala nunca mezcla
     // monedas, porque no habría forma de decidir si está balanceada.
     const pais = await validarMismoPais(usuarioId, sala.id, c);
+
+    if (!Number.isInteger(montoCentavos) || montoCentavos <= 0) {
+      throw new ErrorSala(
+        'MONTO_FUERA_DE_RANGO',
+        'El monto debe ser un número válido expresado en centavos',
+      );
+    }
 
     if (montoCentavos < sala.montoMinimoCentavos) {
       throw new ErrorSala(
@@ -306,13 +358,22 @@ export async function apostar(
       );
     }
 
-    // Cupos: se cuentan participantes de la SALA, no del mercado.
+    // Cupos: se cuentan personas distintas de toda la SALA. Si alguien
+    // ya participa en otro mercado de esta misma sala no consume otro cupo.
     const cupos = await c.query(
       `SELECT count(DISTINCT p.usuario_id)::int AS n
          FROM v_posiciones p
          JOIN v_mercados m ON m.id = p.mercado_id
         WHERE m.sala_id = $1`,
       [sala.id],
+    );
+    const yaParticipaSala = await c.query(
+      `SELECT 1
+         FROM v_posiciones p
+         JOIN v_mercados m ON m.id = p.mercado_id
+        WHERE m.sala_id = $1 AND p.usuario_id = $2
+        LIMIT 1`,
+      [sala.id, usuarioId],
     );
     const yaEsta = await c.query(
       `SELECT lado FROM v_posiciones WHERE mercado_id = $1 AND usuario_id = $2`,
@@ -330,15 +391,43 @@ export async function apostar(
       }
       throw new ErrorSala(
         'POSICION_DUPLICADA',
-        // No prometer lo que no existe: no hay forma de aumentar una
-        // apuesta. Decir que la hay manda a la persona a buscar un
-        // botón que no está.
-        'Ya apostaste en este mercado. Para cambiar el monto, sal de la sala y vuelve a entrar.',
+        sala.anfitrionId === usuarioId
+          ? 'Ya apostaste en este mercado. Usa «Editar monto» para cambiar tu aporte.'
+          : 'Ya apostaste en este mercado. Para cambiar el monto, sal de la sala y vuelve a entrar.',
       );
     }
 
-    if (cupos.rows[0].n >= sala.topeParticipantes) {
-      throw new ErrorSala('SALA_LLENA', 'La sala se llenó mientras decidías');
+    const maxParticipantes = Math.min(sala.topeParticipantes, cfg.maxParticipantesSala);
+    if (yaParticipaSala.rows.length === 0 && Number(cupos.rows[0].n) >= maxParticipantes) {
+      throw new ErrorSala(
+        'SALA_LLENA',
+        `La sala alcanzó su máximo de ${maxParticipantes} participantes`,
+      );
+    }
+
+    // En el flujo público, la suma de contrincantes nunca puede superar
+    // el monto publicado por el creador en ese mercado. La sala/mercado
+    // están bloqueados, así que el remanente no puede venderse dos veces.
+    if (opciones.reglasPublicas && sala.anfitrionId !== usuarioId && lado === 'EN_CONTRA') {
+      const montos = await c.query(
+        `SELECT
+           COALESCE(sum(CASE WHEN lado='A_FAVOR' THEN monto_centavos ELSE 0 END),0)::bigint AS favor,
+           COALESCE(sum(CASE WHEN lado='EN_CONTRA' THEN monto_centavos ELSE 0 END),0)::bigint AS contra
+           FROM v_posiciones
+          WHERE mercado_id = $1`,
+        [mercadoId],
+      );
+      const favor = Number(montos.rows[0].favor);
+      const contra = Number(montos.rows[0].contra);
+      const disponible = Math.max(0, favor - contra);
+      if (montoCentavos > disponible) {
+        throw new ErrorSala(
+          'MONTO_FUERA_DE_RANGO',
+          disponible > 0
+            ? `Solo quedan ${formatear(disponible, pais)} disponibles en este mercado`
+            : 'Este mercado ya alcanzó el monto publicado por el creador',
+        );
+      }
     }
 
     const activas = await c.query(
@@ -350,7 +439,7 @@ export async function apostar(
           AND s.estado IN ('ABIERTA','CUENTA_REGRESIVA','CERRADA','EN_JUEGO')`,
       [usuarioId],
     );
-    if (activas.rows[0].n >= cfg.maxSalasSimultaneas) {
+    if (yaParticipaSala.rows.length === 0 && activas.rows[0].n >= cfg.maxSalasSimultaneas) {
       throw new ErrorSala(
         'LIMITE_SALAS',
         `Ya estás en ${cfg.maxSalasSimultaneas} salas. Espera a que alguna se resuelva.`,
@@ -370,12 +459,6 @@ export async function apostar(
     if (usuario.rows[0].estado !== 'ACTIVO') {
       throw new ErrorSala('USUARIO_NO_HABILITADO', 'Cuenta no habilitada');
     }
-
-    // Quien puede anular una sala no puede tener dinero en juego:
-    // podría entrar, ver que va perdiendo, y anularla para recuperarlo.
-    // No hace falta mala fe — basta la posibilidad para que el sistema
-    // deje de ser creíble.
-    await exigirQueNoSeaPersonal(usuarioId, c);
 
     // El ledger retiene el dinero dentro de ESTA misma transacción.
     await entrarAMercado(usuarioId, mercadoId, sala.id, montoCentavos,
@@ -402,6 +485,236 @@ export async function apostar(
 
     await refrescarEstadoMercado(c, mercadoId);
   }, usuarioId);
+}
+
+// =====================================================================
+//  Gestión del creador antes del partido
+// =====================================================================
+
+/**
+ * El creador puede cambiar el monto de SU posición sin crear una segunda
+ * posición. Solo se mueve la diferencia en el ledger y todo queda dentro
+ * de una única transacción.
+ */
+export async function ajustarMiApuesta(
+  usuarioId: string,
+  mercadoId: string,
+  nuevoMontoCentavos: number,
+  claveIdempotencia: string = `ajuste:${randomUUID()}`,
+): Promise<void> {
+  await enTransaccion(async (c) => {
+    const mercado = await c.query(
+      `SELECT m.id, m.sala_id, m.usuario_crea, m.estado
+         FROM mercados m
+        WHERE m.id = $1 AND m.eliminado_en IS NULL
+        FOR UPDATE`,
+      [mercadoId],
+    );
+    if (mercado.rows.length === 0) {
+      throw new ErrorSala('MERCADO_NO_EXISTE', 'Ese mercado ya no existe');
+    }
+
+    await c.query(
+      `SELECT id FROM salas WHERE id = $1 AND eliminado_en IS NULL FOR UPDATE`,
+      [mercado.rows[0].sala_id],
+    );
+    const sala = await verificarSalaAdministrable(c, mercado.rows[0].sala_id);
+    await exigirQueNoSeaPersonal(usuarioId, c);
+    const pais = await validarMismoPais(usuarioId, sala.id, c);
+
+    const minimo = Math.max(sala.montoMinimoCentavos, pais.minimoApuesta);
+    if (!Number.isInteger(nuevoMontoCentavos) ||
+        nuevoMontoCentavos < minimo ||
+        nuevoMontoCentavos > pais.maximoApuesta) {
+      throw new ErrorSala(
+        'MONTO_FUERA_DE_RANGO',
+        `El monto debe estar entre ${formatear(minimo, pais)} y ${formatear(pais.maximoApuesta, pais)}`,
+      );
+    }
+
+    const posicion = await c.query(
+      `SELECT id, lado, monto_centavos
+         FROM posiciones
+        WHERE mercado_id = $1 AND usuario_id = $2 AND eliminado_en IS NULL
+        FOR UPDATE`,
+      [mercadoId, usuarioId],
+    );
+    if (posicion.rows.length === 0) {
+      throw new ErrorSala('SIN_POSICION', 'No tienes una apuesta en este mercado');
+    }
+
+    const esAnfitrion = sala.anfitrionId === usuarioId;
+    const lado = posicion.rows[0].lado as Lado;
+    if ((esAnfitrion && lado !== 'A_FAVOR') || (!esAnfitrion && lado !== 'EN_CONTRA')) {
+      throw new ErrorSala('SIN_PERMISO', 'Tu posición no corresponde al lado permitido en esta sala');
+    }
+
+    const actual = Number(posicion.rows[0].monto_centavos);
+
+    const montos = await c.query(
+      `SELECT
+         COALESCE(sum(CASE WHEN lado='A_FAVOR' THEN monto_centavos ELSE 0 END),0)::bigint AS favor,
+         COALESCE(sum(CASE WHEN lado='EN_CONTRA' THEN monto_centavos ELSE 0 END),0)::bigint AS contra
+         FROM v_posiciones
+        WHERE mercado_id = $1`,
+      [mercadoId],
+    );
+    const totalFavor = Number(montos.rows[0].favor);
+    const totalContra = Number(montos.rows[0].contra);
+
+    if (esAnfitrion) {
+      // El anfitrión puede aumentar o disminuir su propuesta. Al disminuir
+      // respeta el mínimo configurado y nunca puede bajar de lo que el lado
+      // contrario ya tomó. El máximo general ya fue validado arriba.
+      const pisoAnfitrion = Math.max(minimo, totalContra);
+      if (nuevoMontoCentavos < pisoAnfitrion) {
+        throw new ErrorSala(
+          'MONTO_FUERA_DE_RANGO',
+          `No puedes bajar de ${formatear(pisoAnfitrion, pais)}`,
+        );
+      }
+    } else {
+      // Un contrincante puede subir o bajar su propio monto, pero la suma
+      // del lado derecho nunca puede superar lo ofrecido por el anfitrión.
+      const contraSinMi = totalContra - actual;
+      const maximoPropio = Math.max(0, totalFavor - contraSinMi);
+      if (nuevoMontoCentavos > maximoPropio) {
+        throw new ErrorSala(
+          'MONTO_FUERA_DE_RANGO',
+          `Como máximo puedes dejar ${formatear(maximoPropio, pais)} en este mercado`,
+        );
+      }
+    }
+
+    const diferencia = nuevoMontoCentavos - actual;
+    if (diferencia === 0) return;
+
+    if (diferencia > 0) {
+      await entrarAMercado(
+        usuarioId, mercadoId, sala.id, diferencia, `${claveIdempotencia}:sube`, c,
+      );
+    } else {
+      await salirDeMercado(
+        usuarioId, mercadoId, sala.id, -diferencia, `${claveIdempotencia}:baja`, c,
+      );
+    }
+
+    await c.query(
+      `UPDATE posiciones SET monto_centavos = $3
+        WHERE mercado_id = $1 AND usuario_id = $2 AND eliminado_en IS NULL`,
+      [mercadoId, usuarioId, nuevoMontoCentavos],
+    );
+    await refrescarEstadoMercado(c, mercadoId);
+
+    if (!(await salaBalanceada(sala.id, c))) {
+      await c.query(
+        `UPDATE salas SET estado = 'ABIERTA', regresiva_termina_en = NULL
+          WHERE id = $1 AND estado = 'CUENTA_REGRESIVA'`,
+        [sala.id],
+      );
+    }
+  }, usuarioId);
+}
+
+// Alias temporal para no romper imports internos antiguos.
+export const ajustarApuestaCreador = ajustarMiApuesta;
+
+/** Elimina lógicamente un mercado creado por el anfitrión y devuelve
+ * cualquier dinero retenido. Solo antes del inicio del partido. */
+export async function eliminarMercadoCreador(
+  usuarioId: string,
+  mercadoId: string,
+): Promise<{ devueltoCentavos: number }> {
+  const datos = await enTransaccion(async (c) => {
+    const r = await c.query(
+      `SELECT m.id, m.sala_id, m.usuario_crea, m.estado,
+              s.anfitrion_id, s.estado AS estado_sala, p.inicia_en
+         FROM v_mercados m
+         JOIN v_salas s ON s.id = m.sala_id
+         JOIN v_partidos p ON p.id = s.partido_id
+        WHERE m.id = $1`,
+      [mercadoId],
+    );
+    if (r.rows.length === 0) throw new ErrorSala('MERCADO_NO_EXISTE', 'Ese mercado ya no existe');
+    const x = r.rows[0];
+    if (x.anfitrion_id !== usuarioId || x.usuario_crea !== usuarioId) {
+      throw new ErrorSala('SIN_PERMISO', 'Solo quien creó este mercado puede eliminarlo');
+    }
+    if (!['ABIERTA', 'CUENTA_REGRESIVA'].includes(x.estado_sala) ||
+        minutosHasta(new Date(x.inicia_en)) <= 0) {
+      throw new ErrorSala('CIERRE_INMINENTE', 'El partido ya comenzó');
+    }
+    if (!['PROPUESTO', 'BALANCEADO'].includes(x.estado)) {
+      throw new ErrorSala('ESTADO_INVALIDO', 'Este mercado ya fue cerrado o resuelto');
+    }
+    return { salaId: x.sala_id as string };
+  }, usuarioId);
+
+  const r = await anularMercado(mercadoId, datos.salaId, 'ERROR_OPERATIVO');
+
+  await enTransaccion(async (c) => {
+    await c.query(
+      `UPDATE mercados SET eliminado_en = now(), eliminado_por = $2 WHERE id = $1`,
+      [mercadoId, usuarioId],
+    );
+    if (!(await salaBalanceada(datos.salaId, c))) {
+      await c.query(
+        `UPDATE salas SET estado = 'ABIERTA', regresiva_termina_en = NULL
+          WHERE id = $1 AND estado = 'CUENTA_REGRESIVA'`,
+        [datos.salaId],
+      );
+    }
+  }, usuarioId);
+
+  return r;
+}
+
+/** El creador elimina toda la sala antes del partido. La eliminación es
+ * lógica; primero se anulan los mercados para devolver el 100% retenido. */
+export async function eliminarSalaCreador(
+  usuarioId: string,
+  salaId: string,
+): Promise<{ mercadosEliminados: number; devueltoCentavos: number }> {
+  const mercados = await enTransaccion(async (c) => {
+    const sala = await verificarSalaAdministrable(c, salaId);
+    if (sala.anfitrionId !== usuarioId) {
+      throw new ErrorSala('SIN_PERMISO', 'Solo el creador puede eliminar esta sala');
+    }
+
+    const r = await c.query(
+      `SELECT id FROM v_mercados
+        WHERE sala_id = $1 AND estado IN ('PROPUESTO','BALANCEADO')`,
+      [salaId],
+    );
+    return r.rows.map((x) => x.id as string);
+  }, usuarioId);
+
+  let devueltoCentavos = 0;
+  for (const mercadoId of mercados) {
+    const r = await anularMercado(mercadoId, salaId, 'ERROR_OPERATIVO');
+    devueltoCentavos += r.devueltoCentavos;
+  }
+
+  await enTransaccion(async (c) => {
+    await c.query(
+      `UPDATE mercados SET eliminado_en = now(), eliminado_por = $2
+        WHERE sala_id = $1 AND eliminado_en IS NULL`,
+      [salaId, usuarioId],
+    );
+    await c.query(
+      `UPDATE publicaciones SET eliminado_en = now(), eliminado_por = $2
+        WHERE sala_id = $1 AND eliminado_en IS NULL`,
+      [salaId, usuarioId],
+    );
+    await c.query(
+      `UPDATE salas SET eliminado_en = now(), eliminado_por = $2,
+                        regresiva_termina_en = NULL
+        WHERE id = $1 AND eliminado_en IS NULL`,
+      [salaId, usuarioId],
+    );
+  }, usuarioId);
+
+  return { mercadosEliminados: mercados.length, devueltoCentavos };
 }
 
 // =====================================================================

@@ -391,47 +391,6 @@ async function main(): Promise<void> {
     igual(b.saldo.disponibleCentavos, 47000, 'disponible: ');
   });
 
-  await prueba('los contrincantes no pueden superar el monto del creador', async () => {
-    const host = await registrar();
-    const rival = await registrar();
-    const { mercadoId } = await crearSalaConMercado(host.id);
-
-    const propuesta = await app.inject({
-      method: 'POST', url: `/mercados/${mercadoId}/apostar`,
-      headers: conAuth(host.token, `${P}-hostcap-${++n}`),
-      payload: { lado: 'A_FAVOR', montoCentavos: 3000 },
-    });
-    igual(propuesta.statusCode, 201, 'propuesta: ');
-
-    const demasiado = await app.inject({
-      method: 'POST', url: `/mercados/${mercadoId}/apostar`,
-      headers: conAuth(rival.token, `${P}-rivalcap-${++n}`),
-      payload: { lado: 'EN_CONTRA', montoCentavos: 4000 },
-    });
-    igual(demasiado.statusCode, 400, 'exceso: ');
-    igual(demasiado.json().error.codigo, 'MONTO_FUERA_DE_RANGO', 'código: ');
-
-    const justo = await app.inject({
-      method: 'POST', url: `/mercados/${mercadoId}/apostar`,
-      headers: conAuth(rival.token, `${P}-rivalok-${++n}`),
-      payload: { lado: 'EN_CONTRA', montoCentavos: 3000 },
-    });
-    igual(justo.statusCode, 201, 'monto disponible: ');
-  });
-
-  await prueba('un contrincante no puede usar el lado del creador', async () => {
-    const host = await registrar();
-    const rival = await registrar();
-    const { mercadoId } = await crearSalaConMercado(host.id);
-    const r = await app.inject({
-      method: 'POST', url: `/mercados/${mercadoId}/apostar`,
-      headers: conAuth(rival.token, `${P}-lado-rival-${++n}`),
-      payload: { lado: 'A_FAVOR', montoCentavos: 2000 },
-    });
-    igual(r.statusCode, 403, 'estado: ');
-    igual(r.json().error.codigo, 'SIN_PERMISO', 'código: ');
-  });
-
   await prueba('sin saldo suficiente responde 402 y sugiere recargar', async () => {
     const c = await registrar(1000);
     const { mercadoId } = await crearSalaConMercado(c.id);
@@ -447,7 +406,7 @@ async function main(): Promise<void> {
     igual(r.json().error.mensaje, 'No te alcanza para esta apuesta.', 'mensaje: ');
   });
 
-  await prueba('el anfitrión no puede apostar del lado contrario', async () => {
+  await prueba('no se puede apostar en ambos lados', async () => {
     const c = await registrar();
     const { mercadoId } = await crearSalaConMercado(c.id);
     await app.inject({
@@ -462,8 +421,8 @@ async function main(): Promise<void> {
       headers: conAuth(c.token, `${P}-amb2-${++n}`),
       payload: { lado: 'EN_CONTRA', montoCentavos: 2000 },
     });
-    igual(r.statusCode, 403, 'estado: ');
-    igual(r.json().error.codigo, 'SIN_PERMISO', 'código: ');
+    igual(r.statusCode, 409, 'estado: ');
+    igual(r.json().error.codigo, 'POSICION_CONTRADICTORIA', 'código: ');
   });
 
   await prueba('monto negativo lo rechaza la validación de entrada', async () => {

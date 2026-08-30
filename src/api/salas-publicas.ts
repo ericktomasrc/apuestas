@@ -13,7 +13,12 @@ import { randomBytes } from 'node:crypto';
 
 import { pool, enTransaccion } from '../infraestructura/db.js';
 import { ESQUEMA_ERROR } from './docs.js';
-import { config, apostar } from '../servicios/salas.servicio.js';
+import {
+  config,
+  ajustarApuestaCreador,
+  eliminarMercadoCreador,
+  eliminarSalaCreador,
+} from '../servicios/salas.servicio.js';
 import { paisDeUsuario, formatear } from '../servicios/paises.servicio.js';
 import { exigirQueNoSeaPersonal } from '../servicios/seguridad.servicio.js';
 import {
@@ -113,7 +118,6 @@ export function registrarRutasSalas(
 
     const { rows } = await pool.query(
       `SELECT p.id, p.equipo_local, p.equipo_visitante, p.inicia_en,
-              p.logo_local, p.logo_visitante,
               l.nombre AS liga, d.clave AS deporte, d.nombre AS deporte_nombre,
               COALESCE(array_agg(ml.tipo_mercado ORDER BY ml.tipo_mercado)
                        FILTER (WHERE ml.tipo_mercado IS NOT NULL), '{}') AS mercados,
@@ -129,7 +133,6 @@ export function registrarRutasSalas(
           AND p.inicia_en > now() + make_interval(mins => $1)
           AND ($2::text IS NULL OR d.clave = $2)
         GROUP BY p.id, p.equipo_local, p.equipo_visitante, p.inicia_en,
-              p.logo_local, p.logo_visitante,
                  l.nombre, d.clave, d.nombre
         ORDER BY p.inicia_en ASC
         LIMIT $3`,
@@ -173,7 +176,7 @@ export function registrarRutasSalas(
         properties: {
           partidoId: { type: 'string', format: 'uuid' },
           descripcion: { type: 'string', maxLength: 140 },
-          topeParticipantes: { type: 'integer', minimum: 2, maximum: 20 },
+          topeParticipantes: { type: 'integer', minimum: 2 },
           montoMinimoCentavos: { type: 'integer', minimum: 1 },
           mercados: {
             type: 'array',
@@ -208,7 +211,7 @@ export function registrarRutasSalas(
       .object({
         partidoId: z.string().uuid(),
         descripcion: z.string().max(140).optional(),
-        topeParticipantes: z.number().int().min(2).max(20),
+        topeParticipantes: z.number().int().min(2),
         montoMinimoCentavos: z.number().int().positive(),
         mercados: z
           .array(z.object({
@@ -226,6 +229,13 @@ export function registrarRutasSalas(
     const pais = await paisDeUsuario(sesion.usuarioId);
     const cfg = await config();
 
+    if (d.topeParticipantes > cfg.maxParticipantesSala) {
+      throw Object.assign(new Error('participantes'), {
+        codigo: 'MONTO_FUERA_DE_RANGO',
+        mensajeUsuario: `Máximo ${cfg.maxParticipantesSala} participantes por sala.`,
+      });
+    }
+
     if (d.mercados.length > cfg.maxMercadosPorSala) {
       throw Object.assign(new Error('mercados'), {
         codigo: 'MONTO_FUERA_DE_RANGO',
@@ -241,8 +251,7 @@ export function registrarRutasSalas(
 
     const resultado = await enTransaccion(async (c) => {
       const partido = await c.query(
-        `SELECT p.id, p.equipo_local, p.equipo_visitante, p.inicia_en,
-              p.logo_local, p.logo_visitante, p.liga_id
+        `SELECT p.id, p.equipo_local, p.equipo_visitante, p.inicia_en, p.liga_id
            FROM v_partidos p
           WHERE p.id = $1 AND p.estado = 'PROGRAMADO'`,
         [d.partidoId],
@@ -350,6 +359,177 @@ export function registrarRutasSalas(
     }, sesion.usuarioId);
 
     return respuesta.code(201).send(resultado);
+  });
+
+  // ===================================================================
+  //  Gestión de la sala por su creador
+  // ===================================================================
+
+  app.post('/salas/:id/mercados', {
+    schema: {
+      tags: ['salas'],
+      summary: 'Agregar un mercado a una sala propia',
+      security: [{ bearer: [] }],
+      params: {
+        type: 'object',
+        properties: { id: { type: 'string', format: 'uuid' } },
+        required: ['id'],
+      },
+      body: {
+        type: 'object',
+        properties: {
+          tipo: { type: 'string' },
+          linea: { type: 'number' },
+          equipo: { type: 'string', maxLength: 60 },
+        },
+        required: ['tipo'],
+      },
+      response: {
+        201: { type: 'object', additionalProperties: true },
+        400: ESQUEMA_ERROR, 401: ESQUEMA_ERROR, 403: ESQUEMA_ERROR, 409: ESQUEMA_ERROR,
+      },
+    },
+  }, async (peticion, respuesta) => {
+    const sesion = await exigirSesion(peticion);
+    await exigirQueNoSeaPersonal(sesion.usuarioId);
+    const { id } = z.object({ id: z.string().uuid() }).parse(peticion.params);
+    const d = z.object({
+      tipo: z.string(),
+      linea: z.number().optional(),
+      equipo: z.string().max(60).optional(),
+    }).parse(peticion.body);
+
+    const cfg = await config();
+    const resultado = await enTransaccion(async (c) => {
+      const sala = await c.query(
+        `SELECT s.id, s.anfitrion_id, s.estado, p.inicia_en, p.liga_id,
+                p.equipo_local, p.equipo_visitante
+           FROM v_salas s
+           JOIN v_partidos p ON p.id = s.partido_id
+          WHERE s.id = $1`,
+        [id],
+      );
+      if (sala.rows.length === 0) {
+        throw Object.assign(new Error('sala'), { codigo: 'SALA_NO_EXISTE' });
+      }
+      const x = sala.rows[0];
+      if (x.anfitrion_id !== sesion.usuarioId) {
+        throw Object.assign(new Error('permiso'), {
+          codigo: 'SIN_PERMISO', mensajeUsuario: 'Solo el creador puede agregar mercados.',
+        });
+      }
+      if (!['ABIERTA', 'CUENTA_REGRESIVA'].includes(x.estado)) {
+        throw Object.assign(new Error('estado'), {
+          codigo: 'ESTADO_INVALIDO', mensajeUsuario: 'La sala ya no admite cambios.',
+        });
+      }
+      const faltan = new Date(x.inicia_en).getTime() - Date.now();
+      if (faltan <= 0) {
+        throw Object.assign(new Error('tarde'), {
+          codigo: 'CIERRE_INMINENTE',
+          mensajeUsuario: 'El partido ya comenzó.',
+        });
+      }
+
+      const total = await c.query(
+        `SELECT count(*)::int AS n FROM v_mercados WHERE sala_id = $1`,
+        [id],
+      );
+      if (Number(total.rows[0].n) >= cfg.maxMercadosPorSala) {
+        throw Object.assign(new Error('limite'), {
+          codigo: 'MONTO_FUERA_DE_RANGO',
+          mensajeUsuario: `Máximo ${cfg.maxMercadosPorSala} mercados por sala.`,
+        });
+      }
+
+      const def = MERCADOS[d.tipo];
+      const permitido = await c.query(
+        `SELECT 1 FROM mercados_por_liga
+          WHERE liga_id = $1 AND tipo_mercado = $2 AND eliminado_en IS NULL`,
+        [x.liga_id, d.tipo],
+      );
+      if (!def || permitido.rows.length === 0) {
+        throw Object.assign(new Error('mercado'), {
+          codigo: 'MERCADO_NO_EXISTE',
+          mensajeUsuario: `«${d.tipo}» no está disponible en esta liga.`,
+        });
+      }
+      if (def.linea && (d.linea === undefined || Math.abs(d.linea - Math.floor(d.linea) - 0.5) > 1e-9)) {
+        throw Object.assign(new Error('linea'), {
+          codigo: 'MONTO_FUERA_DE_RANGO',
+          mensajeUsuario: 'La línea tiene que terminar en .5 para que no haya empate.',
+        });
+      }
+
+      const equipo = def.equipo
+        ? (d.equipo === x.equipo_visitante ? x.equipo_visitante : x.equipo_local)
+        : null;
+      const [favor, contra] = def.etiquetas(d.linea ?? null, equipo);
+      const nuevo = await c.query(
+        `INSERT INTO mercados (sala_id, tipo_mercado, linea, equipo_referencia,
+                               etiqueta_favor, etiqueta_contra)
+         VALUES ($1,$2,$3,$4,$5,$6)
+         RETURNING id, tipo_mercado, linea, etiqueta_favor, etiqueta_contra, estado`,
+        [id, d.tipo, def.linea ? d.linea : null, equipo, favor, contra],
+      );
+      return nuevo.rows[0];
+    }, sesion.usuarioId);
+
+    return respuesta.code(201).send({ mercado: resultado });
+  });
+
+  app.patch('/mercados/:id/mi-apuesta', {
+    schema: {
+      tags: ['salas'],
+      summary: 'Cambiar el monto de mi apuesta',
+      security: [{ bearer: [] }],
+      params: {
+        type: 'object', properties: { id: { type: 'string', format: 'uuid' } }, required: ['id'],
+      },
+      body: {
+        type: 'object', properties: { montoCentavos: { type: 'integer', minimum: 1 } },
+        required: ['montoCentavos'],
+      },
+      response: { 200: { type: 'object', additionalProperties: true }, 400: ESQUEMA_ERROR, 401: ESQUEMA_ERROR, 403: ESQUEMA_ERROR, 409: ESQUEMA_ERROR },
+    },
+  }, async (peticion) => {
+    const sesion = await exigirSesion(peticion);
+    const { id } = z.object({ id: z.string().uuid() }).parse(peticion.params);
+    const { montoCentavos } = z.object({ montoCentavos: z.number().int().positive() }).parse(peticion.body);
+    const clave = String(peticion.headers['idempotency-key'] ?? '').trim();
+    if (!clave) {
+      throw Object.assign(new Error('idempotencia'), {
+        codigo: 'FALTA_IDEMPOTENCIA', mensajeUsuario: 'Falta Idempotency-Key.',
+      });
+    }
+    await ajustarApuestaCreador(sesion.usuarioId, id, montoCentavos, clave);
+    return { ok: true };
+  });
+
+  app.delete('/mercados/:id', {
+    schema: {
+      tags: ['salas'], summary: 'Eliminar un mercado propio antes del cierre',
+      security: [{ bearer: [] }],
+      params: { type: 'object', properties: { id: { type: 'string', format: 'uuid' } }, required: ['id'] },
+      response: { 200: { type: 'object', additionalProperties: true }, 401: ESQUEMA_ERROR, 403: ESQUEMA_ERROR, 404: ESQUEMA_ERROR, 409: ESQUEMA_ERROR },
+    },
+  }, async (peticion) => {
+    const sesion = await exigirSesion(peticion);
+    const { id } = z.object({ id: z.string().uuid() }).parse(peticion.params);
+    return eliminarMercadoCreador(sesion.usuarioId, id);
+  });
+
+  app.delete('/salas/:id', {
+    schema: {
+      tags: ['salas'], summary: 'Eliminar una sala propia antes del cierre',
+      security: [{ bearer: [] }],
+      params: { type: 'object', properties: { id: { type: 'string', format: 'uuid' } }, required: ['id'] },
+      response: { 200: { type: 'object', additionalProperties: true }, 401: ESQUEMA_ERROR, 403: ESQUEMA_ERROR, 404: ESQUEMA_ERROR, 409: ESQUEMA_ERROR },
+    },
+  }, async (peticion) => {
+    const sesion = await exigirSesion(peticion);
+    const { id } = z.object({ id: z.string().uuid() }).parse(peticion.params);
+    return eliminarSalaCreador(sesion.usuarioId, id);
   });
 
   // ===================================================================
@@ -505,15 +685,43 @@ export function registrarRutasSalas(
       tags: ['salas'],
       summary: 'Tipos de apuesta y cómo se llaman',
       description:
-        'Las etiquetas salen del servidor a propósito: si la app las armara por su cuenta y difirieran, la sala mostraría una cosa y pagaría otra.',
+        'Las etiquetas salen del servidor. Si se manda salaId, solo devuelve los mercados habilitados para la liga de esa sala.',
+      querystring: {
+        type: 'object',
+        properties: { salaId: { type: 'string', format: 'uuid' } },
+      },
     },
-  }, async () => ({
-    mercados: Object.entries(MERCADOS).map(([tipo, def]) => ({
-      tipo,
-      nombre: def.nombre,
-      necesitaLinea: def.linea,
-      necesitaEquipo: def.equipo,
-      ejemplo: def.etiquetas(2.5, 'Botafogo'),
-    })),
-  }));
+  }, async (peticion) => {
+    const q = z.object({ salaId: z.string().uuid().optional() }).parse(peticion.query);
+    let permitidos = Object.keys(MERCADOS);
+
+    if (q.salaId) {
+      const { rows } = await pool.query(
+        `SELECT ml.tipo_mercado
+           FROM v_salas s
+           JOIN v_partidos p ON p.id = s.partido_id
+           JOIN mercados_por_liga ml
+             ON ml.liga_id = p.liga_id AND ml.eliminado_en IS NULL
+          WHERE s.id = $1
+          ORDER BY ml.tipo_mercado`,
+        [q.salaId],
+      );
+      permitidos = rows.map((r) => String(r.tipo_mercado));
+    }
+
+    return {
+      mercados: permitidos
+        .filter((tipo) => MERCADOS[tipo])
+        .map((tipo) => {
+          const def = MERCADOS[tipo];
+          return {
+            tipo,
+            nombre: def.nombre,
+            necesitaLinea: def.linea,
+            necesitaEquipo: def.equipo,
+            ejemplo: def.etiquetas(2.5, 'Botafogo'),
+          };
+        }),
+    };
+  });
 }

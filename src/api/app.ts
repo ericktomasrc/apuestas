@@ -1006,7 +1006,8 @@ export async function crearServidor(
     }
 
     const mercados = await pool.query(
-      `SELECT b.*, m.tipo_mercado, m.linea, m.etiqueta_favor, m.etiqueta_contra,
+      `SELECT b.*, m.tipo_mercado, m.linea, m.equipo_referencia,
+              m.etiqueta_favor, m.etiqueta_contra,
               m.estado AS estado_mercado, m.lado_ganador
          FROM v_balance_mercados b
          JOIN v_mercados m ON m.id = b.mercado_id
@@ -1018,11 +1019,13 @@ export async function crearServidor(
     // Quién está en cada lado. Ver los nombres es parte de la gracia:
     // se juega contra gente, no contra un sistema.
     const posiciones = await pool.query(
-      `SELECT po.mercado_id, po.lado, po.monto_centavos, u.alias,
-              (po.usuario_id = $2::uuid) AS soy_yo
+      `SELECT po.mercado_id, po.usuario_id, po.lado, po.monto_centavos, u.alias,
+              (po.usuario_id = $2::uuid) AS soy_yo,
+              (po.usuario_id = s.anfitrion_id) AS es_anfitrion
          FROM v_posiciones po
          JOIN v_usuarios u ON u.id = po.usuario_id
          JOIN v_mercados m ON m.id = po.mercado_id
+         JOIN v_salas s ON s.id = m.sala_id
         WHERE m.sala_id = $1
         ORDER BY po.monto_centavos DESC`,
       [id, yo],
@@ -1081,6 +1084,7 @@ export async function crearServidor(
         400: ESQUEMA_ERROR,
         401: ESQUEMA_ERROR,
         402: ESQUEMA_ERROR,
+        403: ESQUEMA_ERROR,
         409: ESQUEMA_ERROR,
       },
     },
@@ -1090,7 +1094,10 @@ export async function crearServidor(
     const { id } = z.object({ id: z.string().uuid() }).parse(peticion.params);
     const datos = Apuesta.parse(peticion.body);
 
-    await apostar(sesion.usuarioId, id, datos.lado, datos.montoCentavos, clave);
+    // Las reglas públicas (lado del creador/contrincante, cupos y monto
+    // restante) se validan dentro de la misma transacción que retiene el
+    // dinero. Así no pueden saltarse ni por carrera ni por petición manual.
+    await apostar(sesion.usuarioId, id, datos.lado, datos.montoCentavos, clave, { reglasPublicas: true });
 
     return respuesta.code(201).send({
       balance: await balanceDe(id),

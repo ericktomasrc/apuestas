@@ -234,15 +234,33 @@ function pintarSelector() {
         : ''}
     </div>`;
 
-  // «Quién puede entrar» aparece con la primera jugada: un botón
-  // intermedio para llegar a dos campos es un paso de más.
-  document.getElementById('paso-dos').innerHTML = vacio ? '' : bloqueQuienEntra();
+  // El editor de una sala reutiliza este MISMO selector. Solo cambia la
+  // acción final: en vez de publicar una sala nueva, guarda altas/bajas
+  // de mercados existentes.
+  if (S.datos.modoEditorSala) {
+    document.getElementById('paso-dos').innerHTML = `
+      <div class="caja-jugadas selector-guardar-cambios">
+        <button class="btn btn-favor btn-ancho" onclick="guardarMercadosSalaDesdeSelector()">
+          Guardar cambios
+        </button>
+      </div>`;
+  } else {
+    // «Quién puede entrar» aparece con la primera jugada: un botón
+    // intermedio para llegar a dos campos es un paso de más.
+    document.getElementById('paso-dos').innerHTML = vacio ? '' : bloqueQuienEntra();
+  }
 }
 
+
+function maxParticipantesSala() {
+  const n = Number(S.limites?.maxParticipantesSala ?? 10);
+  return Number.isInteger(n) && n >= 2 ? n : 10;
+}
 
 function bloqueQuienEntra() {
   const dec = S.pais?.decimales ?? 2;
   const minimo = S.pais?.minimoApuesta ?? 500;
+  const maxCupos = maxParticipantesSala();
 
   return `
   <div class="caja-jugadas">
@@ -253,18 +271,18 @@ function bloqueQuienEntra() {
     <div class="par">
       <div class="campo">
         <label for="minimo">Apuesta mínima</label>
-        <input id="minimo" inputmode="decimal"
+        <input id="minimo" type="text" inputmode="decimal"
           value="${(minimo / (10 ** dec)).toFixed(dec)}"
           oninput="limpiarMinimo(this)" onblur="corregirMinimo(this)">
       </div>
       <div class="campo">
         <label for="tope">Cupos</label>
-        <input id="tope" inputmode="numeric" value="10"
+        <input id="tope" inputmode="numeric" value="${Math.min(10, maxCupos)}"
           oninput="limpiarCupos(this)" onblur="corregirCupos(this)">
       </div>
     </div>
     <p class="pista" id="aviso-entrada">
-      Cada persona pone ${plata(minimo)} o más. Caben hasta 10.</p>
+      Cada persona pone ${plata(minimo)} o más. Caben hasta ${maxCupos}.</p>
 
     <div class="pie-fijo">
       <button class="btn btn-favor btn-ancho" onclick="publicarSala()">
@@ -282,10 +300,16 @@ function bloqueQuienEntra() {
  * perder el tiempo a alguien por algo que la app podía evitar.
  */
 function limpiarMinimo(campo) {
-  // Solo dígitos y un separador decimal, y nunca empezando en 0.
-  let v = campo.value.replace(/[^\d.,]/g, '').replace(',', '.');
-  const partes = v.split('.');
-  if (partes.length > 2) v = partes[0] + '.' + partes.slice(1).join('');
+  // Solo dígitos y un separador decimal. Además se limita la cantidad
+  // de decimales a la moneda del país.
+  const decimales = Number(S.pais?.decimales ?? 2);
+  let v = String(campo.value ?? '').replace(/[^\d.,]/g, '').replace(',', '.');
+  const punto = v.indexOf('.');
+  if (punto >= 0) {
+    v = v.slice(0, punto + 1) + v.slice(punto + 1).replace(/\./g, '');
+    const [entero, dec = ''] = v.split('.');
+    v = entero + '.' + dec.slice(0, decimales);
+  }
   v = v.replace(/^0+(?=\d)/, '');
   if (v === '0') v = '';
   campo.value = v;
@@ -305,7 +329,8 @@ function corregirMinimo(campo) {
 
 function limpiarCupos(campo) {
   let v = campo.value.replace(/\D/g, '').replace(/^0+/, '');
-  if (Number(v) > 20) v = '20';
+  const max = maxParticipantesSala();
+  if (Number(v) > max) v = String(max);
   campo.value = v;
   validarEntrada();
 }
@@ -320,6 +345,7 @@ function validarEntrada() {
   const piso = S.pais?.minimoApuesta ?? 500;
   const monto = aUnidades(document.getElementById('minimo').value);
   const cupos = Number(document.getElementById('tope').value.replace(/\D/g, ''));
+  const maxCupos = maxParticipantesSala();
   const nota = document.getElementById('aviso-entrada');
   const mal = t => `<span style="color:var(--mal)">${t}</span>`;
 
@@ -332,8 +358,8 @@ function validarEntrada() {
       `${plata(monto)} es muy poco. En Perú la apuesta más baja permitida es ${plata(piso)}.`);
   } else if (cupos < 2) {
     nota.innerHTML = mal('Tienen que caber al menos 2: solo no hay contra quién apostar.');
-  } else if (cupos > 20) {
-    nota.innerHTML = mal('El máximo son 20 personas por sala.');
+  } else if (cupos > maxCupos) {
+    nota.innerHTML = mal(`El máximo son ${maxCupos} participantes por sala.`);
   } else {
     nota.innerHTML = `Cada persona pone ${plata(monto)} o más. Caben hasta ${cupos}.`;
   }
@@ -473,13 +499,14 @@ async function publicarSala() {
   const minimo = aUnidades(document.getElementById('minimo').value);
   const cupos = Number(document.getElementById('tope').value.replace(/\D/g, ''));
   const piso = S.pais?.minimoApuesta ?? 500;
+  const maxCupos = maxParticipantesSala();
 
   if (minimo <= 0) return aviso('Escribe cuánto tiene que poner cada persona.', 'mal');
   if (minimo < piso) {
     return aviso(`La apuesta más baja permitida es ${plata(piso)}.`, 'mal');
   }
-  if (!(cupos >= 2 && cupos <= 20)) {
-    return aviso('Tienen que caber entre 2 y 20 personas.', 'mal');
+  if (!(cupos >= 2 && cupos <= maxCupos)) {
+    return aviso(`Tienen que caber entre 2 y ${maxCupos} participantes.`, 'mal');
   }
 
   await accion(async () => {

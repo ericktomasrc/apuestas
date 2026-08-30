@@ -208,8 +208,13 @@ export async function salirDeMercado(
   salaId: string,
   montoCentavos: number,
   claveIdempotencia: string,
+  cliente?: Cliente,
 ): Promise<void> {
-  await enTransaccion(async (c) => {
+  if (!Number.isInteger(montoCentavos) || montoCentavos <= 0) {
+    throw new ErrorSaldo('MONTO_INVALIDO', 'El monto a liberar debe ser un entero positivo');
+  }
+
+  const trabajo = async (c: Cliente): Promise<void> => {
     const { rows } = await c.query(
       `SELECT 1 FROM liquidaciones WHERE mercado_id = $1`,
       [mercadoId],
@@ -226,7 +231,10 @@ export async function salirDeMercado(
       salaId,
       claveIdempotencia,
     });
-  }, usuarioId);
+  };
+
+  if (cliente) await trabajo(cliente);
+  else await enTransaccion(trabajo, usuarioId);
 }
 
 // ---------------------------------------------------------------------

@@ -5815,22 +5815,37 @@ body.sala-activa .sala-mas-participantes{
   body.sala-activa .sala-participantes-compactos .sala-chip-texto strong{max-width:48px!important}
 }
 
-/* ============================================================
-   SALA V14 — anfitrión del mismo tamaño que el apostador
-   ============================================================ */
-body.sala-activa .sala-participantes-compactos .sala-grupo-anfitrion .sala-chip,
-body.sala-activa .sala-participantes-compactos .sala-participantes-apostadores .sala-chip{
-  width:calc(100% - 42px)!important;
-  max-width:calc(100% - 42px)!important;
-  min-width:0!important;
-  height:31px!important;
-  box-sizing:border-box!important;
-  flex:1 1 auto!important;
+/* ==============================================================
+   FIX 2026-08-30 — texto visible en selector "Define tu apuesta"
+   ============================================================== */
+body.sala-activa .selector-original-sala .tipo-texto,
+body.sala-activa .selector-original-sala .tipo-texto > div,
+body.sala-activa .selector-original-sala .tipo-texto strong,
+body.sala-activa .selector-original-sala .tipo-texto b {
+  color: #dce8df !important;
+  opacity: 1 !important;
 }
-body.sala-activa .sala-participantes-compactos .sala-grupo-anfitrion .sala-chip-avatar,
-body.sala-activa .sala-participantes-compactos .sala-participantes-apostadores .sala-chip-avatar{
-  flex:0 0 25px!important;
-  width:25px!important;
-  height:25px!important;
-  line-height:25px!important;
+
+body.sala-activa .selector-original-sala .tipo-texto small,
+body.sala-activa .selector-original-sala .tipo .pista,
+body.sala-activa .selector-original-sala .tipo [class*="desc"],
+body.sala-activa .selector-original-sala .tipo [class*="sub"] {
+  color: #93a89a !important;
+  opacity: 1 !important;
+}
+
+body.sala-activa .selector-original-sala .tipo.puesto .tipo-texto,
+body.sala-activa .selector-original-sala .tipo.puesto .tipo-texto > div,
+body.sala-activa .selector-original-sala .tipo.puesto .tipo-texto strong,
+body.sala-activa .selector-original-sala .tipo.abierto .tipo-texto,
+body.sala-activa .selector-original-sala .tipo.abierto .tipo-texto > div,
+body.sala-activa .selector-original-sala .tipo.abierto .tipo-texto strong {
+  color: #eef7f0 !important;
+  opacity: 1 !important;
+}
+
+body.sala-activa .selector-original-sala .tipo.puesto .tipo-texto small,
+body.sala-activa .selector-original-sala .tipo.abierto .tipo-texto small {
+  color: #a8b9ad !important;
+  opacity: 1 !important;
 }

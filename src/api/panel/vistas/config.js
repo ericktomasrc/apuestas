@@ -10,7 +10,11 @@ VISTAS.config = async () => {
           <br><span style="color:var(--tenue);font-size:12px">${esc(c.descripcion || '')}</span></td>
         <td class="der num"><strong>${esc(c.valor)}</strong></td>
         <td class="der">${puede('config.gestionar')
-          ? `<button class="btn-plano btn-chico" onclick="editarConfig('${esc(c.clave)}','${esc(c.valor)}','${esc(c.tipo)}')">Cambiar</button>` : ''}</td>
+          ? `<button class="btn-plano btn-chico"
+                data-clave="${esc(c.clave)}"
+                data-valor="${esc(c.valor)}"
+                data-tipo="${esc(c.tipo)}"
+                onclick="editarConfigDesdeBoton(this)">Cambiar</button>` : ''}</td>
       </tr>`).join('')}</tbody></table></div>
     <p class="pista">Cuidado con bajar <span class="num">minutos_cierre_antes</span>:
     esos minutos existen para que nadie se salga de una sala al enterarse de la
@@ -18,7 +22,12 @@ VISTAS.config = async () => {
   `);
 };
 
+function editarConfigDesdeBoton(boton) {
+  editarConfig(boton.dataset.clave, boton.dataset.valor, boton.dataset.tipo);
+}
+
 function editarConfig(clave, valor, tipo) {
+  S.datos.configClaveActual = clave;
   modal(clave, `
     <div class="campo"><label for="c_valor">Valor</label>
       ${tipo === 'BOOLEAN'
@@ -28,10 +37,12 @@ function editarConfig(clave, valor, tipo) {
              ${tipo === 'NUMERO' ? 'type="number" step="any"' : ''}>`}
     </div>`,
     `<button class="btn-plano" onclick="cerrarModal()">Cancelar</button>
-     <button class="btn" onclick="guardarConfig('${esc(clave)}')">Guardar</button>`);
+     <button class="btn" onclick="guardarConfig('${escJs(clave)}')">Guardar</button>`);
 }
 
-async function guardarConfig(clave) {
+async function guardarConfig() {
+  const clave = S.datos.configClaveActual;
+  if (!clave) throw new Error('No se pudo identificar el parámetro.');
   await accion(async () => {
     await api('/config/' + encodeURIComponent(clave), {
       method:'PATCH',

@@ -114,7 +114,6 @@ PANTALLAS.muro = async () => {
     </div>
   `,
   `
-    ${bloqueSaldoMuro()}
     ${bloqueActividad(act.actividad ?? [], 3)}
     ${bloqueLigas(lig.ligas ?? [], 5)}
     ${promoTandaBet()}
@@ -302,7 +301,6 @@ function bloqueSaldoMuro() {
         <svg viewBox="0 0 48 48"><path d="M7 14h28a5 5 0 0 1 5 5v19H9a5 5 0 0 1-5-5V11a5 5 0 0 1 5-5h25v8"/><path d="M31 22h12v10H31a5 5 0 0 1 0-10z"/><circle cx="34" cy="27" r="1.5"/></svg>
       </span>
       <div><small>Saldo disponible</small><strong>${plata(disponible)}</strong></div>
-      <button class="wallet-recargar" onclick="ir('billetera')">+ Recargar</button>
     </div>
     <div class="wallet-enjuego">En juego: <b>${plata(retenido)}</b></div>
   </div>`;

@@ -241,17 +241,27 @@ async function verificarSalaOperable(
 }
 
 /** Gestión del creador: se permite hasta que realmente empieza el partido. */
-async function verificarSalaAdministrable(
+export async function verificarSalaAdministrable(
   c: Cliente,
   salaId: string,
 ): Promise<DatosSala> {
   const sala = await leerSala(c, salaId);
+  const cfg = await config(c);
+
   if (sala.estado !== 'ABIERTA' && sala.estado !== 'CUENTA_REGRESIVA') {
     throw new ErrorSala('SALA_CERRADA', 'La sala ya no acepta cambios');
   }
-  if (minutosHasta(sala.iniciaEn) <= 0) {
-    throw new ErrorSala('CIERRE_INMINENTE', 'El partido ya comenzó');
+
+  // Segunda barrera del servidor:
+  // aunque el scheduler todavía no haya cambiado el estado de la sala,
+  // desde el corte configurado ya no se permiten modificaciones.
+  if (minutosHasta(sala.iniciaEn) < cfg.minutosCierreAntes) {
+    throw new ErrorSala(
+      'CIERRE_INMINENTE',
+      `La sala ya está en cierre. Faltan menos de ${cfg.minutosCierreAntes} min para el partido`,
+    );
   }
+
   return sala;
 }
 
@@ -640,10 +650,9 @@ export async function eliminarMercadoCreador(
     if (x.anfitrion_id !== usuarioId || x.usuario_crea !== usuarioId) {
       throw new ErrorSala('SIN_PERMISO', 'Solo quien creó este mercado puede eliminarlo');
     }
-    if (!['ABIERTA', 'CUENTA_REGRESIVA'].includes(x.estado_sala) ||
-        minutosHasta(new Date(x.inicia_en)) <= 0) {
-      throw new ErrorSala('CIERRE_INMINENTE', 'El partido ya comenzó');
-    }
+    // Mismo corte central que el resto de operaciones de la sala.
+    await verificarSalaAdministrable(c, x.sala_id);
+
     if (!['PROPUESTO', 'BALANCEADO'].includes(x.estado)) {
       throw new ErrorSala('ESTADO_INVALIDO', 'Este mercado ya fue cerrado o resuelto');
     }
@@ -806,7 +815,7 @@ export async function iniciarCuentaRegresiva(
   solicitanteId: string | null = null,
 ): Promise<Date> {
   return enTransaccion(async (c) => {
-    const sala = await leerSala(c, salaId);
+    const sala = await verificarSalaAdministrable(c, salaId);
     const cfg = await config(c);
 
     if (sala.estado !== 'ABIERTA') {

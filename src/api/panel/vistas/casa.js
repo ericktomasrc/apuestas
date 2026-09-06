@@ -10,9 +10,9 @@
 VISTAS.casa = async () => {
   const r = await api('/casa');
   const b = r.balance ?? {};
-  // La cuenta de la CASA, no la primera declarada: ahora la lista
-  // incluye también las financiadas, que no operan casas.
-  const cuenta = (r.cuentas ?? []).find(c => c.es_casa_oficial);
+  const cuentas = r.cuentas ?? [];
+  const financiamientos = r.financiamientos ?? [];
+  const cuentaOficial = cuentas.find(c => c.es_casa_oficial && c.activa);
 
   const resultado = Number(b.resultado_acumulado ?? 0);
   const jugadas = Number(b.liquidadas ?? 0);
@@ -20,15 +20,15 @@ VISTAS.casa = async () => {
   const perdio = Number(b.veces_perdio ?? 0);
 
   render(cab('Casa de la plataforma',
-    'Capital de arranque para que las salas no queden vacías',
+    'Cuentas autorizadas, financiamientos y auditoría de la casa',
     puede('casa.exportar')
       ? `<button class="btn-plano" onclick="exportarCasa()">Descargar</button>` : '') + `
 
     ${!r.config.oficialActiva ? `
-      <div class="banda" style="margin-bottom:20px">
+      <div class="banda" style="margin-bottom:18px">
         <p><strong>La casa está apagada</strong>
-        No puede crear casas nuevas. Las que ya estaban abiertas siguen
-        su curso hasta liquidarse.</p>
+        No inicia nuevas operaciones automáticas. Lo que ya estaba abierto
+        conserva su historial y sigue su curso.</p>
         ${puede('casa.gestionar')
           ? `<button class="btn" onclick="interruptorCasa(true)">Encender</button>` : ''}
       </div>` : ''}
@@ -41,85 +41,123 @@ VISTAS.casa = async () => {
           ${resultado > 0 ? '+' : ''}${plata(resultado)}</b>
         <small>${jugadas} liquidada(s)</small>
       </span>
-
       <span class="ficha-dato">
         Ganó / perdió
         <b>${gano} · ${perdio}</b>
-        <small>${jugadas > 0
-          ? `${Math.round(gano / jugadas * 100)}% de acierto`
-          : 'sin datos'}</small>
+        <small>${jugadas > 0 ? `${Math.round(gano / jugadas * 100)}% de acierto` : 'sin datos'}</small>
       </span>
-
       <span class="ficha-dato">
         Disponible
-        <b>${cuenta ? plata(cuenta.disponible_centavos) : '—'}</b>
-        <small>${cuenta
-          ? `${plata(cuenta.retenido_centavos)} comprometidos`
-          : 'sin cuenta'}</small>
+        <b>${cuentaOficial ? plata(cuentaOficial.disponible_centavos) : '—'}</b>
+        <small>${cuentaOficial ? `${plata(cuentaOficial.retenido_centavos)} comprometidos` : 'sin cuenta oficial activa'}</small>
       </span>
-
       <span class="ficha-dato">
         Comisión pagada
         <b>${plata(b.comision_pagada ?? 0)}</b>
-        <small>paga como cualquiera</small>
-      </span>
-    </div>
-
-    ${cuenta ? `<p class="pista" style="margin:-6px 0 16px">
-      Cuenta de la casa: <strong>${esc(cuenta.email)}</strong> · ${esc(cuenta.alias)}
-    </p>` : ''}
-
-    ${jugadas >= 5 && resultado < 0 ? `
-      <p class="pista" style="color:var(--aviso)">
-        La casa lleva ${plata(Math.abs(resultado))} de pérdida acumulada. Es
-        esperable: a cuota 2.0 no hay ventaja, así que a la larga tiende a
-        cero menos la comisión. Sirve para arrancar, no como ingreso.</p>` : ''}
-
-    <div class="fichas-dato">
-      <span class="ficha-dato">
-        Comprometido
-        <b>${plata(b.comprometido_total ?? 0)}</b>
-        <small>ofrecido en total</small>
-      </span>
-      <span class="ficha-dato">
-        En juego de verdad
-        <b>${plata(b.realmente_en_juego ?? 0)}</b>
-        <small>el resto volvió sin riesgo</small>
+        <small>registrada en el historial</small>
       </span>
     </div>
 
     ${puede('casa.gestionar') ? `
-      <h2 style="margin-top:26px">Acciones</h2>
-      <div class="marco" style="padding:16px;display:flex;gap:9px;flex-wrap:wrap">
+      <h2 style="margin-top:22px">Acciones</h2>
+      <div class="marco" style="padding:16px;display:flex;gap:9px;flex-wrap:wrap;align-items:center">
         <button class="btn" onclick="financiarCasa()">Financiar</button>
         <button class="btn-plano" onclick="declararCuenta()">Declarar una cuenta</button>
+        <button class="btn-plano" onclick="generarOfertasCasaDemo()"
+          title="La generación automática no se conecta a ejecución real desde este paquete">
+          Generar ofertas ahora
+        </button>
         ${r.config.oficialActiva
           ? `<button class="btn-plano" onclick="interruptorCasa(false)">Apagar la casa</button>`
           : ''}
       </div>
       <p class="pista">
-        Apagar la casa es el plan: sirve para arrancar y se retira cuando haya
-        usuarios suficientes. Las casas abiertas siguen su curso.</p>` : ''}
+        Las cuentas pueden operar con fondos propios, de plataforma o mixtos.
+        Desactivar conserva todo el historial contable.</p>` : ''}
 
-    <h2 style="margin-top:26px">Libro de la casa</h2>
+    <h2 style="margin-top:26px">Cuentas declaradas</h2>
     <p class="pista" style="margin:-6px 0 12px">
-      Cada decisión con su motivo y quién la autorizó. Es lo que se entrega
-      en una auditoría: los movimientos dicen cuánto, esto dice por qué.</p>
+      Declarar autoriza una cuenta para operar la casa. No significa necesariamente financiarla.
+    </p>
+
+    ${cuentas.length ? `<div class="marco"><table>
+      <thead><tr>
+        <th>Correo</th><th>Alias</th><th>Tipo</th><th>Origen de fondos</th>
+        <th class="der">Casas creadas</th><th>Estado</th><th></th>
+      </tr></thead>
+      <tbody>${cuentas.map(c => `
+        <tr${c.activa ? '' : ' style="opacity:.62"'}>
+          <td><strong>${esc(c.email)}</strong></td>
+          <td>${esc(c.alias)}</td>
+          <td>${c.es_casa_oficial
+            ? '<span class="etiqueta et-bien">Casa oficial</span>'
+            : '<span class="etiqueta et-gris">Operador</span>'}</td>
+          <td>${etiquetaOrigenFondos(c.origen_fondos)}</td>
+          <td class="der num">${Number(c.casas_creadas ?? 0)}</td>
+          <td>${c.activa
+            ? '<span class="etiqueta et-bien">Activa</span>'
+            : '<span class="etiqueta et-gris">Inactiva</span>'}</td>
+          <td class="der">${puede('casa.gestionar')
+            ? `<button class="btn-plano btn-chico"
+                 onclick="cambiarEstadoCuentaCasa('${c.id}',${!c.activa},'${escJs(c.email)}')">
+                 ${c.activa ? 'Desactivar' : 'Activar'}
+               </button>`
+            : ''}</td>
+        </tr>`).join('')}</tbody>
+    </table></div>` : vacio('No hay cuentas declaradas.')}
+
+    <h2 style="margin-top:26px">Historial de financiamientos</h2>
+    <p class="pista" style="margin:-6px 0 12px">
+      Cada aporte de la plataforma conserva la cuenta destinataria, correo, monto,
+      motivo y quién lo autorizó.
+    </p>
+
+    ${financiamientos.length ? `<div class="marco"><table>
+      <thead><tr>
+        <th>Cuándo</th><th>Cuenta (correo)</th><th>Alias</th>
+        <th class="der">Monto</th><th>Motivo</th><th>Autorizó</th>
+      </tr></thead>
+      <tbody>${financiamientos.map(f => `<tr>
+        <td class="num" style="font-size:12px">${fecha(f.momento)}</td>
+        <td><strong>${esc(f.email ?? '—')}</strong></td>
+        <td>${esc(f.alias ?? '—')}</td>
+        <td class="der num">${f.monto_centavos == null ? '—' : plata(f.monto_centavos, f.moneda ?? 'PEN')}</td>
+        <td>${esc(f.motivo)}</td>
+        <td style="color:var(--tenue)">${esc(f.autorizo ?? 'sistema')}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>` : vacio('Todavía no hay financiamientos.')}
+
+    <h2 style="margin-top:26px">Libro de la casa (auditoría)</h2>
+    <p class="pista" style="margin:-6px 0 12px">
+      Historial general de decisiones y movimientos. Las cuentas inactivas y los
+      eventos anteriores permanecen registrados.
+    </p>
 
     ${r.libro.length ? `<div class="marco"><table>
-      <thead><tr><th>Cuándo</th><th>Qué</th><th class="der">Monto</th>
-        <th>Motivo</th><th>Autorizó</th></tr></thead>
+      <thead><tr><th>Cuándo</th><th>Qué</th><th>Cuenta (correo)</th>
+        <th class="der">Monto</th><th>Motivo</th><th>Autorizó</th></tr></thead>
       <tbody>${r.libro.map(l => `<tr>
         <td class="num" style="font-size:12px">${fecha(l.momento)}</td>
         <td><span class="etiqueta ${etiquetaLibro(l.tipo)}">${esc(nombreLibro(l.tipo))}</span>
           ${l.codigo ? `<br><span class="num" style="font-size:11.5px;color:var(--tenue)">${esc(l.codigo)}</span>` : ''}</td>
-        <td class="der num">${l.monto_centavos === null ? '—' : plata(l.monto_centavos)}</td>
+        <td style="font-size:12px">${esc(l.email ?? '—')}</td>
+        <td class="der num">${l.monto_centavos === null ? '—' : plata(l.monto_centavos, l.moneda ?? 'PEN')}</td>
         <td style="font-size:13px">${esc(l.motivo)}</td>
         <td style="font-size:12.5px;color:var(--tenue)">${esc(l.autorizo ?? 'sistema')}</td>
       </tr>`).join('')}</tbody></table></div>`
       : vacio('Todavía no hay nada anotado.')}
   `);
 };
+
+function etiquetaOrigenFondos(origen) {
+  if (origen === 'PLATAFORMA') return '<span class="etiqueta et-bien">Plataforma</span>';
+  if (origen === 'MIXTO') return '<span class="etiqueta et-aviso">Mixto</span>';
+  return '<span class="etiqueta et-gris">Fondos propios</span>';
+}
+
+function generarOfertasCasaDemo() {
+  aviso('La generación de ofertas queda visible como acción administrativa, pero no está conectada a ejecución automática en este paquete.', '');
+}
 
 function nombreLibro(tipo) {
   return {
@@ -151,7 +189,8 @@ async function financiarCasa() {
   // identificador. La vista pública no lleva correo —es dato
   // personal— y el alias solo no basta para acreditar dinero.
   const r = await api('/casa');
-  const declaradas = r.cuentas ?? [];
+  const declaradas = (r.cuentas ?? []).filter(u =>
+    u.activa && ['PLATAFORMA','MIXTO'].includes(u.origen_fondos));
 
   if (declaradas.length === 0) {
     return modal('Financiar', `
@@ -233,10 +272,18 @@ async function declararCuenta() {
         <small>Aparece marcada en el muro y no puede anular sus propias casas.</small>
       </label></div>
 
-    <div class="permiso"><input type="checkbox" id="d_financiada">
-      <label for="d_financiada">Su saldo lo pone la plataforma
-        <small>Para cuentas de prueba o de arranque que no juegan con dinero propio.</small>
-      </label></div>
+    <div class="campo" style="margin-top:14px">
+      <label for="d_origen">Origen de fondos</label>
+      <select id="d_origen">
+        <option value="PROPIOS">Fondos propios</option>
+        <option value="PLATAFORMA">Plataforma</option>
+        <option value="MIXTO">Mixto</option>
+      </select>
+      <p class="pista">
+        Fondos propios: la plataforma no acredita saldo. Plataforma: puede recibir
+        financiamientos desde este panel. Mixto: permite ambos orígenes.
+      </p>
+    </div>
 
     <div class="campo" style="margin-top:14px"><label for="d_nota">Nota pública</label>
       <input id="d_nota" placeholder="Cuenta de arranque, financiada por la plataforma">
@@ -294,13 +341,13 @@ function buscarCuentaDeclarar(texto) {
 
 function elegirCuentaDeclarar(id, alias, esOficial, financiada, correo) {
   document.getElementById('d_cuenta').value = id;
-  document.getElementById('d_buscar').value = correo ?? alias;
-  document.getElementById('d_oficial').checked = esOficial;
-  document.getElementById('d_financiada').checked = financiada;
+  document.getElementById('d_buscar').value = correo;
+  document.getElementById('d_oficial').checked = Boolean(esOficial);
+  document.getElementById('d_origen').value = financiada ? 'PLATAFORMA' : 'PROPIOS';
   document.getElementById('d_resultados').innerHTML =
-    `<p class="pista" style="color:var(--bien)">
-       Elegida: <strong>${esc(correo ?? alias)}</strong>
-       ${correo ? ` (${esc(alias)})` : ''}</p>`;
+    `<div class="banda" style="margin-bottom:14px">
+       <p><strong>${esc(correo)}</strong>${alias ? ` · ${esc(alias)}` : ''}</p>
+     </div>`;
 }
 
 async function guardarDeclaracion() {
@@ -313,7 +360,7 @@ async function guardarDeclaracion() {
   const datos = {
     usuarioId,
     esCasaOficial: document.getElementById('d_oficial').checked,
-    financiada: document.getElementById('d_financiada').checked,
+    origenFondos: document.getElementById('d_origen').value,
     nota: document.getElementById('d_nota').value.trim() || undefined,
     motivo,
   };
@@ -324,6 +371,51 @@ async function guardarDeclaracion() {
       aviso:'Declarar una cuenta cambia lo que se muestra públicamente.',
       mensaje:'Cuenta declarada', ocupado:'Declarando',
       despues: () => VISTAS.casa() });
+}
+
+// ---------------------------------------------------------------------
+//  Activar / desactivar cuenta declarada
+// ---------------------------------------------------------------------
+
+function cambiarEstadoCuentaCasa(usuarioId, activar, correo) {
+  modal(activar ? 'Activar cuenta' : 'Desactivar cuenta', `
+    <p class="pista" style="margin-bottom:16px">
+      <strong>${esc(correo)}</strong><br><br>
+      ${activar
+        ? 'Volverá a quedar activa dentro de la administración de la casa.'
+        : 'Se conserva todo su historial. Una cuenta inactiva deja de recibir nuevos financiamientos desde la plataforma.'}
+    </p>
+    <div class="campo">
+      <label for="ec_motivo">Por qué</label>
+      <textarea id="ec_motivo" rows="2"
+        placeholder="${activar ? 'Se vuelve a utilizar esta cuenta' : 'Ya no se utilizará temporalmente'}"></textarea>
+    </div>`,
+    `<button class="btn-plano" onclick="cerrarModal()">Cancelar</button>
+     <button class="btn${activar ? '' : ' btn-mal'}"
+       onclick="guardarEstadoCuentaCasa('${usuarioId}',${activar})">
+       ${activar ? 'Activar' : 'Desactivar'}
+     </button>`);
+}
+
+async function guardarEstadoCuentaCasa(usuarioId, activa) {
+  const motivo = document.getElementById('ec_motivo')?.value.trim() ?? '';
+  if (motivo.length < 5) return aviso('El motivo necesita al menos 5 caracteres.', 'mal');
+
+  await intentar(
+    cred => api('/casa/cuentas/' + encodeURIComponent(usuarioId) + '/estado', {
+      method:'PATCH',
+      body: JSON.stringify({ activa, motivo, ...cred }),
+    }),
+    {
+      titulo:'Confirma tu identidad',
+      aviso: activa
+        ? 'La cuenta volverá a quedar activa.'
+        : 'La cuenta quedará inactiva, pero su historial no se elimina.',
+      mensaje: activa ? 'Cuenta activada' : 'Cuenta desactivada',
+      ocupado: activa ? 'Activando' : 'Desactivando',
+      despues: () => VISTAS.casa(),
+    },
+  );
 }
 
 // ---------------------------------------------------------------------

@@ -912,16 +912,33 @@ export async function crearServidor(
     const { rows } = await pool.query(
       `SELECT s.id, s.codigo, s.descripcion, s.tope_participantes,
               s.monto_minimo_centavos, s.estado, s.es_del_sistema,
+              (SELECT bs.publicada_en FROM salas bs WHERE bs.id = s.id) AS publicada_en,
               s.destacada_hasta, s.pais,
               pa.moneda, pa.simbolo, pa.decimales,
               p.equipo_local, p.equipo_visitante, p.inicia_en,
               p.logo_local, p.logo_visitante,
-              l.nombre AS liga, d.clave AS deporte,
+              l.nombre AS liga,
+              (SELECT bl.logo_url FROM ligas bl WHERE bl.id = l.id) AS liga_logo_url,
+              d.clave AS deporte,
               u.alias AS anfitrion,
               (SELECT count(DISTINCT po.usuario_id)
                  FROM v_posiciones po
                  JOIN v_mercados me ON me.id = po.mercado_id
                 WHERE me.sala_id = s.id)::int AS participantes,
+              COALESCE((
+                SELECT sum(po.monto_centavos)
+                  FROM v_posiciones po
+                  JOIN v_mercados me ON me.id = po.mercado_id
+                 WHERE me.sala_id = s.id
+                   AND po.usuario_id = s.anfitrion_id
+              ), 0)::bigint AS total_anfitrion_centavos,
+              COALESCE((
+                SELECT sum(po.monto_centavos)
+                  FROM v_posiciones po
+                  JOIN v_mercados me ON me.id = po.mercado_id
+                 WHERE me.sala_id = s.id
+                   AND po.usuario_id <> s.anfitrion_id
+              ), 0)::bigint AS total_apostadores_centavos,
               (SELECT json_agg(json_build_object(
                         'id', b.mercado_id,
                         'tipo', me.tipo_mercado,
@@ -941,6 +958,20 @@ export async function crearServidor(
     LEFT JOIN v_usuarios u ON u.id = s.anfitrion_id
     LEFT JOIN paises_habilitados pa ON pa.codigo = s.pais
         WHERE s.estado IN ('ABIERTA','CUENTA_REGRESIVA')
+          AND (
+            COALESCE(s.es_del_sistema, false)
+            OR (
+              (SELECT bs.publicada_en FROM salas bs WHERE bs.id = s.id) IS NOT NULL
+              AND EXISTS (
+                SELECT 1
+                  FROM v_posiciones pub_po
+                  JOIN v_mercados pub_m ON pub_m.id = pub_po.mercado_id
+                 WHERE pub_m.sala_id = s.id
+                   AND pub_po.usuario_id = s.anfitrion_id
+                   AND pub_po.monto_centavos > 0
+              )
+            )
+          )
           AND ($1::text IS NULL OR d.clave = $1)
           AND ($2::bigint IS NULL OR s.monto_minimo_centavos <= $2)
           AND ($3::text IS NULL OR s.pais = $3)
@@ -987,9 +1018,26 @@ export async function crearServidor(
       `SELECT s.*, p.equipo_local, p.equipo_visitante, p.inicia_en,
               p.logo_local, p.logo_visitante,
               p.estado AS estado_partido, p.goles_local, p.goles_visitante,
-              l.nombre AS liga, d.nombre AS deporte,
+              l.nombre AS liga,
+              (SELECT bl.logo_url FROM ligas bl WHERE bl.id = l.id) AS liga_logo_url,
+              d.nombre AS deporte,
               u.alias AS anfitrion,
               (s.anfitrion_id = $2::uuid) AS soy_anfitrion,
+              EXISTS (
+                SELECT 1
+                  FROM v_posiciones acceso_po
+                  JOIN v_mercados acceso_m ON acceso_m.id = acceso_po.mercado_id
+                 WHERE acceso_m.sala_id = s.id
+                   AND acceso_po.usuario_id = $2::uuid
+              ) AS soy_participante,
+              (SELECT bs.publicada_en FROM salas bs WHERE bs.id = s.id) AS publicada_en,
+              COALESCE((
+                SELECT sum(pub_po.monto_centavos)
+                  FROM v_posiciones pub_po
+                  JOIN v_mercados pub_m ON pub_m.id = pub_po.mercado_id
+                 WHERE pub_m.sala_id = s.id
+                   AND pub_po.usuario_id = s.anfitrion_id
+              ), 0)::bigint AS total_anfitrion_centavos,
               (SELECT count(DISTINCT po.usuario_id)
                  FROM v_posiciones po JOIN v_mercados m ON m.id = po.mercado_id
                 WHERE m.sala_id = s.id)::int AS participantes
@@ -1003,6 +1051,26 @@ export async function crearServidor(
     );
     if (rows.length === 0) {
       throw Object.assign(new Error('no existe'), { codigo: 'SALA_NO_EXISTE' });
+    }
+
+    // Una sala llena queda cerrada para personas nuevas.
+    // El anfitrión y quienes ya forman parte de la sala conservan acceso.
+    const salaDetalle = rows[0];
+    const participantesActuales = Number(salaDetalle.participantes ?? 0);
+    const topeSala = Number(salaDetalle.tope_participantes ?? 0);
+    const estaLlena = topeSala > 0 && participantesActuales >= topeSala;
+
+    if (
+      estaLlena
+      && !Boolean(salaDetalle.soy_anfitrion)
+      && !Boolean(salaDetalle.soy_participante)
+    ) {
+      throw Object.assign(new Error('sala llena'), {
+        statusCode: 403,
+        codigo: 'SIN_PERMISO',
+        mensajeUsuario:
+          'Esta sala ya está llena. Solo pueden entrar el anfitrión y los usuarios que ya participan.',
+      });
     }
 
     const mercados = await pool.query(
@@ -1399,7 +1467,17 @@ export async function crearServidor(
               p.equipo_local, p.equipo_visitante, p.inicia_en,
               p.logo_local, p.logo_visitante,
               l.nombre AS liga,
+              (SELECT bl.logo_url FROM ligas bl WHERE bl.id = l.id) AS liga_logo_url,
+              (SELECT u.alias FROM v_usuarios u WHERE u.id = s.anfitrion_id) AS anfitrion_alias,
               (s.anfitrion_id = $1) AS soy_anfitrion,
+              (SELECT bs.publicada_en FROM salas bs WHERE bs.id = s.id) AS publicada_en,
+              COALESCE((
+                SELECT sum(pub_po.monto_centavos)
+                  FROM v_posiciones pub_po
+                  JOIN v_mercados pub_m ON pub_m.id = pub_po.mercado_id
+                 WHERE pub_m.sala_id = s.id
+                   AND pub_po.usuario_id = s.anfitrion_id
+              ), 0)::bigint AS total_anfitrion_centavos,
               (SELECT count(DISTINCT po.usuario_id)
                  FROM v_posiciones po JOIN v_mercados mm ON mm.id = po.mercado_id
                 WHERE mm.sala_id = s.id)::int AS participantes,

@@ -71,8 +71,19 @@ function armazon(contenido, lateral) {
 
       <div class="superior-der">
         ${haySesion() ? `
-          <button class="saldo-chip" id="saldo-chip" onclick="ir('billetera')">
-            ${textoSaldo()}
+          <button class="saldo-chip saldo-chip-simple" id="saldo-chip"
+            onclick="ir('billetera')" aria-label="Ver billetera">
+            <svg class="saldo-chip-icono" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round" aria-hidden="true">
+              <rect x="2.5" y="6" width="19" height="13" rx="2"/>
+              <path d="M2.5 9.5h19"/>
+              <path d="M16.5 13h3v3h-3z"/>
+            </svg>
+            <strong>${plata(S.saldo?.disponibleCentavos ?? 0)}</strong>
+          </button>
+          <button class="saldo-recargar" onclick="ir('billetera')">
+            + Recargar
           </button>
           <button class="yo" onclick="menuCuenta(event)"
             aria-label="Mi cuenta" title="${esc(S.usuario?.alias ?? '')}">
@@ -172,8 +183,28 @@ function pantallaPrivada(id) {
     </div>`));
 }
 
+/**
+ * El parámetro de la ruta, saneado.
+ *
+ * Todas las pantallas lo usan como identificador: `#sala/<uuid>`,
+ * `#casa/<uuid>`. Cualquier cosa que no tenga esa forma es basura o un
+ * intento de inyección, y en los dos casos lo correcto es descartarla.
+ *
+ * Es la segunda barrera, no la única: el arreglo de fondo es que el
+ * parámetro nunca se incruste en HTML. Esto lo detiene antes de llegar
+ * a ninguna parte.
+ */
+function parametroDeRuta(bruto) {
+  if (bruto === undefined || bruto === null || bruto === '') return undefined;
+  return /^[A-Za-z0-9_-]{1,64}$/.test(String(bruto)) ? String(bruto) : undefined;
+}
+
 function ir(id, datos) {
   if (!PANTALLAS[id]) return;
+
+  // Punto único de saneo: cubre el hash, el arranque y cualquier
+  // llamada interna. Filtrar en cada llamador es olvidarse en alguno.
+  datos = parametroDeRuta(datos);
 
   const opcion = NAV.find(n => n.id === id);
 
@@ -186,7 +217,14 @@ function ir(id, datos) {
   }
 
   S.pantalla = id;
-  document.body.classList.toggle('muro-activo', id === 'muro');
+  document.body.classList.toggle('muro-activo',
+    ['muro','crear','mias','resultados','billetera','casas','casa'].includes(id));
+  document.body.classList.toggle('crear-activa', id === 'crear');
+  document.body.classList.toggle('mias-activa', id === 'mias');
+  document.body.classList.toggle('resultados-activa', id === 'resultados');
+  document.body.classList.toggle('billetera-activa', id === 'billetera');
+  document.body.classList.toggle('casas-activa', id === 'casas');
+  document.body.classList.toggle('casa-activa', id === 'casa');
   document.body.classList.toggle('sala-activa', id === 'sala');
   document.body.classList.remove('pantalla-registro-activa');
   S.datos.parametro = datos;
@@ -205,8 +243,18 @@ function ir(id, datos) {
       <div class="vacio">
         <h3>No se pudo cargar</h3>
         <p>${esc(e.message)}</p>
-        <button class="btn btn-plano" onclick="ir('${id}','${datos ?? ''}')">Reintentar</button>
+        <button class="btn btn-plano" id="btn-reintentar">Reintentar</button>
       </div>`));
+
+    // El parámetro NO se incrusta en el HTML: viaja por la clausura.
+    //
+    // Antes iba dentro de un `onclick="ir('...','...')"`, y como sale
+    // de la URL, bastaba un enlace con una comilla para que el texto
+    // se compilara como código. Esta pantalla es justo la que ve
+    // alguien al abrir un enlace roto, así que era el camino más
+    // corto para el ataque.
+    document.getElementById('btn-reintentar')
+      ?.addEventListener('click', () => ir(id, datos));
   });
 }
 

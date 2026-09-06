@@ -56,6 +56,8 @@ import {
   type ProveedorDeportes,
 } from '../infraestructura/proveedores/deportes.proveedor.js';
 import { registrarRutasCasa } from './casa.js';
+import { registrarRutasOpcionesJuego } from './opciones-juego.js';
+import { registrarRutasHistorialDeportivo } from './historico-deportivo.js';
 
 type ExigirSesion = (peticion: FastifyRequest) => Promise<Sesion>;
 
@@ -143,6 +145,8 @@ export function registrarRutasAdmin(
 
   // Deportes y salas van en su propio archivo: son otro dominio.
   registrarRutasCatalogo(app, exigirSesion, conPermiso, proveedor);
+  registrarRutasOpcionesJuego(app, conPermiso);
+  registrarRutasHistorialDeportivo(app, conPermiso);
 
   const docBase = (summary: string, permiso: string, description?: string) => ({
     tags: ['admin'],

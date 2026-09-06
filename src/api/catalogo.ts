@@ -121,6 +121,7 @@ export function registrarRutasCatalogo(
       // encontrar una, y hace que la pantalla tarde en dibujarse.
       pool.query(
         `SELECT l.id, l.api_id, l.nombre, l.pais, l.deporte_id,
+                (SELECT bl.logo_url FROM ligas bl WHERE bl.id = l.id) AS logo_url,
                 l.tiene_estadisticas,
                 d.clave AS deporte,
                 (SELECT count(*) FROM v_partidos p
@@ -210,6 +211,7 @@ export function registrarRutasCatalogo(
           },
           nombre: { type: 'string', minLength: 2, maxLength: 60 },
           pais: { type: 'string', minLength: 2, maxLength: 2 },
+          logoUrl: { type: 'string', format: 'uri', maxLength: 500 },
         },
         required: ['deporteId', 'apiId', 'nombre'],
       },
@@ -222,15 +224,16 @@ export function registrarRutasCatalogo(
         apiId: z.string().min(1).max(60),
         nombre: z.string().min(2).max(60),
         pais: z.string().length(2).toUpperCase().optional(),
+        logoUrl: z.string().url().max(500).optional(),
       })
       .parse(peticion.body);
 
     const id = await enTransaccion(async (c) => {
       try {
         const r = await c.query(
-          `INSERT INTO ligas (deporte_id, api_id, nombre, pais)
-           VALUES ($1,$2,$3,$4) RETURNING id`,
-          [d.deporteId, d.apiId, d.nombre, d.pais ?? null],
+          `INSERT INTO ligas (deporte_id, api_id, nombre, pais, logo_url)
+           VALUES ($1,$2,$3,$4,$5) RETURNING id`,
+          [d.deporteId, d.apiId, d.nombre, d.pais ?? null, d.logoUrl ?? null],
         );
         return r.rows[0].id as string;
       } catch (e) {
@@ -557,8 +560,10 @@ export function registrarRutasCatalogo(
     await conPermiso(peticion, 'deportes.ver');
 
     const activas = await pool.query(
-      `SELECT id, api_id, nombre, pais, tiene_estadisticas, mercados, partidos
-         FROM v_ligas_activas ORDER BY nombre`,
+      `SELECT l.id, l.api_id, l.nombre, l.pais,
+              (SELECT bl.logo_url FROM ligas bl WHERE bl.id = l.id) AS logo_url,
+              l.tiene_estadisticas, l.mercados, l.partidos
+         FROM v_ligas_activas l ORDER BY l.nombre`,
     );
     const total = await pool.query(`SELECT count(*)::int AS n FROM v_ligas`);
 

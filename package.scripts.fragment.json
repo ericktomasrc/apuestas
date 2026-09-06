@@ -1,0 +1,6 @@
+{
+  "scripts": {
+    "historico:importar": "tsx src/herramientas/importar-historico-deportivo.ts",
+    "historico:sincronizar": "tsx src/herramientas/sincronizar-historico-deportivo.ts"
+  }
+}

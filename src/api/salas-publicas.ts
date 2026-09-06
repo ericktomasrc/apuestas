@@ -18,6 +18,7 @@ import {
   ajustarApuestaCreador,
   eliminarMercadoCreador,
   eliminarSalaCreador,
+  verificarSalaAdministrable,
 } from '../servicios/salas.servicio.js';
 import { paisDeUsuario, formatear } from '../servicios/paises.servicio.js';
 import { exigirQueNoSeaPersonal } from '../servicios/seguridad.servicio.js';
@@ -118,7 +119,8 @@ export function registrarRutasSalas(
 
     const { rows } = await pool.query(
       `SELECT p.id, p.equipo_local, p.equipo_visitante, p.inicia_en,
-              l.nombre AS liga, d.clave AS deporte, d.nombre AS deporte_nombre,
+              l.nombre AS liga,
+              (SELECT bl.logo_url FROM ligas bl WHERE bl.id = l.id) AS liga_logo_url, d.clave AS deporte, d.nombre AS deporte_nombre,
               COALESCE(array_agg(ml.tipo_mercado ORDER BY ml.tipo_mercado)
                        FILTER (WHERE ml.tipo_mercado IS NOT NULL), '{}') AS mercados,
               (SELECT count(*) FROM v_salas s
@@ -133,7 +135,7 @@ export function registrarRutasSalas(
           AND p.inicia_en > now() + make_interval(mins => $1)
           AND ($2::text IS NULL OR d.clave = $2)
         GROUP BY p.id, p.equipo_local, p.equipo_visitante, p.inicia_en,
-                 l.nombre, d.clave, d.nombre
+                 l.id, l.nombre, d.clave, d.nombre
         ORDER BY p.inicia_en ASC
         LIMIT $3`,
       [cfg.minutosCierreAntes, q.deporte ?? null, q.limite],
@@ -340,25 +342,261 @@ export function registrarRutasSalas(
           [sala.rows[0].id, m.tipo, def.linea ? m.linea : null, equipo, favor, contra],
         );
       }
-
-      // Se publica en el muro de actividad. Es como se llenan las
-      // salas: alguien ve que se abrió una de un partido que le
-      // interesa y entra.
-      await c.query(
-        `INSERT INTO publicaciones (tipo, usuario_id, sala_id, datos)
-         VALUES ('SALA_CREADA', $1, $2, $3)`,
-        [sesion.usuarioId, sala.rows[0].id, JSON.stringify({
-          codigo,
-          local: partido.rows[0].equipo_local,
-          visitante: partido.rows[0].equipo_visitante,
-          mercados: d.mercados.length,
-        })],
-      );
+      // La sala nace privada para el catálogo público: crearla no implica
+      // que ya esté publicada en "Salas disponibles". El GET /salas solo
+      // la mostrará cuando el anfitrión tenga un aporte total mayor a cero.
 
       return { id: sala.rows[0].id as string, codigo };
     }, sesion.usuarioId);
 
     return respuesta.code(201).send(resultado);
+  });
+
+  // ===================================================================
+  //  Publicación manual de una sala propia (DEV/demo)
+  // ===================================================================
+
+  app.post('/salas/:id/publicar', {
+    schema: {
+      tags: ['salas'],
+      summary: 'Publicar manualmente una sala propia',
+      security: [{ bearer: [] }],
+      params: {
+        type: 'object',
+        properties: { id: { type: 'string', format: 'uuid' } },
+        required: ['id'],
+      },
+      response: {
+        200: { type: 'object', additionalProperties: true },
+        400: ESQUEMA_ERROR, 401: ESQUEMA_ERROR, 403: ESQUEMA_ERROR, 404: ESQUEMA_ERROR,
+      },
+    },
+  }, async (peticion) => {
+    if (process.env.NODE_ENV === 'production') {
+      throw Object.assign(new Error('solo demo'), {
+        codigo: 'SIN_PERMISO',
+        mensajeUsuario: 'La publicación de salas de prueba está deshabilitada en producción.',
+      });
+    }
+
+    const sesion = await exigirSesion(peticion);
+    await exigirQueNoSeaPersonal(sesion.usuarioId);
+    const { id } = z.object({ id: z.string().uuid() }).parse(peticion.params);
+
+    return enTransaccion(async (c) => {
+      const sala = await c.query(
+        `SELECT s.id, s.codigo, s.anfitrion_id, s.estado, s.es_del_sistema,
+                bs.publicada_en,
+                p.equipo_local, p.equipo_visitante
+           FROM v_salas s
+           JOIN salas bs ON bs.id = s.id
+           JOIN v_partidos p ON p.id = s.partido_id
+          WHERE s.id = $1
+          FOR UPDATE OF bs`,
+        [id],
+      );
+
+      if (sala.rows.length === 0) {
+        throw Object.assign(new Error('sala'), {
+          codigo: 'SALA_NO_EXISTE',
+          mensajeUsuario: 'La sala ya no existe.',
+        });
+      }
+
+      const s = sala.rows[0];
+
+      if (s.anfitrion_id !== sesion.usuarioId) {
+        throw Object.assign(new Error('permiso'), {
+          codigo: 'SIN_PERMISO',
+          mensajeUsuario: 'Solo el anfitrión puede publicar esta sala.',
+        });
+      }
+
+      await verificarSalaAdministrable(c, id);
+
+      if (!['ABIERTA', 'CUENTA_REGRESIVA'].includes(s.estado)) {
+        throw Object.assign(new Error('estado'), {
+          codigo: 'ESTADO_INVALIDO',
+          mensajeUsuario: 'Esta sala ya no puede publicarse.',
+        });
+      }
+
+      if (s.publicada_en) {
+        return { ok: true, publicada: true, publicadaEn: s.publicada_en };
+      }
+
+      const aporte = await c.query(
+        `SELECT COALESCE(sum(po.monto_centavos), 0)::bigint AS total
+           FROM v_posiciones po
+           JOIN v_mercados m ON m.id = po.mercado_id
+          WHERE m.sala_id = $1
+            AND po.usuario_id = $2`,
+        [id, sesion.usuarioId],
+      );
+      const total = Number(aporte.rows[0]?.total ?? 0);
+
+      if (total <= 0) {
+        throw Object.assign(new Error('aporte'), {
+          codigo: 'MONTO_FUERA_DE_RANGO',
+          mensajeUsuario:
+            'Para publicar la sala, el anfitrión debe tener un aporte mayor a S/0.00.',
+        });
+      }
+
+      const actualizado = await c.query(
+        `UPDATE salas
+            SET publicada_en = now()
+          WHERE id = $1
+          RETURNING publicada_en`,
+        [id],
+      );
+
+      await c.query(
+        `INSERT INTO publicaciones (tipo, usuario_id, sala_id, datos)
+         SELECT 'SALA_CREADA', $1, $2, $3
+          WHERE NOT EXISTS (
+            SELECT 1 FROM publicaciones
+             WHERE tipo = 'SALA_CREADA' AND sala_id = $2
+          )`,
+        [sesion.usuarioId, id, JSON.stringify({
+          codigo: s.codigo,
+          local: s.equipo_local,
+          visitante: s.equipo_visitante,
+        })],
+      );
+
+      return {
+        ok: true,
+        publicada: true,
+        publicadaEn: actualizado.rows[0].publicada_en,
+        aporteAnfitrionCentavos: total,
+      };
+    }, sesion.usuarioId);
+  });
+
+  // ===================================================================
+  //  Aumentar cupos de una sala propia
+  // ===================================================================
+
+  app.patch('/salas/:id/cupos', {
+    schema: {
+      tags: ['salas'],
+      summary: 'Aumentar cupos de una sala propia',
+      security: [{ bearer: [] }],
+      params: {
+        type: 'object',
+        properties: { id: { type: 'string', format: 'uuid' } },
+        required: ['id'],
+      },
+      body: {
+        type: 'object',
+        properties: {
+          topeParticipantes: { type: 'integer', minimum: 2 },
+        },
+        required: ['topeParticipantes'],
+      },
+      response: {
+        200: { type: 'object', additionalProperties: true },
+        400: ESQUEMA_ERROR, 401: ESQUEMA_ERROR, 403: ESQUEMA_ERROR,
+        404: ESQUEMA_ERROR, 409: ESQUEMA_ERROR,
+      },
+    },
+  }, async (peticion) => {
+    const sesion = await exigirSesion(peticion);
+    await exigirQueNoSeaPersonal(sesion.usuarioId);
+
+    const { id } = z.object({ id: z.string().uuid() }).parse(peticion.params);
+    const { topeParticipantes } = z.object({
+      topeParticipantes: z.number().int().min(2),
+    }).parse(peticion.body);
+
+    const cfg = await config();
+
+    if (topeParticipantes > cfg.maxParticipantesSala) {
+      throw Object.assign(new Error('tope'), {
+        codigo: 'MONTO_FUERA_DE_RANGO',
+        mensajeUsuario: `El máximo permitido es ${cfg.maxParticipantesSala} cupos.`,
+      });
+    }
+
+    return enTransaccion(async (c) => {
+      const r = await c.query(
+        `SELECT s.id, s.anfitrion_id, s.estado, s.tope_participantes,
+                (SELECT count(DISTINCT po.usuario_id)
+                   FROM v_posiciones po
+                   JOIN v_mercados m ON m.id = po.mercado_id
+                  WHERE m.sala_id = s.id)::int AS participantes
+           FROM v_salas s
+          WHERE s.id = $1
+          FOR UPDATE`,
+        [id],
+      );
+
+      if (!r.rows.length) {
+        throw Object.assign(new Error('sala'), {
+          codigo: 'SALA_NO_EXISTE',
+          mensajeUsuario: 'La sala ya no existe.',
+        });
+      }
+
+      const actual = r.rows[0];
+
+      if (actual.anfitrion_id !== sesion.usuarioId) {
+        throw Object.assign(new Error('permiso'), {
+          codigo: 'SIN_PERMISO',
+          mensajeUsuario: 'Solo el anfitrión puede modificar los cupos.',
+        });
+      }
+
+      await verificarSalaAdministrable(c, id);
+
+      if (!['ABIERTA', 'CUENTA_REGRESIVA'].includes(actual.estado)) {
+        throw Object.assign(new Error('estado'), {
+          codigo: 'ESTADO_INVALIDO',
+          mensajeUsuario: 'Los cupos ya no pueden modificarse en este estado.',
+        });
+      }
+
+      const anterior = Number(actual.tope_participantes ?? 0);
+      const participantes = Number(actual.participantes ?? 0);
+
+      // El flujo solicitado es únicamente para AUMENTAR cupos.
+      if (topeParticipantes < anterior) {
+        throw Object.assign(new Error('cupos'), {
+          codigo: 'ESTADO_INVALIDO',
+          mensajeUsuario: 'Desde aquí los cupos solo se pueden aumentar.',
+        });
+      }
+
+      if (topeParticipantes < participantes) {
+        throw Object.assign(new Error('participantes'), {
+          codigo: 'ESTADO_INVALIDO',
+          mensajeUsuario: 'El número de cupos no puede ser menor a los participantes actuales.',
+        });
+      }
+
+      if (topeParticipantes === anterior) {
+        return {
+          ok: true,
+          topeParticipantes: anterior,
+          participantes,
+        };
+      }
+
+      const actualizado = await c.query(
+        `UPDATE salas
+            SET tope_participantes = $2
+          WHERE id = $1
+          RETURNING tope_participantes`,
+        [id, topeParticipantes],
+      );
+
+      return {
+        ok: true,
+        topeParticipantes: Number(actualizado.rows[0].tope_participantes),
+        participantes,
+      };
+    }, sesion.usuarioId);
   });
 
   // ===================================================================
@@ -423,13 +661,7 @@ export function registrarRutasSalas(
           codigo: 'ESTADO_INVALIDO', mensajeUsuario: 'La sala ya no admite cambios.',
         });
       }
-      const faltan = new Date(x.inicia_en).getTime() - Date.now();
-      if (faltan <= 0) {
-        throw Object.assign(new Error('tarde'), {
-          codigo: 'CIERRE_INMINENTE',
-          mensajeUsuario: 'El partido ya comenzó.',
-        });
-      }
+      await verificarSalaAdministrable(c, id);
 
       const total = await c.query(
         `SELECT count(*)::int AS n FROM v_mercados WHERE sala_id = $1`,
@@ -656,7 +888,9 @@ export function registrarRutasSalas(
   }, async () => {
     const cfg = await config();
     const { rows } = await pool.query(
-      `SELECT l.id, l.nombre, l.pais, d.nombre AS deporte, d.clave AS deporte_clave,
+      `SELECT l.id, l.nombre, l.pais,
+              (SELECT bl.logo_url FROM ligas bl WHERE bl.id = l.id) AS logo_url,
+              d.nombre AS deporte, d.clave AS deporte_clave,
               count(DISTINCT p.id)::int AS partidos,
               count(DISTINCT s.id) FILTER (
                 WHERE s.estado IN ('ABIERTA','CUENTA_REGRESIVA'))::int AS salas_abiertas

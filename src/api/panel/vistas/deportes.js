@@ -103,9 +103,20 @@ VISTAS.deportes = async () => {
       <thead><tr><th>Liga</th><th>Deporte</th><th>Se puede apostar a</th>
         <th class="der">Partidos</th><th></th></tr></thead>
       <tbody>${r.ligas.map(l => `<tr>
-        <td><strong>${esc(l.nombre)}</strong>
-          ${l.pais ? `<span class="etiqueta et-gris">${esc(l.pais)}</span>` : ''}
-          <br><span class="num" style="color:var(--tenue);font-size:11.5px">${esc(l.api_id)}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:9px">
+            ${l.logo_url
+              ? `<img src="${esc(l.logo_url)}" alt="" width="28" height="28"
+                   style="object-fit:contain;border-radius:6px;background:#fff;padding:2px"
+                   onerror="this.style.display='none'">`
+              : ''}
+            <div>
+              <strong>${esc(l.nombre)}</strong>
+              ${l.pais ? `<span class="etiqueta et-gris">${esc(l.pais)}</span>` : ''}
+              <br><span class="num" style="color:var(--tenue);font-size:11.5px">${esc(l.api_id)}</span>
+            </div>
+          </div>
+        </td>
         <td>${esc(l.deporte)}</td>
         <td>${l.mercados.length
           ? l.mercados.map(m => `<span class="etiqueta ${m.verificadoEn ? 'et-bien' : 'et-aviso'}"
@@ -180,7 +191,10 @@ function nuevaLiga() {
       <input id="lg_pais" class="num" maxlength="2" placeholder="PE"
         oninput="this.value=this.value.toUpperCase().replace(/[^A-Z]/g,'')">
       <p class="pista">Opcional. Es el país de la liga, no el de los apostadores:
-      un peruano puede apostar sobre un partido brasileño.</p></div>`,
+      un peruano puede apostar sobre un partido brasileño.</p></div>
+    <div class="campo"><label for="lg_logo">Logo de la liga</label>
+      <input id="lg_logo" type="url" placeholder="https://media.api-sports.io/football/leagues/281.png">
+      <p class="pista">Opcional. Cuando importas desde API-Football se completa automáticamente.</p></div>`,
     `<button class="btn-plano" onclick="cerrarModal()">Cancelar</button>
      <button class="btn" onclick="guardarLiga()">Agregar</button>`);
 }
@@ -196,6 +210,7 @@ async function guardarLiga() {
       deporteId: document.getElementById('lg_deporte').value,
       nombre, apiId,
       pais: document.getElementById('lg_pais').value || undefined,
+      logoUrl: document.getElementById('lg_logo').value.trim() || undefined,
     })});
     cerrarModal();
     VISTAS.deportes();

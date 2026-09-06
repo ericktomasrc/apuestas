@@ -34,25 +34,52 @@ PANTALLAS.casas = async () => {
 
   if (casas.length === 0) {
     return pintar(armazon(`
-      <h1 class="titulo">Casas abiertas</h1>
-      <p class="sub">Alguien pone el dinero y tú eliges contra qué apostar.</p>
-      ${llamada}
-      <div class="vacio">
-        <h3>No hay casas abiertas</h3>
-        <p>${S.modulos?.casaPuedeCrear
-          ? 'Cuando alguien abra una, aparece aquí.'
-          : 'Cuando la plataforma abra una, aparece aquí y podrás apostar contra ella.'}</p>
-        <button class="btn btn-plano" onclick="ir('muro')">Ver salas</button>
-      </div>`));
+      <section class="casas-pagina">
+        <div class="casas-encabezado">
+          <div>
+            <span class="casas-kicker">CASAS</span>
+            <h1 class="titulo">Casas abiertas</h1>
+            <p class="sub">Encuentra las casas disponibles para los próximos partidos.</p>
+          </div>
+        </div>
+
+        ${llamada}
+
+        <div class="casas-vacio">
+          <div class="casas-vacio-icono" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 10.5 12 3l9 7.5"/>
+              <path d="M5 9.5V21h14V9.5"/>
+              <path d="M9 21v-6h6v6"/>
+            </svg>
+          </div>
+          <h2>No hay casas abiertas ahora</h2>
+          <p>${S.modulos?.casaPuedeCrear
+            ? 'Cuando haya una casa disponible para un partido, aparecerá aquí.'
+            : 'Cuando la plataforma publique una casa disponible, aparecerá aquí.'}</p>
+          <button class="btn btn-favor casas-vacio-btn" onclick="ir('muro')">Volver a Salas</button>
+        </div>
+      </section>`));
   }
 
   pintar(armazon(`
-    <h1 class="titulo">Casas abiertas</h1>
-    <p class="sub">Alguien pone el dinero y tú eliges contra qué apostar.
-    No hay que esperar contraparte.</p>
+    <section class="casas-pagina">
+      <div class="casas-encabezado">
+        <div>
+          <span class="casas-kicker">CASAS</span>
+          <h1 class="titulo">Casas abiertas</h1>
+          <p class="sub">Encuentra las casas disponibles para los próximos partidos.</p>
+        </div>
+        <div class="casas-contador">
+          <strong>${casas.length}</strong>
+          <span>disponible${casas.length === 1 ? '' : 's'}</span>
+        </div>
+      </div>
 
-    ${llamada}
-    <div class="rejilla-salas">${casas.map(tarjetaCasa).join('')}</div>
+      ${llamada}
+      <div class="rejilla-salas casas-rejilla">${casas.map(tarjetaCasa).join('')}</div>
+    </section>
   `));
 };
 
@@ -350,7 +377,7 @@ async function publicarCasa() {
 
 function tarjetaCasa(c) {
   return `
-  <div class="sala ${c.es_oficial ? 'destacada' : ''}"
+  <div class="sala casa-tarjeta ${c.es_oficial ? 'destacada' : ''}"
        onclick="ir('casa','${c.id}')" role="button" tabindex="0"
        onkeydown="if(event.key==='Enter')ir('casa','${c.id}')">
 
@@ -522,7 +549,7 @@ function bloqueOpcion(o, abierta, yaEstoy, casa) {
 
     ${abierta && !yaEstoy && !lleno && !casa.soy_operador ? `
       <button class="btn btn-favor btn-ancho" style="margin-top:12px"
-        onclick="abrirApuestaCasa('${o.id}','${esc(o.etiqueta)}',${disponible})">
+        onclick="abrirApuestaCasa('${escJs(o.id)}','${escJs(o.etiqueta)}',${Number(disponible)})">
         Apostar a que sí
       </button>` : ''}
 

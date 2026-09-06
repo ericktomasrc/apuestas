@@ -4,6 +4,35 @@ const esc = t => String(t ?? '').replace(/[&<>"']/g,
   c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
 /**
+ * Escapa para una cadena de JAVASCRIPT que además vive dentro de un
+ * atributo HTML, como `onclick="f('AQUI')"`.
+ *
+ * ⚠️ `esc()` NO sirve para eso, y confundir los dos contextos fue un
+ * agujero real. `esc()` convierte la comilla en `&#39;`, pero el
+ * navegador decodifica las entidades del atributo ANTES de compilar el
+ * JavaScript: la comilla vuelve, cierra la cadena, y lo que siga se
+ * ejecuta.
+ *
+ * Aquí se usan escapes hexadecimales de JavaScript (`\x27`), que no son
+ * entidades HTML y por tanto sobreviven a esa decodificación.
+ *
+ * La lista es blanca a propósito: se deja pasar solo lo inofensivo y se
+ * escapa todo lo demás. Una lista negra siempre se queda corta.
+ *
+ * Aun así, la salida preferida es no meter datos en un atributo: usa
+ * `addEventListener` o `dataset` cuando puedas. Esto es para lo que ya
+ * está escrito así.
+ */
+function escJs(t) {
+  return String(t ?? '').replace(/[^a-zA-Z0-9 _.-]/g, (c) => {
+    const n = c.charCodeAt(0);
+    return n < 256
+      ? '\\x' + n.toString(16).padStart(2, '0')
+      : '\\u' + n.toString(16).padStart(4, '0');
+  });
+}
+
+/**
  * Formatea dinero según el país del usuario.
  *
  * El monto viaja SIEMPRE como entero en la unidad mínima. Dividir por
@@ -114,6 +143,17 @@ function cerrarHoja() {
   document.getElementById('velo').innerHTML = '';
   document.body.style.overflow = '';
   document.removeEventListener('keydown', escCierra);
+
+  // "Agregar mercado" dentro de Sala reutiliza el selector de Crear.
+  // Al cerrar por X, Escape o clic en el fondo, se elimina ese modo para
+  // que al entrar luego a Crear nunca aparezca el editor de la sala.
+  if (S?.datos?.modoEditorSala) {
+    S.datos.modoEditorSala = false;
+    S.datos.editorMercadosOriginales = null;
+    S.datos.editorSalaMeta = null;
+    S.datos.configurando = null;
+    S.datos.nueva = null;
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -173,11 +213,24 @@ function escudo(url, nombre) {
   const iniciales = String(nombre ?? '?')
     .split(/\s+/).slice(0, 2).map(p => p[0] ?? '').join('').toUpperCase();
 
+  // Las iniciales viajan por `data-`, no dentro del `onerror`.
+  //
+  // Antes se incrustaban en una cadena de JavaScript dentro del
+  // atributo, y el nombre del equipo lo pone el proveedor externo: una
+  // comilla en él cerraba la cadena. Un atributo de datos no se
+  // interpreta como código, así que el problema desaparece de raíz.
   return url
     ? `<img class="escudo" src="${esc(url)}" alt="" loading="lazy"
-         onerror="this.replaceWith(Object.assign(document.createElement('span'),
-                  {className:'escudo escudo-letras',textContent:'${esc(iniciales)}'}))">`
+         data-iniciales="${esc(iniciales)}" onerror="escudoRoto(this)">`
     : `<span class="escudo escudo-letras">${esc(iniciales)}</span>`;
+}
+
+/** El CDN del proveedor no respondió: se cae a las iniciales. */
+function escudoRoto(img) {
+  const s = document.createElement('span');
+  s.className = 'escudo escudo-letras';
+  s.textContent = img.dataset.iniciales || '?';
+  img.replaceWith(s);
 }
 
 /** Los dos escudos con el «vs» en medio. */

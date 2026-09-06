@@ -21,6 +21,8 @@ PANTALLAS.sala = async (id) => {
   const misPosicionesLista = Object.values(miPosicion);
   const totalMiApuesta = misPosicionesLista.reduce(
     (total, p) => total + Number(p.monto_centavos ?? 0), 0);
+  const totalAnfitrion = Number(s.total_anfitrion_centavos ?? 0);
+  const publicadaEnMuro = Boolean(s.es_del_sistema) || Boolean(s.publicada_en);
 
   S.datos.posiciones = r.posiciones ?? [];
   S.datos.minimoSala = s.monto_minimo_centavos;
@@ -82,6 +84,13 @@ PANTALLAS.sala = async (id) => {
             <div><small>Código de sala</small><strong class="num">${esc(s.codigo)}</strong></div>
           </div>
           <div class="sala-resumen-item">
+            <span>S/</span>
+            <div>
+              <small>Apuesta mínima</small>
+              <strong class="num">${plata(Number(s.monto_minimo_centavos ?? 0))}</strong>
+            </div>
+          </div>
+          <div class="sala-resumen-item">
             <span>♙</span>
             <div><small>Cupos</small><strong>${s.participantes ?? 0} / ${topeVisual}</strong></div>
           </div>
@@ -92,10 +101,12 @@ PANTALLAS.sala = async (id) => {
         <main class="sala-principal">
           ${estadoSala(s)}
 
-          ${s.soy_anfitrion && Object.keys(miPosicion).length === 0 && abierta ? `
-            <div class="sala-aviso">
-              Crear la sala no te obliga a apostar. Puedes entrar a un lado como cualquiera
-              o dejarla correr sin ti.
+          ${s.soy_anfitrion && !publicadaEnMuro && abierta ? `
+            <div class="sala-aviso sala-aviso-publicacion">
+              Esta sala todavía no aparece en <strong>Salas disponibles</strong>.
+              ${totalAnfitrion > 0
+                ? 'Ya tiene aporte del anfitrión. Pulsa <strong>Publicar sala</strong> para mostrarla en el Muro.'
+                : `Primero debes tener un aporte mayor a ${plata(0)} y después publicarla manualmente.`}
             </div>` : ''}
 
           <div class="sala-mercados-cab">
@@ -116,6 +127,13 @@ PANTALLAS.sala = async (id) => {
           </div>
 
           <div class="sala-acciones">
+            ${s.soy_anfitrion && abierta ? `
+              <button class="${publicadaEnMuro ? 'sala-btn-publicada' : 'sala-btn-publicar'}"
+                onclick="abrirEstadoPublicacionSala()">
+                <span>${publicadaEnMuro ? '✓' : '↥'}</span>
+                ${publicadaEnMuro ? 'Sala publicada' : 'Publicar sala'}
+              </button>` : ''}
+
             ${abierta ? `
               <button class="sala-btn-secundario" onclick="compartir('${s.codigo}')">
                 <span>↗</span> Compartir sala
@@ -176,7 +194,68 @@ PANTALLAS.sala = async (id) => {
       </div>
     </div>
   `));
+
+  if (S.datos.abrirPublicacionSala === id) {
+    S.datos.abrirPublicacionSala = null;
+    requestAnimationFrame(abrirEstadoPublicacionSala);
+  }
 };
+
+function abrirEstadoPublicacionSala() {
+  const s = S.datos.salaActual ?? {};
+  const total = Number(s.total_anfitrion_centavos ?? 0);
+  const publicada = Boolean(s.es_del_sistema) || Boolean(s.publicada_en);
+
+  if (publicada) {
+    return hoja('Sala publicada',
+      `${s.equipo_local ?? ''} vs ${s.equipo_visitante ?? ''}`,
+      `<div class="sala-publicacion-info">
+        <div class="sala-publicacion-icono">✓</div>
+        <strong>Esta sala ya está publicada.</strong>
+        <p>Tu aporte como anfitrión es ${plata(total)}.</p>
+        <button class="btn btn-favor btn-ancho"
+          onclick="cerrarHoja();ir('muro')">Ver Salas disponibles</button>
+      </div>`);
+  }
+
+  if (total <= 0) {
+    return hoja('Publicar sala',
+      `${s.equipo_local ?? ''} vs ${s.equipo_visitante ?? ''}`,
+      `<div class="sala-publicacion-info">
+        <div class="sala-publicacion-icono pendiente">↥</div>
+        <strong>Aún no está lista para publicarse.</strong>
+        <p>El anfitrión debe tener un aporte mayor a ${plata(0)}.
+        Después podrás publicarla manualmente.</p>
+        <button class="btn btn-plano btn-ancho" onclick="cerrarHoja()">Entendido</button>
+      </div>`);
+  }
+
+  hoja('Publicar sala',
+    `${s.equipo_local ?? ''} vs ${s.equipo_visitante ?? ''}`,
+    `<div class="sala-publicacion-info">
+      <div class="sala-publicacion-icono pendiente">↥</div>
+      <strong>La sala está lista para publicarse.</strong>
+      <p>Tu aporte actual es ${plata(total)}. No aparecerá en el Muro
+      hasta que confirmes.</p>
+      <button class="btn btn-favor btn-ancho" onclick="publicarSalaManual()">
+        Publicar sala
+      </button>
+      <button class="btn btn-plano btn-ancho" onclick="cerrarHoja()">
+        Todavía no
+      </button>
+    </div>`);
+}
+
+async function publicarSalaManual() {
+  const s = S.datos.salaActual ?? {};
+  if (!s.id) return;
+
+  await accion(async () => {
+    await api(`/salas/${s.id}/publicar`, { method: 'POST' });
+    cerrarHoja();
+    ir('sala', s.id);
+  }, 'Sala publicada', 'Publicando');
+}
 
 function inicialEquipoSala(nombre) {
   const partes = String(nombre ?? '?').trim().split(/\s+/).filter(Boolean);
@@ -498,6 +577,11 @@ async function abrirNuevoMercado() {
   });
 
   S.datos.editorMercadosOriginales = mercados.map(x => ({ ...x }));
+  S.datos.editorSalaMeta = {
+    minimoCentavos: Number(s.monto_minimo_centavos ?? S.pais?.minimoApuesta ?? 500),
+    cupos: Number(s.tope_participantes ?? 2),
+    maxCupos: Number(S.limites?.maxParticipantesSala ?? s.tope_participantes ?? 2),
+  };
   S.datos.modoEditorSala = true;
   S.datos.nueva = {
     partido: {
@@ -510,13 +594,46 @@ async function abrirNuevoMercado() {
     mercados: mercados.map(x => ({ ...x })),
   };
 
-  // Esta función ya existe en crear.js y dibuja la pantalla original que
-  // el usuario ya conoce: buscador, categorías, fichas y jugadas elegidas.
+  // IMPORTANTE:
+  // No se crea un segundo "Define la apuesta".
+  // Se reutiliza directamente el que ya dibuja crear.js.
   dibujarCreacion();
-  document.querySelector('.hoja')?.classList.add('selector-original-sala');
+
+  const hoja = document.querySelector('.hoja');
+  hoja?.classList.add('selector-original-sala', 'usar-visual-crear');
+
+  // Crear mantiene su componente intacto.
+  // Solo cuando se abre desde una Sala habilitamos CUPOS para aumentar.
+  const cupos = document.getElementById('tope');
+  if (cupos) {
+    cupos.removeAttribute('readonly');
+    cupos.removeAttribute('aria-readonly');
+    cupos.removeAttribute('tabindex');
+    cupos.min = String(Number(s.tope_participantes ?? 2));
+    cupos.max = String(Number(S.limites?.maxParticipantesSala ?? s.tope_participantes ?? 2));
+    cupos.value = String(Number(s.tope_participantes ?? 2));
+    cupos.oninput = () => limpiarCupos(cupos);
+    cupos.onblur = () => {
+      corregirCupos(cupos);
+      const actual = Number(s.tope_participantes ?? 2);
+      if (Number(cupos.value) < actual) cupos.value = String(actual);
+    };
+  }
+
+  // La apuesta mínima permanece bloqueada/informativa.
+  const minimo = document.getElementById('minimo');
+  if (minimo) {
+    minimo.setAttribute('readonly', '');
+    minimo.setAttribute('aria-readonly', 'true');
+  }
 }
 
 async function guardarMercadosSalaDesdeSelector() {
+  const salaActual = S.datos.salaActual ?? {};
+  const cuposInput = document.getElementById('tope');
+  const cuposActuales = Number(salaActual.tope_participantes ?? 2);
+  const nuevosCupos = Number(cuposInput?.value ?? cuposActuales);
+
   const originales = S.datos.editorMercadosOriginales ?? [];
   const seleccionados = S.datos.nueva?.mercados ?? [];
   const clave = x => `${x.tipo}|${x.linea ?? ''}|${x.equipo ?? ''}`;
@@ -537,11 +654,26 @@ async function guardarMercadosSalaDesdeSelector() {
         method: 'POST', body: JSON.stringify(body),
       });
     }
+
+    if (
+      Number.isInteger(nuevosCupos)
+      && nuevosCupos > cuposActuales
+    ) {
+      await api(`/salas/${S.datos.parametro}/cupos`, {
+        method: 'PATCH',
+        body: JSON.stringify({ topeParticipantes: nuevosCupos }),
+      });
+    }
+
+    const salaId = S.datos.parametro;
     S.datos.modoEditorSala = false;
     S.datos.editorMercadosOriginales = null;
+    S.datos.editorSalaMeta = null;
+    S.datos.nueva = null;
+    S.datos.configurando = null;
     await refrescarSaldo();
     cerrarHoja();
-    ir('sala', S.datos.parametro);
+    ir('sala', salaId);
   }, 'Mercados actualizados', 'Guardando');
 }
 
@@ -927,10 +1059,37 @@ function abrirApuesta(mercadoId, lado, sugerido, maxPermitido) {
   const limiteMercado = Number.isFinite(Number(maxPermitido)) ? Number(maxPermitido) : Infinity;
   const limiteReal = Math.min(S.saldo.disponibleCentavos, S.pais?.maximoApuesta ?? Infinity, limiteMercado);
 
+  // Cuál de los tres límites es el que bloquea.
+  //
+  // Antes se asumía que era el del mercado siempre que el lado fuera
+  // EN_CONTRA. Así, alguien con la cuenta en cero leía "este mercado
+  // ya no tiene monto disponible" —un problema ajeno, sin nada que
+  // hacer al respecto— cuando en realidad le faltaba saldo y tenía
+  // arreglo inmediato. El mensaje lo mandaba a mirar al lugar
+  // equivocado.
+  //
+  // El orden importa: el saldo se revisa primero porque es lo propio y
+  // lo accionable. Que además el mercado esté lleno no cambia lo que
+  // esa persona tiene que hacer.
   if (limiteReal < minimo) {
-    return aviso(lado === 'EN_CONTRA'
-      ? 'Este mercado ya no tiene monto suficiente disponible.'
-      : `El mínimo es ${plata(minimo)}.`, 'mal');
+    const saldo = S.saldo?.disponibleCentavos ?? 0;
+
+    if (saldo < minimo) {
+      aviso(saldo === 0
+        ? 'No tienes saldo. Recarga para poder apostar.'
+        : `Te falta saldo: tienes ${plata(saldo)} y el mínimo es ${plata(minimo)}.`,
+        'mal');
+      // El siguiente paso es recargar, así que se lleva ahí. Es lo
+      // mismo que hace accion() cuando el servidor responde RECARGAR.
+      setTimeout(() => ir('billetera'), 900);
+      return;
+    }
+
+    if (limiteMercado < minimo) {
+      return aviso('Este mercado ya no tiene monto suficiente disponible.', 'mal');
+    }
+
+    return aviso(`El mínimo es ${plata(minimo)}.`, 'mal');
   }
 
   const inicial = Math.min(sugerido ?? minimo, limiteReal);

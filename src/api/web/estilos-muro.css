@@ -5849,3 +5849,4763 @@ body.sala-activa .selector-original-sala .tipo.abierto .tipo-texto small {
   color: #a8b9ad !important;
   opacity: 1 !important;
 }
+
+/* ============================================================
+   CREAR — layout ancho + tabs de ligas reutilizando el Muro
+   Solo presentación. No cambia lógica ni endpoints.
+   ============================================================ */
+body.crear-activa main{
+  width:100%!important;
+  max-width:none!important;
+  padding:0 0 28px!important;
+  background:#020a06!important;
+}
+
+body.crear-activa main > .envoltura{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+}
+
+body.crear-activa .crear-pagina{
+  width:calc(100% - 36px)!important;
+  max-width:1360px!important;
+  margin:0 auto!important;
+  padding:28px 0 34px!important;
+  box-sizing:border-box!important;
+  min-width:0!important;
+}
+
+body.crear-activa .crear-encabezado{
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:20px!important;
+  padding:0 2px 18px!important;
+  margin:0 0 14px!important;
+  border-bottom:1px solid rgba(96,210,86,.16)!important;
+}
+
+body.crear-activa .crear-kicker{
+  display:block!important;
+  margin:0 0 7px!important;
+  color:#69db43!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  letter-spacing:.17em!important;
+  text-transform:uppercase!important;
+}
+
+body.crear-activa .crear-encabezado .titulo{
+  margin:0 0 5px!important;
+  color:#f4faf5!important;
+  font:800 29px/1.05 'Bricolage Grotesque','Archivo',sans-serif!important;
+  letter-spacing:-.04em!important;
+}
+
+body.crear-activa .crear-encabezado .sub{
+  margin:0!important;
+  color:#91a399!important;
+  font-size:13px!important;
+}
+
+body.crear-activa .crear-total{
+  display:flex!important;
+  align-items:baseline!important;
+  gap:7px!important;
+  flex:0 0 auto!important;
+  color:#8fa197!important;
+  font-size:11px!important;
+  white-space:nowrap!important;
+}
+body.crear-activa .crear-total strong{
+  color:#7be35e!important;
+  font-family:'IBM Plex Mono',monospace!important;
+  font-size:15px!important;
+}
+
+/* Una sola fila, aunque existan 50 o 100 ligas. */
+body.crear-activa .crear-ligas-wrap{
+  position:relative!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:0 0 18px!important;
+  overflow:hidden!important;
+}
+body.crear-activa .crear-ligas-wrap::after{
+  content:'';
+  position:absolute;
+  top:0;right:0;bottom:0;
+  width:42px;
+  pointer-events:none;
+  background:linear-gradient(90deg,rgba(2,10,6,0),#020a06 88%);
+  opacity:.95;
+}
+
+body.crear-activa .crear-ligas{
+  width:100%!important;
+  min-width:0!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  gap:8px!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  padding:2px 44px 5px 0!important;
+  scroll-behavior:smooth!important;
+  scroll-snap-type:x proximity!important;
+  scrollbar-width:none!important;
+  -ms-overflow-style:none!important;
+  cursor:grab!important;
+  user-select:none!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior-x:contain!important;
+}
+body.crear-activa .crear-ligas::-webkit-scrollbar{display:none!important}
+body.crear-activa .crear-ligas.arrastrando{cursor:grabbing!important;scroll-behavior:auto!important}
+
+body.crear-activa .crear-liga-tab{
+  flex:0 0 auto!important;
+  min-height:36px!important;
+  max-width:280px!important;
+  padding:0 16px!important;
+  border:1px solid rgba(82,176,75,.32)!important;
+  border-radius:999px!important;
+  background:#05120d!important;
+  color:#c2d0c7!important;
+  font-size:11.5px!important;
+  font-weight:700!important;
+  line-height:34px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  scroll-snap-align:start!important;
+  cursor:pointer!important;
+  transition:background .14s ease,border-color .14s ease,color .14s ease!important;
+}
+body.crear-activa .crear-liga-tab:hover{
+  color:#fff!important;
+  border-color:rgba(105,219,67,.62)!important;
+  background:#0a1b12!important;
+}
+body.crear-activa .crear-liga-tab.activo{
+  color:#fff!important;
+  background:linear-gradient(180deg,#359b45,#267a35)!important;
+  border-color:#4eb95d!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+
+body.crear-activa .crear-listado-cab{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin:0 0 10px!important;
+  padding:0 1px!important;
+}
+body.crear-activa .crear-listado-cab strong{
+  color:#eef7f0!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  letter-spacing:.04em!important;
+  text-transform:uppercase!important;
+}
+body.crear-activa .crear-listado-cab span{
+  color:#789083!important;
+  font-size:10.5px!important;
+}
+
+/* Las mismas tarjetas deportivas del Muro, pero sin quedar apretadas. */
+body.crear-activa .crear-rejilla{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:14px!important;
+  align-items:stretch!important;
+}
+body.crear-activa .crear-partido-card{
+  width:100%!important;
+  min-width:0!important;
+  min-height:235px!important;
+  padding:12px 12px 10px!important;
+  border-radius:13px!important;
+  overflow:hidden!important;
+  background:
+    linear-gradient(180deg,rgba(3,18,11,.42),rgba(3,18,11,.72) 70%,rgba(3,18,11,.96)),
+    url('estadio-partidos.png') center/cover no-repeat!important;
+  border:1px solid rgba(117,214,97,.24)!important;
+  box-shadow:none!important;
+}
+body.crear-activa .crear-partido-card .t-cab{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  min-width:0!important;
+}
+body.crear-activa .crear-partido-card .chip{
+  max-width:72%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+body.crear-activa .crear-partido-card .chip-tiempo{flex:0 0 auto!important}
+
+body.crear-activa .crear-match-visual{
+  min-height:145px!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr)!important;
+  grid-template-rows:100px auto!important;
+  align-items:center!important;
+  justify-items:center!important;
+  column-gap:8px!important;
+  row-gap:3px!important;
+  position:relative!important;
+  margin-top:3px!important;
+}
+body.crear-activa .crear-match-visual .escudos{
+  grid-column:1 / 4!important;
+  grid-row:1!important;
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 48px minmax(0,1fr)!important;
+  align-items:center!important;
+  justify-items:center!important;
+  gap:8px!important;
+  margin:0!important;
+}
+body.crear-activa .crear-match-visual .escudo:first-child{grid-column:1!important}
+body.crear-activa .crear-match-visual .escudo:last-child{grid-column:3!important}
+body.crear-activa .crear-match-visual .escudo{
+  width:68px!important;
+  height:68px!important;
+  max-width:68px!important;
+  margin:0!important;
+}
+body.crear-activa .crear-match-visual img.escudo{
+  border:0!important;
+  background:transparent!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  object-fit:contain!important;
+}
+body.crear-activa .crear-match-visual .escudo-letras{
+  border-radius:18px!important;
+  background:rgba(15,58,34,.94)!important;
+  border:2px solid rgba(127,221,104,.58)!important;
+  color:#edf7f0!important;
+}
+body.crear-activa .crear-match-visual .match-vs{
+  grid-column:2!important;
+  grid-row:1!important;
+  position:relative!important;
+  left:auto!important;top:auto!important;transform:none!important;
+  z-index:4!important;
+  padding:6px 8px!important;
+  border-radius:999px!important;
+  background:rgba(1,12,7,.68)!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  color:#fff!important;
+  font-size:15px!important;
+  font-weight:800!important;
+}
+body.crear-activa .crear-match-visual .match-nombre{
+  grid-row:2!important;
+  width:100%!important;
+  min-width:0!important;
+  color:#f4faf5!important;
+  font-size:12px!important;
+  font-weight:700!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+body.crear-activa .crear-match-visual .match-nombre-local{grid-column:1!important}
+body.crear-activa .crear-match-visual .match-nombre-visita{grid-column:3!important}
+body.crear-activa .crear-partido-pie{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  margin-top:6px!important;
+  padding-top:9px!important;
+  color:#aebdb4!important;
+  font-size:10.5px!important;
+}
+body.crear-activa .crear-partido-pie .t-entrar{
+  display:flex!important;
+  align-items:center!important;
+  gap:3px!important;
+  color:#69db43!important;
+  font-weight:700!important;
+  white-space:nowrap!important;
+}
+
+@media(max-width:1250px){
+  body.crear-activa .crear-rejilla{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:930px){
+  body.crear-activa .crear-pagina{width:calc(100% - 24px)!important;padding-top:20px!important}
+  body.crear-activa .crear-rejilla{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:620px){
+  body.crear-activa .crear-pagina{width:calc(100% - 20px)!important;padding-top:16px!important}
+  body.crear-activa .crear-encabezado{align-items:flex-start!important;flex-direction:column!important;gap:8px!important}
+  body.crear-activa .crear-encabezado .titulo{font-size:24px!important}
+  body.crear-activa .crear-rejilla{grid-template-columns:1fr!important}
+  body.crear-activa .crear-partido-card{min-height:220px!important}
+  body.crear-activa .crear-liga-tab{max-width:230px!important}
+}
+
+/* ============================================================
+   CREAR — DEFINE LA APUESTA V2
+   Solo cambia la piel visual del selector. No altera tamaños de
+   la hoja, flujo, mercados, montos, cupos ni reglas.
+   ============================================================ */
+
+/* Hoja: conserva el ancho original; solo adopta la piel TandaBet. */
+body.crear-activa .hoja{
+  background:#07110c!important;
+  color:#eef7f0!important;
+  border-left-color:#1d3526!important;
+  box-shadow:-18px 0 42px rgba(0,0,0,.34)!important;
+}
+body.crear-activa .hoja-interior{
+  background:#07110c!important;
+}
+body.crear-activa .hoja h2{
+  color:#f2faf4!important;
+  font-size:19px!important;
+  font-weight:800!important;
+}
+body.crear-activa .hoja-sub{
+  color:#91a397!important;
+  font-size:13px!important;
+}
+body.crear-activa .hoja-cerrar{
+  width:30px!important;
+  height:30px!important;
+  background:#0c1a12!important;
+  border:1px solid #1b3123!important;
+  color:#9fb1a5!important;
+}
+body.crear-activa .hoja-cerrar:hover{
+  background:#11251a!important;
+  color:#fff!important;
+}
+
+/* Selector principal. */
+body.crear-activa .selector{
+  overflow:hidden!important;
+  background:#07110c!important;
+  border:1px solid #1d3526!important;
+  border-radius:11px!important;
+}
+body.crear-activa .buscador{
+  height:42px!important;
+  padding:0 12px!important;
+  background:#09150e!important;
+  border-bottom:1px solid #1d3526!important;
+}
+body.crear-activa .buscador svg{stroke:#7e9184!important}
+body.crear-activa .buscador input{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:#eef7f0!important;
+  font-size:13px!important;
+}
+body.crear-activa .buscador input::placeholder{color:#6f8276!important}
+
+body.crear-activa .selector-cats{
+  background:#06100b!important;
+  border-right:1px solid #1d3526!important;
+}
+body.crear-activa .cat{
+  min-height:35px!important;
+  padding:8px 12px!important;
+  background:transparent!important;
+  color:#9eafa4!important;
+  font-size:12px!important;
+  border:0!important;
+}
+body.crear-activa .cat:hover{
+  background:#0b1b12!important;
+  color:#eef7f0!important;
+}
+body.crear-activa .cat.activa{
+  background:#10251a!important;
+  color:#7dde68!important;
+  font-weight:700!important;
+}
+body.crear-activa .cat small{color:#63806c!important}
+
+body.crear-activa .selector-lista{
+  background:#07110c!important;
+  padding:8px!important;
+  max-height:390px!important;
+  scrollbar-color:#476153 #07110c!important;
+  scrollbar-width:thin!important;
+}
+body.crear-activa .selector-lista > div + div{margin-top:6px!important}
+
+/* Mercado: compacto y oscuro. */
+body.crear-activa .tipo{
+  min-height:54px!important;
+  padding:9px 11px!important;
+  border:1px solid #1d3526!important;
+  border-radius:8px!important;
+  background:#09150e!important;
+  color:#eef7f0!important;
+}
+body.crear-activa .tipo:hover{
+  background:#0d1c12!important;
+  border-color:#356c42!important;
+}
+body.crear-activa .tipo.puesto,
+body.crear-activa .tipo.abierto{
+  background:#10251a!important;
+  border-color:#4c9a59!important;
+}
+body.crear-activa .tipo-marca{
+  color:#73dc5d!important;
+  font-size:14px!important;
+}
+body.crear-activa .tipo-texto strong{
+  color:#eef7f0!important;
+  font-size:13px!important;
+  font-weight:700!important;
+}
+body.crear-activa .tipo-texto small{
+  color:#809286!important;
+  font-size:11px!important;
+}
+
+/* Configuración desplegada. */
+body.crear-activa .panel-tipo{
+  padding:10px 11px 11px!important;
+  background:#0c2115!important;
+  border-color:#3d7f4c!important;
+  color:#e9f5ec!important;
+}
+body.crear-activa .mini-rotulo{
+  color:#8bb89a!important;
+  font-size:10.5px!important;
+}
+body.crear-activa .lineas{
+  gap:6px!important;
+}
+body.crear-activa .linea{
+  min-width:42px!important;
+  min-height:30px!important;
+  padding:4px 9px!important;
+  border-radius:999px!important;
+  background:#08140d!important;
+  border:1px solid #294733!important;
+  color:#dce9df!important;
+  font-size:11.5px!important;
+}
+body.crear-activa .linea:hover{
+  border-color:#559b62!important;
+  color:#fff!important;
+}
+body.crear-activa .linea.activa{
+  background:#397e5f!important;
+  border-color:#65aa86!important;
+  color:#fff!important;
+}
+body.crear-activa .panel-tipo .pista{
+  color:#829589!important;
+  font-size:10.5px!important;
+  line-height:1.4!important;
+}
+
+/* Agregar: no ocupa una barra gigante. */
+body.crear-activa .panel-tipo .btn-favor.btn-ancho{
+  width:auto!important;
+  min-width:108px!important;
+  min-height:34px!important;
+  height:34px!important;
+  margin:9px 0 0 auto!important;
+  padding:0 16px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:7px!important;
+  background:#3f8f68!important;
+  border:1px solid #57a87e!important;
+  color:#fff!important;
+  font-size:12px!important;
+  font-weight:700!important;
+}
+body.crear-activa .panel-tipo .btn-favor.btn-ancho:hover{
+  background:#4c9d75!important;
+  border-color:#6bb58e!important;
+}
+
+/* Jugadas / quién puede entrar. */
+body.crear-activa .caja-jugadas{
+  margin-top:10px!important;
+  padding:10px 12px!important;
+  background:#08140e!important;
+  border:1px solid #1d3526!important;
+  border-radius:9px!important;
+  color:#eaf4ec!important;
+}
+body.crear-activa .caja-jugadas.vacia{border-style:dashed!important}
+body.crear-activa .jugadas-cab{
+  color:#8fa297!important;
+  font-size:10px!important;
+  margin-bottom:7px!important;
+}
+body.crear-activa .jugadas-cab span{color:#708277!important}
+body.crear-activa .jugadas-vacio{color:#65766b!important;font-size:11.5px!important}
+body.crear-activa .puesta{
+  padding:4px 8px!important;
+  background:#10251a!important;
+  color:#bfe3c7!important;
+  border:1px solid #294b34!important;
+  font-size:11px!important;
+}
+body.crear-activa .puesta button{color:#8fd681!important}
+
+body.crear-activa .caja-jugadas label{
+  color:#91a398!important;
+  font-size:10px!important;
+}
+body.crear-activa .caja-jugadas input,
+body.crear-activa .caja-jugadas select{
+  min-height:38px!important;
+  height:38px!important;
+  padding:6px 10px!important;
+  background:#09150e!important;
+  border:1px solid #294333!important;
+  color:#eef7f0!important;
+  border-radius:7px!important;
+  font-size:14px!important;
+}
+body.crear-activa .caja-jugadas input:focus,
+body.crear-activa .caja-jugadas select:focus{
+  border-color:#4f9b62!important;
+  box-shadow:0 0 0 2px rgba(82,174,101,.13)!important;
+}
+body.crear-activa .caja-jugadas .pista{color:#809287!important}
+
+/* Publicar: ancho útil, pero bajo y sobrio. */
+body.crear-activa .pie-fijo{
+  margin-top:9px!important;
+  padding-top:9px!important;
+  background:#08140e!important;
+  border-top:1px solid #1d3526!important;
+}
+body.crear-activa .pie-fijo .btn-favor.btn-ancho{
+  width:100%!important;
+  min-height:38px!important;
+  height:38px!important;
+  padding:0 16px!important;
+  border-radius:7px!important;
+  background:#3f8f68!important;
+  border:1px solid #57a87e!important;
+  color:#fff!important;
+  font-size:12.5px!important;
+  font-weight:700!important;
+}
+body.crear-activa .pie-fijo .btn-favor.btn-ancho:hover{
+  background:#4c9d75!important;
+  border-color:#6bb58e!important;
+}
+
+@media(max-width:759px){
+  body.crear-activa .selector{grid-template-columns:1fr!important}
+  body.crear-activa .selector-cats{
+    display:flex!important;
+    overflow-x:auto!important;
+    border-right:0!important;
+    border-bottom:1px solid #1d3526!important;
+  }
+  body.crear-activa .cat{width:auto!important;white-space:nowrap!important}
+}
+
+
+/* ============================================================
+   MIS SALAS — reutiliza cabecera del Muro, cambia solo contenido
+   ============================================================ */
+body.mias-activa{
+  background:#020a06!important;
+  color:#f3faf5!important;
+}
+body.mias-activa main{
+  width:100%!important;
+  max-width:none!important;
+  padding:0 0 28px!important;
+  background:#020a06!important;
+  min-height:calc(100vh - 61px)!important;
+}
+body.mias-activa main > .envoltura{
+  width:100%!important;
+  max-width:none!important;
+  margin:0!important;
+  padding:0!important;
+}
+body.mias-activa .mias-pagina{
+  width:calc(100% - 40px)!important;
+  max-width:1510px!important;
+  margin:0 auto!important;
+  padding:28px 0 36px!important;
+}
+body.mias-activa .mias-encabezado{
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:28px!important;
+  padding:0 2px 20px!important;
+  border-bottom:1px solid rgba(88,193,84,.18)!important;
+}
+body.mias-activa .mias-kicker{
+  display:block!important;
+  margin-bottom:7px!important;
+  color:#6ddd58!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  letter-spacing:.16em!important;
+  text-transform:uppercase!important;
+}
+body.mias-activa .mias-encabezado .titulo{
+  margin:0!important;
+  color:#fff!important;
+  font-size:28px!important;
+  line-height:1.05!important;
+}
+body.mias-activa .mias-encabezado .sub{
+  margin:7px 0 0!important;
+  color:#8fa398!important;
+  font-size:12.5px!important;
+}
+body.mias-activa .mias-resumen{
+  display:flex!important;
+  flex:0 0 auto!important;
+  border:1px solid rgba(95,200,84,.20)!important;
+  border-radius:12px!important;
+  overflow:hidden!important;
+  background:#06130d!important;
+}
+body.mias-activa .mias-resumen > div{
+  min-width:105px!important;
+  padding:10px 14px!important;
+  text-align:center!important;
+  border-left:1px solid rgba(95,200,84,.14)!important;
+}
+body.mias-activa .mias-resumen > div:first-child{border-left:0!important}
+body.mias-activa .mias-resumen strong{
+  display:block!important;
+  color:#f5fff6!important;
+  font-size:16px!important;
+  font-weight:800!important;
+}
+body.mias-activa .mias-resumen span{
+  display:block!important;
+  margin-top:2px!important;
+  color:#82968a!important;
+  font-size:9px!important;
+  text-transform:uppercase!important;
+  letter-spacing:.07em!important;
+}
+body.mias-activa .mias-aviso{
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  margin:14px 0 0!important;
+  padding:9px 12px!important;
+  color:#a8bbaf!important;
+  font-size:11.5px!important;
+  background:#06150d!important;
+  border:1px solid rgba(100,205,83,.16)!important;
+  border-radius:8px!important;
+}
+body.mias-activa .mias-aviso p{margin:0!important}
+body.mias-activa .mias-aviso strong{color:#7ee266!important}
+body.mias-activa .mias-aviso-punto,
+body.mias-activa .mias-sin-punto{
+  width:7px!important;height:7px!important;border-radius:50%!important;
+  background:#72d95e!important;box-shadow:0 0 0 4px rgba(114,217,94,.10)!important;
+  flex:0 0 7px!important;
+}
+body.mias-activa .mias-seccion-cab{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  margin:22px 0 10px!important;
+  padding:0 2px!important;
+}
+body.mias-activa .mias-seccion-cab h2{
+  margin:0!important;color:#f0f7f2!important;font-size:13px!important;
+  font-weight:800!important;text-transform:uppercase!important;letter-spacing:.06em!important;
+}
+body.mias-activa .mias-seccion-cab span{color:#688074!important;font-size:10px!important}
+body.mias-activa .mias-seccion-terminadas{margin-top:28px!important}
+
+body.mias-activa .mias-rejilla{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:14px!important;
+}
+body.mias-activa .mias-card{
+  min-width:0!important;
+  overflow:hidden!important;
+  border:1px solid rgba(93,192,80,.24)!important;
+  border-radius:13px!important;
+  background:#06110c!important;
+  color:#f1f8f3!important;
+  cursor:pointer!important;
+  transition:transform .14s ease,border-color .14s ease,box-shadow .14s ease!important;
+}
+@media(hover:hover) and (pointer:fine){
+  body.mias-activa .mias-card:hover{
+    transform:translateY(-2px)!important;
+    border-color:rgba(114,220,92,.48)!important;
+    box-shadow:0 12px 26px rgba(0,0,0,.20)!important;
+  }
+}
+body.mias-activa .mias-card-visual{
+  position:relative!important;
+  min-height:180px!important;
+  padding:12px!important;
+  background:
+    linear-gradient(180deg,rgba(2,15,9,.34),rgba(2,15,9,.58) 66%,rgba(2,15,9,.92)),
+    url('estadio-partidos.png') center/cover no-repeat!important;
+}
+body.mias-activa .mias-card-top{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;
+}
+body.mias-activa .mias-liga{
+  max-width:65%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+  padding:4px 9px!important;border-radius:999px!important;background:#eef7ef!important;color:#29563b!important;
+  font-size:9.5px!important;font-weight:800!important;
+}
+body.mias-activa .mias-estado{
+  padding:4px 8px!important;border-radius:999px!important;font-size:9px!important;font-weight:800!important;
+  border:1px solid transparent!important;white-space:nowrap!important;
+}
+body.mias-activa .estado-abierta,body.mias-activa .estado-resuelta{background:#123b20!important;color:#8ae56c!important;border-color:#2b7040!important}
+body.mias-activa .estado-cerrando,body.mias-activa .estado-juego{background:#3a3212!important;color:#efd66c!important;border-color:#6b5a20!important}
+body.mias-activa .estado-espera,body.mias-activa .estado-neutra{background:#162019!important;color:#a6b6ab!important;border-color:#324138!important}
+
+body.mias-activa .mias-enfrentamiento{
+  display:grid!important;grid-template-columns:minmax(0,1fr) 46px minmax(0,1fr)!important;align-items:center!important;
+  gap:8px!important;margin-top:20px!important;
+}
+body.mias-activa .mias-equipo{text-align:center!important;min-width:0!important}
+body.mias-activa .mias-equipo .escudo{
+  width:62px!important;height:62px!important;max-width:62px!important;margin:0 auto 8px!important;
+  border-radius:18px!important;background:#10391f!important;border:2px solid rgba(117,218,91,.52)!important;
+  color:#e8f5eb!important;box-shadow:0 7px 18px rgba(0,0,0,.28)!important;
+}
+body.mias-activa .mias-equipo img.escudo{
+  border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;object-fit:contain!important;
+}
+body.mias-activa .mias-equipo strong{
+  display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+  color:#fff!important;font-size:11px!important;font-weight:800!important;text-transform:lowercase!important;
+}
+body.mias-activa .mias-vs{
+  justify-self:center!important;padding:7px 8px!important;border-radius:999px!important;
+  background:rgba(1,12,7,.72)!important;border:1px solid rgba(255,255,255,.10)!important;
+  color:#fff!important;font-size:13px!important;font-weight:900!important;
+}
+body.mias-activa .mias-anfitrion{
+  position:absolute!important;left:12px!important;bottom:10px!important;
+  padding:3px 7px!important;border-radius:5px!important;background:rgba(52,142,62,.88)!important;
+  color:#fff!important;font-size:8px!important;font-weight:900!important;letter-spacing:.08em!important;
+}
+body.mias-activa .mias-card-info{padding:11px 12px 10px!important;background:#06110c!important}
+body.mias-activa .mias-posiciones{display:grid!important;gap:5px!important}
+body.mias-activa .mias-posicion{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;
+  padding:5px 0!important;border-bottom:1px solid rgba(93,192,80,.12)!important;font-size:10.5px!important;color:#a9baaf!important;
+}
+body.mias-activa .mias-posicion strong{color:#eaf6ec!important;font-size:11px!important}
+body.mias-activa .mias-mas{padding-top:3px!important;color:#6f8378!important;font-size:9.5px!important}
+body.mias-activa .mias-sin-apuesta{
+  display:flex!important;align-items:center!important;gap:8px!important;min-height:37px!important;
+  color:#83968b!important;font-size:10.5px!important;
+}
+body.mias-activa .mias-card-pie{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;
+  margin-top:8px!important;padding-top:8px!important;border-top:1px solid rgba(93,192,80,.14)!important;
+  color:#7e9186!important;font-size:9.5px!important;
+}
+body.mias-activa .mias-card-pie strong{color:#c9d8ce!important;font-size:10px!important}
+body.mias-activa .mias-resultado.positivo{color:#75df5f!important}
+body.mias-activa .mias-resultado.negativo{color:#e17a78!important}
+
+body.mias-activa .mias-vacio{
+  max-width:520px!important;margin:42px auto 0!important;padding:28px!important;text-align:center!important;
+  border:1px solid rgba(92,192,81,.20)!important;border-radius:14px!important;background:#06130d!important;
+}
+body.mias-activa .mias-vacio-icono{
+  width:46px!important;height:46px!important;margin:0 auto 12px!important;display:grid!important;place-items:center!important;
+  border-radius:14px!important;background:#123b20!important;color:#78df60!important;font-size:25px!important;font-weight:700!important;
+}
+body.mias-activa .mias-vacio h3{margin:0!important;color:#fff!important;font-size:17px!important}
+body.mias-activa .mias-vacio p{margin:7px 0 16px!important;color:#82958a!important;font-size:12px!important;line-height:1.5!important}
+body.mias-activa .mias-vacio-acciones{display:flex!important;justify-content:center!important;gap:8px!important;flex-wrap:wrap!important}
+
+@media(max-width:1250px){body.mias-activa .mias-rejilla{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:920px){
+  body.mias-activa .mias-pagina{width:calc(100% - 24px)!important;padding-top:20px!important}
+  body.mias-activa .mias-rejilla{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.mias-activa .mias-encabezado{align-items:flex-start!important;flex-direction:column!important;gap:14px!important}
+}
+@media(max-width:620px){
+  body.mias-activa .mias-rejilla{grid-template-columns:1fr!important}
+  body.mias-activa .mias-resumen{width:100%!important}
+  body.mias-activa .mias-resumen>div{flex:1!important;min-width:0!important}
+  body.mias-activa .mias-encabezado .titulo{font-size:24px!important}
+}
+
+
+/* ============================================================
+   LAYOUT UNIFICADO — MURO / CREAR / MIS SALAS
+   Las tres pantallas usan el mismo ancho exterior y el mismo
+   margen lateral. El Muro conserva su columna lateral interna.
+   ============================================================ */
+
+:root{
+  --tb-contenido-max:1500px;
+  --tb-contenido-pad:16px;
+}
+
+/* Muro: conserva rejilla principal + lateral, pero fija el mismo shell. */
+@media(min-width:901px){
+  body.muro-activo .doble{
+    width:100%!important;
+    max-width:var(--tb-contenido-max)!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    padding-left:var(--tb-contenido-pad)!important;
+    padding-right:var(--tb-contenido-pad)!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Crear y Mis salas ocupan exactamente el mismo ancho exterior del Muro. */
+  body.crear-activa .crear-pagina,
+  body.mias-activa .mias-pagina{
+    width:100%!important;
+    max-width:var(--tb-contenido-max)!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    padding-left:var(--tb-contenido-pad)!important;
+    padding-right:var(--tb-contenido-pad)!important;
+    box-sizing:border-box!important;
+  }
+}
+
+/* Tablet: mismas separaciones laterales en las tres vistas. */
+@media(min-width:621px) and (max-width:900px){
+  body.muro-activo .doble,
+  body.crear-activa .crear-pagina,
+  body.mias-activa .mias-pagina{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+    box-sizing:border-box!important;
+  }
+}
+
+/* Móvil: una sola regla de borde para las tres pantallas. */
+@media(max-width:620px){
+  body.muro-activo .doble,
+  body.crear-activa .crear-pagina,
+  body.mias-activa .mias-pagina{
+    width:100%!important;
+    max-width:none!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+    padding-left:10px!important;
+    padding-right:10px!important;
+    box-sizing:border-box!important;
+  }
+}
+
+
+/* ============================================================
+   MIS SALAS — FILTROS DINÁMICOS POR LIGA
+   ============================================================ */
+body.mias-activa .mias-filtros-wrap{
+  margin:14px 0 18px!important;
+  padding-top:13px!important;
+  border-top:1px solid rgba(91,191,78,.16)!important;
+}
+body.mias-activa .mias-filtros-cab{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:12px!important;margin-bottom:8px!important;color:#91a49a!important;
+  font-size:10px!important;text-transform:uppercase!important;letter-spacing:.08em!important;font-weight:800!important;
+}
+body.mias-activa .mias-filtros-cab small{
+  color:#5f7669!important;font-size:9px!important;font-weight:700!important;letter-spacing:0!important;text-transform:none!important;
+}
+body.mias-activa .mias-ligas-scroll{
+  display:flex!important;align-items:center!important;gap:8px!important;
+  width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:hidden!important;
+  flex-wrap:nowrap!important;padding:1px 2px 6px!important;
+  scrollbar-width:none!important;overscroll-behavior-x:contain!important;
+  scroll-behavior:smooth!important;touch-action:pan-x!important;cursor:grab!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+body.mias-activa .mias-ligas-scroll::-webkit-scrollbar{display:none!important}
+body.mias-activa .mias-ligas-scroll:active{cursor:grabbing!important}
+body.mias-activa .mias-liga-tab{
+  flex:0 0 auto!important;display:inline-flex!important;align-items:center!important;gap:7px!important;
+  min-height:34px!important;max-width:250px!important;padding:0 13px!important;border-radius:18px!important;
+  border:1px solid rgba(85,183,74,.28)!important;background:#06150e!important;color:#b7c8bd!important;
+  font-size:10.5px!important;font-weight:800!important;white-space:nowrap!important;cursor:pointer!important;
+  box-shadow:none!important;
+}
+body.mias-activa .mias-liga-tab span{
+  min-width:0!important;max-width:190px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+body.mias-activa .mias-liga-tab b{
+  display:grid!important;place-items:center!important;min-width:20px!important;height:20px!important;padding:0 5px!important;
+  border-radius:10px!important;background:rgba(255,255,255,.06)!important;color:#9eb0a5!important;
+  font-size:9px!important;font-weight:900!important;
+}
+body.mias-activa .mias-liga-tab:hover{
+  color:#fff!important;border-color:rgba(100,215,83,.48)!important;background:#091d13!important;
+}
+body.mias-activa .mias-liga-tab.activo{
+  color:#fff!important;background:linear-gradient(180deg,#2f9844,#247a36)!important;
+  border-color:#4bb65a!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+body.mias-activa .mias-liga-tab.activo b{background:rgba(0,0,0,.18)!important;color:#eaffea!important}
+body.mias-activa .mias-sin-resultados{
+  padding:20px!important;border:1px dashed rgba(90,180,79,.18)!important;border-radius:12px!important;
+  color:#71867a!important;background:#041009!important;text-align:center!important;font-size:11px!important;
+}
+@media(max-width:620px){
+  body.mias-activa .mias-filtros-cab{margin-bottom:7px!important}
+  body.mias-activa .mias-liga-tab{min-height:32px!important;padding:0 11px!important;font-size:10px!important}
+}
+
+/* ============================================================
+   RESULTADOS — DASHBOARD OSCURO
+   ============================================================ */
+body.resultados-activa .envoltura{
+  width:100%!important;max-width:1500px!important;margin:0 auto!important;
+  padding:28px 16px 48px!important;box-sizing:border-box!important;
+}
+body.resultados-activa main{background:#020b07!important;min-height:calc(100vh - 76px)!important}
+body.resultados-activa .resultados-pagina{color:#eef8f1!important}
+
+.resultados-encabezado{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;padding-bottom:18px;border-bottom:1px solid rgba(89,191,76,.18)}
+.resultados-kicker{font-size:10px;font-weight:900;letter-spacing:.16em;color:#57d64e;margin-bottom:7px}
+.resultados-encabezado h1{font-family:'Bricolage Grotesque',sans-serif;font-size:31px;line-height:1;margin:0;color:#fff}
+.resultados-encabezado p{margin:8px 0 0;color:#8da397;font-size:12px}
+.resultados-mini-resumen{display:grid;grid-template-columns:repeat(3,minmax(90px,1fr));border:1px solid rgba(76,177,65,.23);border-radius:14px;overflow:hidden;background:#06140d}
+.resultados-mini-resumen div{padding:14px 20px;text-align:center;border-left:1px solid rgba(76,177,65,.17)}
+.resultados-mini-resumen div:first-child{border-left:0}
+.resultados-mini-resumen strong{display:block;font:700 18px 'IBM Plex Mono',monospace;color:#fff}
+.resultados-mini-resumen span{display:block;margin-top:3px;font-size:8px;letter-spacing:.08em;color:#6f8979}
+
+.resultados-periodos{display:flex;gap:6px;margin:16px 0 14px;overflow-x:auto;scrollbar-width:none}
+.resultados-periodos::-webkit-scrollbar{display:none}
+.resultado-periodo{flex:0 0 auto;min-height:34px;padding:0 17px;border:1px solid rgba(95,143,112,.22);border-radius:9px;background:#07110d;color:#9cb0a4;font-size:11px;font-weight:700;cursor:pointer}
+.resultado-periodo:hover{border-color:rgba(89,212,76,.48);color:#fff}
+.resultado-periodo.activo{background:#12331d;border-color:#39a84a;color:#fff;box-shadow:inset 0 0 0 1px rgba(80,225,88,.07)}
+
+.resultados-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+.resultados-principal{min-width:0}
+.resultados-lateral{display:grid;gap:12px;position:sticky;top:14px}
+.resultados-metricas{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:11px}
+.resultado-metrica{min-height:91px;padding:13px;border:1px solid rgba(99,146,115,.18);border-radius:11px;background:linear-gradient(180deg,#0a1510,#07100c);display:flex;gap:10px;align-items:center}
+.resultado-metrica-icono{width:36px;height:36px;flex:0 0 36px;display:grid;place-items:center;border-radius:50%;font-size:18px;background:#111d16;color:#9eb1a5}
+.resultado-metrica span{display:block;font-size:8.5px;letter-spacing:.06em;color:#82978b;font-weight:800}
+.resultado-metrica strong{display:block;margin-top:4px;font:700 18px 'IBM Plex Mono',monospace;color:#fff;white-space:nowrap}
+.resultado-metrica small{display:block;margin-top:3px;color:#71867a;font-size:9px}
+.resultado-metrica.positivo .resultado-metrica-icono{background:#0b2a13;color:#63e45f}.resultado-metrica.positivo strong{color:#59df58}
+.resultado-metrica.negativo .resultado-metrica-icono{background:#2d1212;color:#ff5757}.resultado-metrica.negativo strong{color:#ff5757}
+.resultado-metrica.en-juego .resultado-metrica-icono{background:#10290f;color:#78e66a}.resultado-metrica.en-juego strong{color:#5dde59}
+
+.resultado-grafica-card,.resultado-detalle-card,.resultado-aside-card{border:1px solid rgba(95,143,112,.18);border-radius:11px;background:linear-gradient(180deg,#09130f,#06100c)}
+.resultado-grafica-card{padding:14px 15px 12px;margin-bottom:11px}
+.resultado-seccion-cab{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px}
+.resultado-seccion-cab span,.resultado-aside-titulo{font-size:9.5px;font-weight:900;letter-spacing:.04em;color:#eef5f0}
+.resultado-seccion-cab small{display:block;margin-top:3px;color:#687d70;font-size:9px}
+.resultado-grafica-final{font:700 13px 'IBM Plex Mono',monospace}.resultado-grafica-final.positivo{color:#5ee45a}.resultado-grafica-final.negativo{color:#ff5757}
+.resultado-grafica-wrap{height:175px;width:100%;background-image:linear-gradient(rgba(111,163,127,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(111,163,127,.06) 1px,transparent 1px);background-size:100% 35px,10% 100%;border-radius:7px;overflow:hidden}
+.resultado-grafica-wrap svg{width:100%;height:100%;overflow:visible}
+.resultado-linea-cero{stroke:#31523e;stroke-width:1;stroke-dasharray:5 5;vector-effect:non-scaling-stroke}
+.resultado-area{fill:rgba(66,190,69,.10)}
+.resultado-linea{fill:none;stroke-width:2.5;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round}.resultado-linea.positiva{stroke:#60df57}.resultado-linea.negativa{stroke:#f05252}
+.resultado-punto{fill:#77e96d;stroke:#0a150f;stroke-width:1.4;vector-effect:non-scaling-stroke}
+.resultado-grafica-pie{display:flex;justify-content:space-between;color:#718579;font-size:9px;margin-top:6px}
+
+.resultado-aside-card{padding:14px}
+.resultado-aside-titulo{margin-bottom:12px}
+.resultado-donut-wrap{display:grid;grid-template-columns:116px 1fr;gap:14px;align-items:center}
+.resultado-donut{width:112px;height:112px;border-radius:50%;background:conic-gradient(#2d9b3b 0 var(--g),#db3d3d var(--g) var(--p),#77827c var(--p) 100%);position:relative;display:grid;place-items:center}
+.resultado-donut:after{content:'';position:absolute;inset:19px;border-radius:50%;background:#07100c}
+.resultado-donut>div{position:relative;z-index:1;text-align:center}.resultado-donut strong{display:block;font:700 18px 'IBM Plex Mono',monospace;color:#fff}.resultado-donut span{font-size:8px;color:#7b9083}
+.resultado-leyenda{display:grid;gap:11px}.resultado-leyenda>div{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;font-size:9px;color:#c7d3cb}.resultado-leyenda i{width:8px;height:8px;border-radius:50%}.resultado-leyenda i.ganado{background:#2d9b3b}.resultado-leyenda i.perdido{background:#db3d3d}.resultado-leyenda i.devuelto{background:#77827c}.resultado-leyenda strong{font:600 9px 'IBM Plex Mono',monospace;color:#9fb0a5}
+.resultado-efectividad{border-top:1px solid rgba(104,150,118,.14);margin-top:13px;padding-top:11px;text-align:center;color:#aabbb0;font-size:9px}.resultado-efectividad span{display:block;margin-top:4px;color:#58dd55}
+.resultado-mejores{display:grid}.resultado-mejores button{display:grid;grid-template-columns:24px 1fr auto;gap:9px;align-items:center;padding:9px 0;border:0;border-top:1px solid rgba(106,154,120,.11);background:none;color:inherit;text-align:left;cursor:pointer}.resultado-mejores button:first-child{border-top:0}.resultado-posicion{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#17331e;color:#65df5c;font:bold 10px 'IBM Plex Mono',monospace}.resultado-mejor-info{min-width:0}.resultado-mejor-info strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:#edf5ef}.resultado-mejor-info small{display:block;margin-top:2px;color:#6d8275;font-size:8.5px}.resultado-mejores b{font:700 11px 'IBM Plex Mono',monospace;color:#5fe159}.resultado-aside-vacio{padding:16px 0;color:#6d8175;font-size:9px;line-height:1.5}
+.resultado-resumen-lista{display:grid;gap:11px}.resultado-resumen-lista div{display:flex;justify-content:space-between;gap:12px;font-size:9.5px;color:#94a79b}.resultado-resumen-lista strong{font:600 10px 'IBM Plex Mono',monospace;color:#fff}.resultado-resumen-lista strong.positivo{color:#58df57}.resultado-resumen-lista strong.negativo{color:#ff5757}.resultado-resumen-lista strong.en-juego{color:#f0b83f}
+
+.resultado-detalle-card{overflow:hidden}.resultado-subtabs{display:flex;gap:2px;padding:0 4px;border-bottom:1px solid rgba(99,146,115,.16);overflow-x:auto;scrollbar-width:none}.resultado-subtabs::-webkit-scrollbar{display:none}.resultado-subtabs button{flex:0 0 auto;padding:12px 13px 10px;border:0;border-bottom:2px solid transparent;background:none;color:#768a7e;font-size:10px;font-weight:700;cursor:pointer}.resultado-subtabs button.activo{color:#fff;border-bottom-color:#55dd50;background:linear-gradient(180deg,rgba(52,163,65,.08),transparent)}
+.resultado-filtros{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(99,146,115,.12)}.resultado-filtros[hidden]{display:none!important}.resultado-estados{display:flex;gap:5px;min-width:0;overflow-x:auto;scrollbar-width:none}.resultado-estados::-webkit-scrollbar{display:none}.resultado-estados button{flex:0 0 auto;min-height:29px;padding:0 11px;border-radius:16px;border:1px solid rgba(96,145,112,.22);background:#06100c;color:#84988c;font-size:9px;cursor:pointer}.resultado-estados button.activo{color:#fff;border-color:#42b94b;background:#10331a}
+.resultado-buscar{display:flex;align-items:center;gap:7px;min-width:230px;height:31px;padding:0 10px;border:1px solid rgba(96,145,112,.18);border-radius:7px;background:#07110d;color:#718579}.resultado-buscar input{width:100%;border:0!important;outline:0!important;background:transparent!important;color:#dce8e0!important;font-size:9px!important;padding:0!important;box-shadow:none!important}.resultado-buscar input::placeholder{color:#5f7367}
+.resultado-tabla{display:grid}.resultado-fila{width:100%;display:grid;grid-template-columns:minmax(210px,2.1fr) .55fr .8fr .65fr 1fr 18px;gap:10px;align-items:center;padding:10px 13px;border:0;border-top:1px solid rgba(99,146,115,.10);background:transparent;color:#dce7df;text-align:left;cursor:pointer}.resultado-fila:first-child{border-top:0}.resultado-fila:hover{background:rgba(41,120,52,.07)}.resultado-fila-partido{display:flex;align-items:center;gap:10px;min-width:0}.resultado-fila-partido>div:last-child{min-width:0}.resultado-fila-partido strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;color:#eef6f0}.resultado-fila-partido small{display:block;margin-top:2px;color:#6d8175;font-size:8.5px}.resultado-mini-vs{display:flex!important;align-items:center;gap:3px!important;flex:0 0 auto}.resultado-mini-vs span{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#0d2816;border:1px solid #287b37;font:bold 8px 'IBM Plex Mono',monospace;color:#e8f5eb}.resultado-mini-vs i{font-style:normal;font-size:6px;color:#668072}
+.resultado-fila-tipo span,.resultado-fila-neto span,.resultado-fila-fecha span{display:block;font-size:7px;color:#5f7467;letter-spacing:.06em}.resultado-fila-tipo strong,.resultado-fila-neto strong,.resultado-fila-fecha strong{display:block;margin-top:3px;font-size:9px;color:#aebdb4}.resultado-fila-neto strong{font-family:'IBM Plex Mono',monospace}.resultado-fila-neto strong.ganado{color:#58df57}.resultado-fila-neto strong.perdido{color:#ff5757}.resultado-estado{display:inline-flex;align-items:center;justify-content:center;min-height:23px;padding:0 8px;border-radius:12px;border:1px solid rgba(120,140,127,.2);font-size:8px;white-space:nowrap}.resultado-estado.ganado{color:#61df5b;border-color:#267c34;background:#0d2613}.resultado-estado.perdido{color:#ff6767;border-color:#743333;background:#241010}.resultado-estado.en-juego{color:#f2bd48;border-color:#745a1a;background:#241c08}.resultado-estado.devuelto{color:#adb8b1;background:#151b17}.resultado-fila-flecha{color:#5f7869;font-size:18px;text-align:right}
+.resultado-sin-coincidencias{padding:28px;text-align:center;color:#687d70;font-size:10px}
+.resultado-resumen-tiempo{display:grid}.resultado-resumen-tiempo>div{display:flex;justify-content:space-between;gap:20px;padding:11px 14px;border-top:1px solid rgba(99,146,115,.10);color:#a4b4aa;font-size:10px}.resultado-resumen-tiempo>div:first-child{border-top:0}.resultado-resumen-tiempo strong{font:600 10px 'IBM Plex Mono',monospace;color:#dfeae3}.resultado-resumen-tiempo strong.positivo{color:#59df58}.resultado-resumen-tiempo strong.negativo{color:#ff5757}
+.resultados-vacio{text-align:center;padding:55px 20px;border:1px solid rgba(95,143,112,.17);border-radius:12px;background:#06100c}.resultados-vacio-icono{margin:0 auto 10px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#102a16;color:#5dde59;font-size:20px}.resultados-vacio h3{margin:0;color:#fff}.resultados-vacio p{color:#789082;font-size:11px}
+
+@media(max-width:1180px){
+  .resultados-layout{grid-template-columns:1fr}.resultados-lateral{grid-template-columns:repeat(3,minmax(0,1fr));position:static}.resultados-metricas{grid-template-columns:repeat(3,1fr)}
+}
+@media(max-width:850px){
+  body.resultados-activa .envoltura{padding:18px 12px 38px!important}.resultados-encabezado{align-items:flex-start}.resultados-mini-resumen{display:none}.resultados-metricas{grid-template-columns:repeat(2,1fr)}.resultados-lateral{grid-template-columns:1fr}.resultado-filtros{flex-direction:column}.resultado-buscar{min-width:0;width:100%}.resultado-fila{grid-template-columns:1fr auto 18px}.resultado-fila-tipo,.resultado-fila-neto span,.resultado-fila-fecha span{display:none}.resultado-fila-neto{grid-column:2}.resultado-fila-estado{grid-column:2}.resultado-fila-fecha{grid-column:1}.resultado-fila-flecha{grid-column:3;grid-row:1/3}
+}
+@media(max-width:560px){
+  .resultados-encabezado h1{font-size:25px}.resultados-metricas{grid-template-columns:1fr}.resultado-metrica{min-height:76px}.resultado-grafica-wrap{height:145px}.resultado-donut-wrap{grid-template-columns:105px 1fr}.resultado-donut{width:102px;height:102px}.resultado-fila{padding:10px}.resultado-mini-vs{display:none!important}
+}
+
+
+/* ============================================================
+   BILLETERA — DASHBOARD OSCURO
+   ============================================================ */
+body.billetera-activa .envoltura{
+  width:100%!important;max-width:1500px!important;margin:0 auto!important;
+  padding:28px 16px 48px!important;box-sizing:border-box!important;
+}
+body.billetera-activa main{background:#020b07!important;min-height:calc(100vh - 76px)!important}
+body.billetera-activa .billetera-pagina{color:#edf6f0!important}
+
+.billetera-encabezado{display:flex;align-items:flex-end;justify-content:space-between;gap:22px;padding-bottom:18px;border-bottom:1px solid rgba(89,191,76,.18)}
+.billetera-kicker{font-size:10px;font-weight:900;letter-spacing:.16em;color:#57d64e;margin-bottom:7px}
+.billetera-encabezado h1{margin:0;color:#fff;font:800 31px/1 'Bricolage Grotesque',sans-serif}
+.billetera-encabezado p{margin:8px 0 0;color:#8da397;font-size:12px}
+
+.billetera-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start;margin-top:16px}
+.billetera-principal{min-width:0}
+.billetera-lateral{display:grid;gap:12px;position:sticky;top:92px}
+.billetera-card{border:1px solid rgba(88,150,105,.20);border-radius:13px;background:linear-gradient(180deg,#09130f,#06100c);box-shadow:0 10px 30px rgba(0,0,0,.10)}
+.billetera-card h3{margin:0 0 11px;color:#eff6f1;font-size:10px;font-weight:900;letter-spacing:.03em}
+
+.billetera-metricas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.billetera-metrica{min-height:92px;padding:14px;display:flex;align-items:center;gap:12px;border:1px solid rgba(91,153,108,.19);border-radius:12px;background:linear-gradient(180deg,#09130f,#06100c)}
+.billetera-metrica-icono{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:50%;font-size:19px;font-weight:800}
+.billetera-metrica>div:last-child{min-width:0}
+.billetera-metrica span{display:block;color:#94a99d;font-size:8.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}
+.billetera-metrica strong{display:block;margin-top:5px;color:#fff;font:700 20px 'IBM Plex Mono',monospace;white-space:nowrap}
+.billetera-metrica small{display:block;margin-top:4px;color:#6f8578;font-size:9px}
+.billetera-metrica.disponible .billetera-metrica-icono{color:#62e35c;background:#0d2b14}
+.billetera-metrica.juego .billetera-metrica-icono{color:#f5b331;background:#2b2109}
+.billetera-metrica.juego strong{color:#f1b63d}
+.billetera-metrica.positivo .billetera-metrica-icono{color:#62e35c;background:#0d2b14}
+.billetera-metrica.positivo strong{color:#5ee159}
+.billetera-metrica.negativo .billetera-metrica-icono{color:#ff5a52;background:#2a1110}
+.billetera-metrica.negativo strong{color:#ff5757}
+
+.billetera-acciones-principales{display:grid;grid-template-columns:1.1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.billetera-accion{min-height:40px;border:1px solid rgba(94,150,111,.23);border-radius:8px;background:#07110d;color:#dbe6df;font-size:10px;font-weight:800;cursor:pointer}
+.billetera-accion:hover{border-color:rgba(80,213,76,.45);color:#fff}
+.billetera-accion.primaria{background:#12391c;border-color:#2f9440;color:#dff8df}
+.billetera-accion span{margin-right:7px;font-size:15px;vertical-align:-1px}
+
+.billetera-movimientos{overflow:hidden}
+.billetera-filtros{display:flex;justify-content:space-between;gap:10px;padding:11px 12px;border-bottom:1px solid rgba(99,146,115,.12)}
+.billetera-tabs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none}.billetera-tabs::-webkit-scrollbar{display:none}
+.billetera-tabs button{flex:0 0 auto;min-height:30px;padding:0 11px;border-radius:16px;border:1px solid rgba(96,145,112,.22);background:#06100c;color:#84988c;font-size:9px;cursor:pointer}
+.billetera-tabs button.activo{color:#fff;border-color:#42b94b;background:#10331a}
+.billetera-filtros-derecha{display:flex;gap:7px;min-width:0}
+.billetera-buscar{display:flex;align-items:center;gap:7px;min-width:240px;height:31px;padding:0 10px;border:1px solid rgba(96,145,112,.18);border-radius:7px;background:#07110d;color:#718579}
+.billetera-buscar input{width:100%;border:0!important;outline:0!important;background:transparent!important;color:#dce8e0!important;font-size:9px!important;padding:0!important;box-shadow:none!important}
+.billetera-buscar input::placeholder{color:#5f7367}
+.billetera-periodo{height:31px;min-width:92px;border:1px solid rgba(96,145,112,.18)!important;border-radius:7px!important;background:#07110d!important;color:#aebdb4!important;font-size:9px!important;padding:0 28px 0 9px!important}
+
+.billetera-tabla-cab,.billetera-fila{display:grid;grid-template-columns:145px 180px minmax(220px,1fr) 110px 105px;gap:10px;align-items:center}
+.billetera-tabla-cab{padding:9px 13px;color:#61766a;font-size:7.5px;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid rgba(99,146,115,.12)}
+.billetera-fila{padding:11px 13px;border-bottom:1px solid rgba(99,146,115,.10);color:#dce7df}
+.billetera-fila:last-child{border-bottom:0}
+.billetera-fila:hover{background:rgba(41,120,52,.06)}
+.billetera-fecha{font-size:9px;color:#879b8f}
+.billetera-concepto{display:flex;align-items:center;gap:8px;min-width:0}.billetera-concepto strong{font-size:9.5px;color:#eef5ef}
+.billetera-concepto i{width:20px;height:20px;border-radius:50%;display:block;background:#18201b;border:1px solid #334237}
+.billetera-concepto i.billetera-en-juego{background:#2a210a;border-color:#85661b}.billetera-concepto i.billetera-ganado{background:#0d2913;border-color:#2e8039}.billetera-concepto i.billetera-perdido{background:#2a1110;border-color:#77312f}.billetera-concepto i.billetera-devuelto{background:#0d2030;border-color:#295a79}.billetera-concepto i.billetera-entrada{background:#102a16;border-color:#2e8039}
+.billetera-detalle{min-width:0}.billetera-detalle strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#dce7df;font-size:9.5px}.billetera-detalle small{display:block;margin-top:2px;color:#687d70;font-size:8px}
+.billetera-estado{display:inline-flex;align-items:center;justify-content:center;min-height:23px;padding:0 8px;border-radius:12px;border:1px solid rgba(120,140,127,.2);font-size:8px;white-space:nowrap}
+.billetera-estado.billetera-en-juego{color:#f2bd48;border-color:#745a1a;background:#241c08}.billetera-estado.billetera-ganado,.billetera-estado.billetera-entrada{color:#61df5b;border-color:#267c34;background:#0d2613}.billetera-estado.billetera-perdido{color:#ff6767;border-color:#743333;background:#241010}.billetera-estado.billetera-devuelto{color:#63b9ee;border-color:#285c79;background:#0d1d28}.billetera-estado.billetera-neutro,.billetera-estado.billetera-salida{color:#a8b4ac;background:#141a16}
+.billetera-importe{text-align:right;font:600 10px 'IBM Plex Mono',monospace;color:#e5eee8}.billetera-importe.positivo{color:#5ee159}.billetera-importe.negativo{color:#ff695f}
+.billetera-sin-movimientos{padding:34px;text-align:center;color:#687d70;font-size:10px}
+
+.billetera-rapidas{padding:14px}.billetera-rapida{width:100%;display:grid;grid-template-columns:32px 1fr auto;gap:9px;align-items:center;padding:9px 0;border:0;border-top:1px solid rgba(106,154,120,.11);background:none;color:inherit;text-align:left;cursor:pointer}.billetera-rapida:first-of-type{border-top:0}.billetera-rapida i{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:#102a16;color:#5ddd58;font-style:normal;font-size:14px}.billetera-rapida strong{display:block;color:#edf5ef;font-size:9.5px}.billetera-rapida small{display:block;margin-top:2px;color:#6e8276;font-size:8px}.billetera-rapida b{color:#6f8578;font-size:17px}
+.billetera-card:not(.billetera-movimientos):not(.billetera-rapidas){padding:14px}.billetera-card-cab{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}.billetera-card-cab h3{margin:0}.billetera-card-cab span{font-size:8px;color:#82968a;border:1px solid rgba(96,145,112,.18);padding:5px 7px;border-radius:7px}
+.billetera-resumen-lista{display:grid;gap:10px}.billetera-resumen-lista div{display:flex;justify-content:space-between;gap:12px;color:#8ea195;font-size:9px}.billetera-resumen-lista strong{font:600 9.5px 'IBM Plex Mono',monospace;color:#fff}.billetera-resumen-lista strong.positivo{color:#59df58}.billetera-resumen-lista strong.negativo{color:#ff5757}.billetera-resumen-lista strong.en-juego{color:#f0b83f}.billetera-resumen-lista .total{padding-top:10px;border-top:1px solid rgba(99,146,115,.13)}
+.billetera-metodo-vacio{display:flex;align-items:center;gap:10px;padding:10px;border:1px dashed rgba(94,150,111,.18);border-radius:9px;background:#06100c}.billetera-metodo-vacio>span{display:grid;place-items:center;width:29px;height:29px;border-radius:8px;background:#111a14;color:#718579}.billetera-metodo-vacio strong{display:block;color:#cbd8d0;font-size:9px}.billetera-metodo-vacio small{display:block;margin-top:2px;color:#667a6e;font-size:8px;line-height:1.4}
+.billetera-nota{margin-top:12px;display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid rgba(71,175,68,.22);border-radius:10px;background:#07160c;color:#aebdb4}.billetera-nota-icono{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;background:#11321a;color:#5dde59;font-weight:900}.billetera-nota strong{display:block;color:#e4eee7;font-size:9.5px}.billetera-nota span{display:block;margin-top:2px;color:#718579;font-size:8.5px}
+
+@media(max-width:1180px){
+  .billetera-layout{grid-template-columns:1fr}.billetera-lateral{grid-template-columns:repeat(3,minmax(0,1fr));position:static}.billetera-metricas{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:850px){
+  body.billetera-activa .envoltura{padding:18px 12px 38px!important}.billetera-lateral{grid-template-columns:1fr}.billetera-filtros{flex-direction:column}.billetera-filtros-derecha{width:100%}.billetera-buscar{min-width:0;flex:1}.billetera-tabla-cab{display:none}.billetera-fila{grid-template-columns:110px minmax(160px,1fr) 100px}.billetera-detalle{grid-column:2}.billetera-fila>div:nth-child(4){grid-column:3;grid-row:1}.billetera-importe{grid-column:3;grid-row:2}
+}
+@media(max-width:560px){
+  .billetera-encabezado h1{font-size:25px}.billetera-metricas{grid-template-columns:1fr}.billetera-acciones-principales{grid-template-columns:1fr}.billetera-filtros-derecha{flex-direction:column}.billetera-buscar,.billetera-periodo{width:100%}.billetera-fila{grid-template-columns:1fr auto;padding:11px}.billetera-fecha{grid-column:1}.billetera-concepto{grid-column:1}.billetera-detalle{grid-column:1}.billetera-fila>div:nth-child(4){grid-column:2;grid-row:1/3}.billetera-importe{grid-column:2;grid-row:3}.billetera-lateral{display:grid}
+}
+
+
+/* ============================================================
+   BILLETERA — CORRECCIÓN DE ALTURAS + HOJAS
+   ============================================================ */
+
+/* El historial nunca debe repartir las filas ocupando toda la altura. */
+body.billetera-activa #billetera-lista{
+  display:block!important;
+  height:auto!important;
+  min-height:0!important;
+}
+
+body.billetera-activa .billetera-movimientos{
+  height:auto!important;
+  min-height:0!important;
+  align-self:start!important;
+}
+
+body.billetera-activa .billetera-fila{
+  display:grid!important;
+  height:auto!important;
+  min-height:54px!important;
+  max-height:none!important;
+  align-content:center!important;
+  align-items:center!important;
+  padding-top:10px!important;
+  padding-bottom:10px!important;
+}
+
+body.billetera-activa .billetera-fila > *{
+  align-self:center!important;
+  min-height:0!important;
+}
+
+/* Un importe retenido sigue siendo dinero EN JUEGO, no una pérdida cerrada. */
+body.billetera-activa .billetera-fila:has(.billetera-estado.billetera-en-juego) .billetera-importe.negativo{
+  color:#f0b83f!important;
+}
+
+/* ------------------------------------------------------------
+   Hoja / modal de Billetera
+   ------------------------------------------------------------ */
+body.billetera-activa .velo{
+  background:rgba(0,0,0,.72)!important;
+  backdrop-filter:blur(3px)!important;
+}
+
+body.billetera-activa .hoja{
+  width:min(500px,94vw)!important;
+  max-height:min(620px,88vh)!important;
+  background:#07110d!important;
+  border:1px solid rgba(88,150,105,.28)!important;
+  border-radius:16px 16px 0 0!important;
+  color:#e7f0ea!important;
+  box-shadow:0 -18px 60px rgba(0,0,0,.45)!important;
+}
+
+body.billetera-activa .hoja-interior{
+  padding:22px!important;
+  background:transparent!important;
+}
+
+body.billetera-activa .hoja h2{
+  color:#fff!important;
+  font:800 22px/1.1 'Bricolage Grotesque',sans-serif!important;
+  margin:0 42px 5px 0!important;
+}
+
+body.billetera-activa .hoja-sub{
+  color:#8ca095!important;
+  font-size:12px!important;
+  margin-bottom:18px!important;
+}
+
+body.billetera-activa .hoja-cerrar{
+  width:34px!important;
+  height:34px!important;
+  border-radius:50%!important;
+  border:1px solid rgba(99,146,115,.18)!important;
+  background:#0c1712!important;
+  color:#95aa9e!important;
+}
+
+body.billetera-activa .hoja-cerrar:hover{
+  color:#fff!important;
+  border-color:rgba(81,206,77,.42)!important;
+  background:#11251a!important;
+}
+
+body.billetera-activa .hoja .caja{
+  background:#09150f!important;
+  border:1px solid rgba(94,150,111,.20)!important;
+  color:#cddbd2!important;
+  border-radius:10px!important;
+  padding:14px!important;
+  margin-bottom:14px!important;
+}
+
+body.billetera-activa .hoja .caja p{
+  color:#a9bbb0!important;
+  margin:0!important;
+  font-size:12px!important;
+  line-height:1.55!important;
+}
+
+body.billetera-activa .hoja .pista{
+  color:#74897c!important;
+}
+
+body.billetera-activa .hoja .btn,
+body.billetera-activa .hoja .btn-ancho{
+  min-height:38px!important;
+  height:38px!important;
+  padding:0 18px!important;
+  border-radius:8px!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+
+body.billetera-activa .hoja .btn-plano{
+  background:#12351c!important;
+  border:1px solid #318e3d!important;
+  color:#e5f7e6!important;
+}
+
+body.billetera-activa .hoja .btn-plano:hover{
+  background:#174523!important;
+}
+
+@media(max-width:560px){
+  body.billetera-activa .hoja{
+    width:100%!important;
+    max-height:82vh!important;
+  }
+
+  body.billetera-activa .hoja-interior{
+    padding:18px!important;
+  }
+
+  body.billetera-activa .billetera-fila{
+    min-height:72px!important;
+  }
+}
+
+
+/* ============================================================
+   BILLETERA — AISLAMIENTO DE CLASES DE ESTADO
+   Evita colisiones con `.entrada` del login/registro.
+   ============================================================ */
+body.billetera-activa .billetera-concepto i{
+  position:static!important;
+  inset:auto!important;
+  width:20px!important;
+  min-width:20px!important;
+  max-width:20px!important;
+  height:20px!important;
+  min-height:20px!important;
+  max-height:20px!important;
+  padding:0!important;
+  margin:0!important;
+  display:block!important;
+  flex:0 0 20px!important;
+  border-radius:50%!important;
+  box-sizing:border-box!important;
+  background-image:none!important;
+  transform:none!important;
+}
+
+
+/* ============================================================
+   LOGOS DE LIGA + TABS HORIZONTALES
+   ============================================================ */
+
+.muro-ligas-tabs-wrap{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex:1 1 auto;
+}
+.muro-ligas-rotulo{
+  flex:0 0 auto;
+  color:#81968a;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.muro-ligas-tabs{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  overscroll-behavior-inline:contain;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  cursor:grab;
+  user-select:none;
+  padding:2px 1px 4px;
+}
+.muro-ligas-tabs::-webkit-scrollbar{display:none}
+.muro-ligas-tabs:active{cursor:grabbing}
+.muro-liga-tab{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:35px;
+  max-width:260px;
+  padding:0 12px 0 7px;
+  border:1px solid rgba(75,180,78,.30);
+  border-radius:999px;
+  background:#06140d;
+  color:#b8c9be;
+  font-size:10px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+}
+.muro-liga-tab:hover{
+  color:#fff;
+  border-color:rgba(78,212,74,.55);
+  background:#0a1d11;
+}
+.muro-liga-tab.activo{
+  color:#fff;
+  background:#1c7c2d;
+  border-color:#4ccc58;
+}
+.muro-liga-tab>span:not(.muro-liga-logo-fallback){
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:180px;
+}
+.muro-liga-tab b,
+.crear-liga-tab b,
+.mias-liga-tab b{
+  display:inline-grid;
+  place-items:center;
+  min-width:18px;
+  height:18px;
+  padding:0 5px;
+  border-radius:999px;
+  background:rgba(92,223,87,.12);
+  color:#78df73;
+  font-size:8px;
+  font-weight:900;
+}
+.muro-liga-tab.activo b,
+.crear-liga-tab.activo b,
+.mias-liga-tab.activo b{
+  background:rgba(0,0,0,.20);
+  color:#fff;
+}
+
+.muro-liga-logo,
+.crear-liga-logo,
+.mias-liga-logo{
+  flex:0 0 auto;
+  width:23px;
+  height:23px;
+  object-fit:contain;
+  border-radius:6px;
+  background:#eef6ef;
+  padding:2px;
+  box-sizing:border-box;
+}
+.muro-liga-logo-fallback,
+.crear-liga-logo-fallback,
+.mias-liga-logo-fallback{
+  flex:0 0 auto;
+  display:inline-grid;
+  place-items:center;
+  width:23px;
+  height:23px;
+  border-radius:6px;
+  background:#10251a;
+  color:#6dde67;
+  font-size:9px;
+  font-weight:900;
+}
+
+/* Crear: las ligas siguen en una sola fila aunque existan 100. */
+body.crear-activa .crear-liga-tab{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  max-width:270px!important;
+  white-space:nowrap!important;
+}
+body.crear-activa .crear-liga-tab>span:not(.crear-liga-logo-fallback){
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:190px;
+}
+
+/* Mis salas: conserva el rail arrastrable y añade logos. */
+body.mias-activa .mias-liga-tab{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  max-width:270px!important;
+  white-space:nowrap!important;
+}
+body.mias-activa .mias-liga-tab>span:not(.mias-liga-logo-fallback){
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:190px;
+}
+
+/* El toolbar del Muro permite que el rail use el ancho restante. */
+body.muro-activo .muro-toolbar-izq{
+  min-width:0!important;
+  flex:1 1 auto!important;
+}
+body.muro-activo .muro-toolbar{
+  align-items:center!important;
+  gap:12px!important;
+}
+
+@media(max-width:760px){
+  .muro-ligas-tabs-wrap{
+    width:100%;
+    align-items:flex-start;
+    flex-direction:column;
+    gap:5px;
+  }
+  .muro-ligas-tabs{
+    width:100%;
+  }
+  .muro-liga-tab,
+  body.crear-activa .crear-liga-tab,
+  body.mias-activa .mias-liga-tab{
+    max-width:220px!important;
+  }
+}
+
+
+/* =====================================================================
+   FIX 2026-08-30 — SALA: mismo "Define la apuesta" que CREAR
+   + fondo trasero transparente para TODAS las hojas/modales de Sala.
+   No cambia lógica, mercados, montos ni endpoints.
+   ===================================================================== */
+
+/* En Sala no oscurecer ni desenfocar el contenido que queda detrás
+   de ninguna hoja/modal lateral. */
+body.sala-activa .velo,
+body.sala-activa .velo.visible{
+  background:transparent!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+
+/* El editor de mercados de Sala usa el mismo HTML del selector de Crear.
+   Igualamos también su ancho y espaciado al panel de Crear. */
+@media(min-width:760px){
+  body.sala-activa .hoja.selector-original-sala{
+    top:0!important;
+    left:auto!important;
+    right:0!important;
+    bottom:0!important;
+    width:480px!important;
+    max-width:none!important;
+    max-height:none!important;
+    height:100vh!important;
+    border-radius:0!important;
+    overflow:hidden!important;
+    display:flex!important;
+    flex-direction:column!important;
+  }
+}
+
+body.sala-activa .hoja.selector-original-sala{
+  background:#07110c!important;
+  color:#eef7f0!important;
+  border-left-color:#1d3526!important;
+  box-shadow:-18px 0 42px rgba(0,0,0,.34)!important;
+}
+
+body.sala-activa .hoja.selector-original-sala .hoja-interior{
+  background:#07110c!important;
+  padding:20px 20px 22px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala h2{
+  color:#f2faf4!important;
+  font-size:19px!important;
+  font-weight:800!important;
+  margin-bottom:5px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala .hoja-sub{
+  color:#91a397!important;
+  font-size:13px!important;
+  line-height:1.45!important;
+  margin-bottom:16px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala .hoja-cerrar{
+  top:14px!important;
+  right:16px!important;
+  width:30px!important;
+  height:30px!important;
+  background:#0c1a12!important;
+  border:1px solid #1b3123!important;
+  color:#9fb1a5!important;
+}
+
+body.sala-activa .hoja.selector-original-sala .hoja-cerrar:hover{
+  background:#11251a!important;
+  color:#fff!important;
+}
+
+/* Selector principal: copia visual de CREAR. */
+body.sala-activa .selector-original-sala .selector{
+  display:grid!important;
+  grid-template-columns:135px minmax(0,1fr)!important;
+  overflow:hidden!important;
+  background:#07110c!important;
+  border:1px solid #1d3526!important;
+  border-radius:11px!important;
+}
+
+body.sala-activa .selector-original-sala .buscador{
+  height:42px!important;
+  padding:0 12px!important;
+  background:#09150e!important;
+  border-bottom:1px solid #1d3526!important;
+}
+
+body.sala-activa .selector-original-sala .buscador svg{
+  stroke:#7e9184!important;
+}
+
+body.sala-activa .selector-original-sala .buscador input{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:#eef7f0!important;
+  font-size:13px!important;
+}
+
+body.sala-activa .selector-original-sala .buscador input::placeholder{
+  color:#6f8276!important;
+}
+
+body.sala-activa .selector-original-sala .selector-cats{
+  background:#06100b!important;
+  border-right:1px solid #1d3526!important;
+}
+
+body.sala-activa .selector-original-sala .cat{
+  min-height:35px!important;
+  padding:8px 12px!important;
+  background:transparent!important;
+  color:#9eafa4!important;
+  font-size:12px!important;
+  border:0!important;
+}
+
+body.sala-activa .selector-original-sala .cat:hover{
+  background:#0b1b12!important;
+  color:#eef7f0!important;
+}
+
+body.sala-activa .selector-original-sala .cat.activa{
+  background:#10251a!important;
+  color:#7dde68!important;
+  font-weight:700!important;
+}
+
+body.sala-activa .selector-original-sala .cat small{
+  color:#63806c!important;
+}
+
+body.sala-activa .selector-original-sala .selector-lista{
+  background:#07110c!important;
+  padding:8px!important;
+  max-height:390px!important;
+  scrollbar-color:#476153 #07110c!important;
+  scrollbar-width:thin!important;
+}
+
+body.sala-activa .selector-original-sala .selector-lista > div + div{
+  margin-top:6px!important;
+}
+
+body.sala-activa .selector-original-sala .tipo{
+  min-height:54px!important;
+  padding:9px 11px!important;
+  border:1px solid #1d3526!important;
+  border-radius:8px!important;
+  background:#09150e!important;
+  color:#eef7f0!important;
+}
+
+body.sala-activa .selector-original-sala .tipo:hover{
+  background:#0d1c12!important;
+  border-color:#356c42!important;
+}
+
+body.sala-activa .selector-original-sala .tipo.puesto,
+body.sala-activa .selector-original-sala .tipo.abierto{
+  background:#10251a!important;
+  border-color:#4c9a59!important;
+}
+
+body.sala-activa .selector-original-sala .tipo-marca{
+  color:#73dc5d!important;
+  font-size:14px!important;
+}
+
+body.sala-activa .selector-original-sala .tipo-texto strong{
+  color:#eef7f0!important;
+  font-size:13px!important;
+  font-weight:700!important;
+}
+
+body.sala-activa .selector-original-sala .tipo-texto small{
+  color:#809286!important;
+  font-size:11px!important;
+}
+
+/* Configuración de mercado: igual a Crear. */
+body.sala-activa .selector-original-sala .panel-tipo{
+  padding:10px 11px 11px!important;
+  background:#0c2115!important;
+  border-color:#3d7f4c!important;
+  color:#e9f5ec!important;
+}
+
+body.sala-activa .selector-original-sala .mini-rotulo{
+  color:#8bb89a!important;
+  font-size:10.5px!important;
+}
+
+body.sala-activa .selector-original-sala .lineas{
+  gap:6px!important;
+}
+
+body.sala-activa .selector-original-sala .linea{
+  min-width:42px!important;
+  min-height:30px!important;
+  padding:4px 9px!important;
+  border-radius:999px!important;
+  background:#08140d!important;
+  border:1px solid #294733!important;
+  color:#dce9df!important;
+  font-size:11.5px!important;
+}
+
+body.sala-activa .selector-original-sala .linea:hover{
+  border-color:#559b62!important;
+  color:#fff!important;
+}
+
+body.sala-activa .selector-original-sala .linea.activa{
+  background:#397e5f!important;
+  border-color:#65aa86!important;
+  color:#fff!important;
+}
+
+/* Botón "Agregar" igual de compacto que en Crear. */
+body.sala-activa .selector-original-sala .panel-tipo .btn-favor.btn-ancho{
+  width:auto!important;
+  min-width:108px!important;
+  min-height:34px!important;
+  height:34px!important;
+  margin:9px 0 0 auto!important;
+  padding:0 16px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:7px!important;
+  background:#3f8f68!important;
+  border:1px solid #57a87e!important;
+  color:#fff!important;
+  font-size:12px!important;
+  font-weight:700!important;
+}
+
+body.sala-activa .selector-original-sala .panel-tipo .btn-favor.btn-ancho:hover{
+  background:#4c9d75!important;
+  border-color:#6bb58e!important;
+}
+
+/* Jugadas elegidas: mismo tamaño/fondo que Crear. */
+body.sala-activa .selector-original-sala .caja-jugadas{
+  margin-top:10px!important;
+  padding:10px 12px!important;
+  background:#08140e!important;
+  border:1px solid #1d3526!important;
+  border-radius:9px!important;
+  color:#eaf4ec!important;
+}
+
+body.sala-activa .selector-original-sala .caja-jugadas.vacia{
+  border-style:dashed!important;
+}
+
+body.sala-activa .selector-original-sala .jugadas-cab{
+  color:#8fa297!important;
+  font-size:10px!important;
+  margin-bottom:7px!important;
+}
+
+body.sala-activa .selector-original-sala .jugadas-cab span{
+  color:#708277!important;
+}
+
+body.sala-activa .selector-original-sala .jugadas-vacio{
+  color:#65766b!important;
+  font-size:11.5px!important;
+}
+
+body.sala-activa .selector-original-sala .puesta{
+  padding:4px 8px!important;
+  background:#10251a!important;
+  color:#bfe3c7!important;
+  border:1px solid #294b34!important;
+  font-size:11px!important;
+}
+
+body.sala-activa .selector-original-sala .puesta button{
+  color:#8fd681!important;
+}
+
+/* Guardar cambios: mismo lenguaje visual de los botones de Crear. */
+body.sala-activa .selector-original-sala .selector-guardar-cambios{
+  margin-top:10px!important;
+  padding:10px 12px!important;
+  background:#08140e!important;
+  border:1px solid #1d3526!important;
+  border-radius:9px!important;
+}
+
+body.sala-activa .selector-original-sala .selector-guardar-cambios .btn-favor.btn-ancho{
+  width:100%!important;
+  min-height:38px!important;
+  height:38px!important;
+  padding:0 16px!important;
+  border-radius:7px!important;
+  background:#3f8f68!important;
+  border:1px solid #57a87e!important;
+  color:#fff!important;
+  font-size:12.5px!important;
+  font-weight:700!important;
+}
+
+body.sala-activa .selector-original-sala .selector-guardar-cambios .btn-favor.btn-ancho:hover{
+  background:#4c9d75!important;
+  border-color:#6bb58e!important;
+}
+
+/* Responsive idéntico a Crear. */
+@media(max-width:759px){
+  body.sala-activa .hoja.selector-original-sala{
+    width:100%!important;
+    max-width:none!important;
+  }
+
+  body.sala-activa .selector-original-sala .selector{
+    grid-template-columns:1fr!important;
+  }
+
+  body.sala-activa .selector-original-sala .selector-cats{
+    display:flex!important;
+    overflow-x:auto!important;
+    border-right:0!important;
+    border-bottom:1px solid #1d3526!important;
+  }
+
+  body.sala-activa .selector-original-sala .cat{
+    width:auto!important;
+    white-space:nowrap!important;
+  }
+}
+
+
+/* =====================================================================
+   2026-08-30 — MODALES / HOJAS: OVERLAY TRANSPARENTE GLOBAL
+   ---------------------------------------------------------------------
+   El proyecto usa un único #velo para hoja(), por eso este bloque debe
+   estar al FINAL del CSS. El selector con #id gana también a overrides
+   anteriores de Sala/Billetera.
+   ===================================================================== */
+
+/* SIN EXCEPCIONES:
+   - no capa negra
+   - no blur
+   - no filtros visuales sobre la pantalla de atrás
+   - se conserva el click del velo para cerrar
+*/
+html body #velo.velo,
+html body #velo.velo.visible,
+body[class] #velo.velo,
+body[class] #velo.velo.visible{
+  background:transparent!important;
+  background-color:transparent!important;
+  background-image:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  filter:none!important;
+}
+
+/* Algunos navegadores/transiciones antiguas pueden dejar pseudo-elementos
+   oscureciendo la página. Se neutralizan también. */
+html body #velo.velo::before,
+html body #velo.velo::after,
+html body #velo.velo.visible::before,
+html body #velo.velo.visible::after{
+  background:transparent!important;
+  background-image:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  filter:none!important;
+  box-shadow:none!important;
+  opacity:0!important;
+  pointer-events:none!important;
+}
+
+
+/* =====================================================================
+   ESTILO UNIFICADO DE HOJAS LATERALES
+   Mismo lenguaje visual de "Define la apuesta" de CREAR.
+   ===================================================================== */
+
+@media (min-width:760px){
+  /* Sala: selector de mercados y confirmaciones.
+     Billetera: Recarga / Retiro / detalle.
+     Cualquier hoja abierta en estas pantallas entra por la derecha. */
+  body.sala-activa #velo > .hoja,
+  body.billetera-activa #velo > .hoja{
+    position:absolute!important;
+    top:0!important;
+    right:0!important;
+    bottom:0!important;
+    left:auto!important;
+    width:480px!important;
+    max-width:calc(100vw - 24px)!important;
+    height:100vh!important;
+    max-height:none!important;
+    margin:0!important;
+    border-radius:0!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain!important;
+  }
+}
+
+/* Fondo del PANEL, no del fondo de atrás.
+   Este sí se mantiene oscuro para legibilidad, igual que Crear. */
+body.sala-activa #velo > .hoja,
+body.billetera-activa #velo > .hoja{
+  background:#07110c!important;
+  color:#eef7f0!important;
+  border:0!important;
+  border-left:1px solid #1d3526!important;
+  box-shadow:-16px 0 34px rgba(0,0,0,.24)!important;
+}
+
+body.sala-activa #velo > .hoja .hoja-interior,
+body.billetera-activa #velo > .hoja .hoja-interior{
+  padding:20px 20px 22px!important;
+  background:transparent!important;
+}
+
+body.sala-activa #velo > .hoja h2,
+body.billetera-activa #velo > .hoja h2{
+  margin:0 44px 5px 0!important;
+  color:#f3faf5!important;
+  font-family:'Bricolage Grotesque',sans-serif!important;
+  font-size:19px!important;
+  line-height:1.15!important;
+  font-weight:800!important;
+  letter-spacing:-.02em!important;
+}
+
+body.sala-activa #velo > .hoja .hoja-sub,
+body.billetera-activa #velo > .hoja .hoja-sub{
+  margin:0 0 16px!important;
+  color:#91a397!important;
+  font-size:12px!important;
+  line-height:1.45!important;
+}
+
+/* Cerrar igual en ambos. */
+body.sala-activa #velo > .hoja .hoja-cerrar,
+body.billetera-activa #velo > .hoja .hoja-cerrar{
+  position:absolute!important;
+  top:14px!important;
+  right:16px!important;
+  z-index:4!important;
+  width:30px!important;
+  height:30px!important;
+  padding:0!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid #1b3123!important;
+  border-radius:999px!important;
+  background:#0c1a12!important;
+  color:#9fb1a5!important;
+  font-size:16px!important;
+  line-height:1!important;
+}
+
+body.sala-activa #velo > .hoja .hoja-cerrar:hover,
+body.billetera-activa #velo > .hoja .hoja-cerrar:hover{
+  background:#11251a!important;
+  border-color:#31553d!important;
+  color:#fff!important;
+}
+
+
+/* =====================================================================
+   BILLETERA — Recarga / Retiro con proporciones de Define la apuesta
+   ===================================================================== */
+
+body.billetera-activa #velo > .hoja .caja{
+  margin:0 0 12px!important;
+  padding:12px 13px!important;
+  background:#09150e!important;
+  border:1px solid #1d3526!important;
+  border-radius:9px!important;
+  box-shadow:none!important;
+}
+
+body.billetera-activa #velo > .hoja .caja p{
+  margin:0!important;
+  color:#aebdb3!important;
+  font-size:12px!important;
+  line-height:1.5!important;
+}
+
+/* Todos los botones de las hojas de billetera: compactos como Crear. */
+body.billetera-activa #velo > .hoja button.btn,
+body.billetera-activa #velo > .hoja .btn,
+body.billetera-activa #velo > .hoja .btn-ancho{
+  min-height:38px!important;
+  height:38px!important;
+  padding:0 16px!important;
+  border-radius:7px!important;
+  font-size:12px!important;
+  line-height:1!important;
+  font-weight:700!important;
+  box-shadow:none!important;
+}
+
+body.billetera-activa #velo > .hoja .btn-plano,
+body.billetera-activa #velo > .hoja .btn-favor{
+  background:#12351c!important;
+  border:1px solid #318e3d!important;
+  color:#eef9ef!important;
+}
+
+body.billetera-activa #velo > .hoja .btn-plano:hover,
+body.billetera-activa #velo > .hoja .btn-favor:hover{
+  background:#174523!important;
+  border-color:#46a553!important;
+}
+
+
+/* =====================================================================
+   SALA — confirmación de apuesta con la misma escala visual
+   ===================================================================== */
+
+body.sala-activa #velo > .hoja .caja{
+  border-radius:9px!important;
+  box-shadow:none!important;
+}
+
+body.sala-activa #velo > .hoja .sala-confirmar-apuesta,
+body.sala-activa #velo > .hoja .btn-favor,
+body.sala-activa #velo > .hoja .sala-btn-primario{
+  min-height:38px!important;
+  height:38px!important;
+  padding:0 16px!important;
+  border-radius:7px!important;
+  font-size:12px!important;
+  font-weight:700!important;
+  box-shadow:none!important;
+}
+
+/* Los botones rápidos de monto quedan compactos y consistentes. */
+body.sala-activa #velo > .hoja .linea,
+body.sala-activa #velo > .hoja [class*="monto"] button,
+body.sala-activa #velo > .hoja [class*="rapido"] button{
+  min-height:32px!important;
+  border-radius:8px!important;
+}
+
+
+/* =====================================================================
+   MÓVIL
+   ===================================================================== */
+@media (max-width:759px){
+  body.sala-activa #velo > .hoja,
+  body.billetera-activa #velo > .hoja{
+    position:absolute!important;
+    left:0!important;
+    right:0!important;
+    bottom:0!important;
+    top:auto!important;
+    width:100%!important;
+    max-width:none!important;
+    height:auto!important;
+    max-height:88vh!important;
+    border-left:0!important;
+    border-top:1px solid #1d3526!important;
+    border-radius:14px 14px 0 0!important;
+    overflow-y:auto!important;
+  }
+
+  body.sala-activa #velo > .hoja .hoja-interior,
+  body.billetera-activa #velo > .hoja .hoja-interior{
+    padding:18px 16px 20px!important;
+  }
+}
+
+
+/* =====================================================================
+   2026-08-30 — MURO: sidebar sin hueco + sala compacta
+   ===================================================================== */
+
+/* Elimina el espacio vacío sobre Saldo disponible.
+   Se desactiva el offset sticky acumulado por overrides antiguos. */
+@media(min-width:901px){
+  body.muro-activo .lateral{
+    position:relative!important;
+    top:0!important;
+    align-self:start!important;
+    margin-top:0!important;
+    padding-top:0!important;
+  }
+}
+
+/* Card más baja: mantiene el estadio, reduce escudos/espacios verticales. */
+body.muro-activo .rejilla-salas-abiertas .tarjeta.sala-card-compacta{
+  padding:11px 14px 10px!important;
+}
+
+body.muro-activo .sala-card-compacta .t-cab{
+  margin-bottom:4px!important;
+}
+
+body.muro-activo .sala-card-compacta .match-visual{
+  grid-template-rows:60px auto!important;
+  min-height:87px!important;
+  margin:0 0 5px!important;
+  row-gap:3px!important;
+}
+
+body.muro-activo .sala-card-compacta .match-visual > .escudos{
+  height:60px!important;
+}
+
+body.muro-activo .sala-card-compacta .match-visual img.escudo{
+  width:56px!important;
+  height:56px!important;
+  max-width:56px!important;
+}
+
+body.muro-activo .sala-card-compacta .match-visual .escudo-letras{
+  width:54px!important;
+  height:54px!important;
+  border-radius:15px!important;
+  font-size:15px!important;
+}
+
+body.muro-activo .sala-card-compacta .match-vs{
+  width:38px!important;
+  height:38px!important;
+  min-width:38px!important;
+  font-size:14px!important;
+}
+
+body.muro-activo .sala-card-compacta .match-nombre{
+  font-size:11.5px!important;
+}
+
+body.muro-activo .sala-card-compacta .sala-card-meta{
+  padding:5px 0 6px!important;
+  margin:0!important;
+  font-size:11px!important;
+}
+
+/* Anfitrión VS apostador(es). */
+body.muro-activo .sala-card-enfrentamiento{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:7px 0 5px!important;
+}
+
+body.muro-activo .sala-card-lado{
+  min-width:0!important;
+}
+body.muro-activo .sala-card-lado.der{
+  text-align:right!important;
+}
+body.muro-activo .sala-card-lado small{
+  display:block!important;
+  margin-bottom:2px!important;
+  color:#899b90!important;
+  font-size:9px!important;
+  font-weight:700!important;
+  text-transform:uppercase!important;
+  letter-spacing:.04em!important;
+}
+body.muro-activo .sala-card-lado strong{
+  display:block!important;
+  color:#77df62!important;
+  font:700 14px/1.1 'IBM Plex Mono',monospace!important;
+}
+body.muro-activo .sala-card-lado.der strong{
+  color:#9dc5ff!important;
+}
+
+body.muro-activo .sala-card-vs-mini{
+  display:grid!important;
+  place-items:center!important;
+  width:30px!important;
+  height:30px!important;
+  border-radius:999px!important;
+  background:rgba(3,15,9,.70)!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  color:#b8c8bd!important;
+  font-size:9px!important;
+  font-weight:800!important;
+}
+
+/* "Falta" ahora es la suma TOTAL de lo que falta en todos los mercados. */
+body.muro-activo .sala-card-falta-total{
+  display:grid!important;
+  grid-template-columns:auto auto 1fr!important;
+  align-items:center!important;
+  gap:6px!important;
+  min-height:30px!important;
+  padding:5px 0 7px!important;
+  border-top:1px solid rgba(115,199,103,.12)!important;
+}
+
+body.muro-activo .sala-card-falta-total>span{
+  color:#8e9f94!important;
+  font-size:9.5px!important;
+  font-weight:700!important;
+}
+
+body.muro-activo .sala-card-falta-total>b{
+  color:#f0f7f2!important;
+  font:700 11px/1 'IBM Plex Mono',monospace!important;
+}
+
+body.muro-activo .sala-card-ver-apuestas{
+  justify-self:end!important;
+  min-height:26px!important;
+  padding:0 9px!important;
+  border:1px solid rgba(105,217,77,.36)!important;
+  border-radius:7px!important;
+  background:rgba(31,93,42,.30)!important;
+  color:#83df72!important;
+  font-size:9.5px!important;
+  font-weight:700!important;
+  cursor:pointer!important;
+}
+
+body.muro-activo .sala-card-ver-apuestas:hover{
+  background:rgba(46,127,59,.46)!important;
+  border-color:rgba(105,217,77,.62)!important;
+  color:#fff!important;
+}
+
+body.muro-activo .sala-card-compacta .t-pie{
+  padding-top:7px!important;
+  font-size:10px!important;
+}
+
+/* La barra antigua ya no participa en el nuevo resumen del card. */
+body.muro-activo .sala-card-compacta .sala-card-balance{
+  display:none!important;
+}
+
+
+/* =====================================================================
+   Hoja rápida "Apuestas de la sala"
+   ===================================================================== */
+.muro-apuestas-rapidas{
+  display:grid;
+  gap:9px;
+}
+
+.muro-apuestas-mercado{
+  padding:10px;
+  border:1px solid #1d3526;
+  border-radius:9px;
+  background:#09150e;
+}
+
+.muro-apuestas-mercado-cab{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding-bottom:7px;
+  border-bottom:1px solid rgba(115,199,103,.13);
+}
+
+.muro-apuestas-mercado-cab strong{
+  color:#eef7f0;
+  font-size:11.5px;
+  text-transform:capitalize;
+}
+
+.muro-apuestas-mercado-cab span{
+  color:#718478;
+  font-size:9px;
+}
+
+.muro-apuestas-duelo{
+  display:grid;
+  grid-template-columns:1fr 32px 1fr;
+  align-items:center;
+  gap:7px;
+  padding:8px 0;
+}
+
+.muro-apuestas-duelo>div.der{text-align:right}
+.muro-apuestas-duelo small{
+  display:block;
+  color:#829487;
+  font-size:9px;
+  margin-bottom:2px;
+}
+.muro-apuestas-duelo b{
+  color:#7dde68;
+  font:700 12px/1.1 'IBM Plex Mono',monospace;
+}
+.muro-apuestas-duelo .der b{color:#9dc5ff}
+.muro-apuestas-duelo i{
+  display:grid;
+  place-items:center;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  background:#07110c;
+  border:1px solid #1d3526;
+  color:#9caea2;
+  font-size:8.5px;
+  font-style:normal;
+  font-weight:800;
+}
+
+.muro-apuestas-personas{
+  display:grid;
+  gap:4px;
+}
+
+.muro-apuestas-persona{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:8px;
+  min-height:28px;
+  padding:5px 7px;
+  border-radius:6px;
+  background:#07110c;
+}
+
+.muro-apuestas-persona span{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:#dce9df;
+  font-size:10px;
+}
+
+.muro-apuestas-persona em{
+  margin-left:5px;
+  padding:2px 5px;
+  border-radius:999px;
+  background:#15351f;
+  color:#7dde68;
+  font-size:7.5px;
+  font-style:normal;
+  font-weight:700;
+}
+
+.muro-apuestas-persona small{
+  color:#7f9185;
+  font-size:8.5px;
+}
+
+.muro-apuestas-persona b{
+  color:#eef7f0;
+  font:600 9.5px/1 'IBM Plex Mono',monospace;
+}
+
+.muro-apuestas-vacio{
+  padding:10px;
+  color:#718478;
+  font-size:10px;
+  text-align:center;
+}
+
+
+/* =====================================================================
+   2026-08-30 — OBSERVACIONES FINALES MURO / CREAR / MIS SALAS
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   1. RAILS DE LIGA: sin "Con cupos", sin rótulo "LIGA" y sin título
+      repetido en Partidos disponibles.
+   --------------------------------------------------------------------- */
+body.muro-activo .muro-toolbar-izq{
+  width:100%!important;
+  min-width:0!important;
+  display:flex!important;
+  align-items:center!important;
+}
+
+body.muro-activo .muro-ligas-tabs-wrap{
+  width:100%!important;
+  min-width:0!important;
+  display:block!important;
+}
+
+body.muro-activo .muro-ligas-rotulo,
+body.muro-activo .muro-toolbar .seccion-titulo,
+body.muro-activo .muro-toolbar .seccion-sub{
+  display:none!important;
+}
+
+body.muro-activo .muro-ligas-tabs{
+  width:100%!important;
+  margin:0!important;
+}
+
+/* ---------------------------------------------------------------------
+   2. MODAL "Apuestas de la sala": nunca blanco.
+      #velo sigue transparente atrás, pero la hoja tiene el mismo panel
+      oscuro de "Define la apuesta".
+   --------------------------------------------------------------------- */
+html body #velo > .hoja{
+  background:#07110c!important;
+  background-color:#07110c!important;
+  color:#eef7f0!important;
+  border:0!important;
+  border-left:1px solid #1d3526!important;
+  box-shadow:-16px 0 34px rgba(0,0,0,.24)!important;
+}
+
+html body #velo > .hoja .hoja-interior{
+  background:transparent!important;
+  color:#eef7f0!important;
+}
+
+html body #velo > .hoja h2{
+  color:#f3faf5!important;
+}
+
+html body #velo > .hoja .hoja-sub{
+  color:#91a397!important;
+}
+
+html body #velo > .hoja .hoja-cerrar{
+  background:#0c1a12!important;
+  border-color:#1b3123!important;
+  color:#9fb1a5!important;
+}
+
+/* Asegura que la hoja rápida creada desde Muro tenga 480px como Crear. */
+@media(min-width:760px){
+  body.muro-activo #velo > .hoja{
+    position:absolute!important;
+    top:0!important;
+    right:0!important;
+    bottom:0!important;
+    left:auto!important;
+    width:480px!important;
+    max-width:calc(100vw - 24px)!important;
+    height:100vh!important;
+    max-height:none!important;
+    margin:0!important;
+    border-radius:0!important;
+    overflow-y:auto!important;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   3. FECHA / HORA de "Elige el partido":
+      evita que las luces del estadio hagan desaparecer "mañana".
+   --------------------------------------------------------------------- */
+body.crear-activa .crear-partido-card .chip-tiempo,
+body.muro-activo .tarjeta .chip-tiempo{
+  position:relative!important;
+  z-index:5!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:24px!important;
+  padding:4px 8px!important;
+  border:1px solid rgba(132,215,111,.24)!important;
+  border-radius:7px!important;
+  background:rgba(3,15,9,.78)!important;
+  color:#eaf6ed!important;
+  font-size:9.5px!important;
+  font-weight:700!important;
+  line-height:1.05!important;
+  text-shadow:0 1px 3px rgba(0,0,0,.95)!important;
+  box-shadow:0 3px 10px rgba(0,0,0,.18)!important;
+  backdrop-filter:blur(3px)!important;
+  -webkit-backdrop-filter:blur(3px)!important;
+}
+
+/* ---------------------------------------------------------------------
+   4. MIS SALAS: fecha/hora arriba a la derecha igual que Crear.
+   --------------------------------------------------------------------- */
+body.mias-activa .mias-card-top{
+  align-items:flex-start!important;
+  gap:8px!important;
+}
+
+body.mias-activa .mias-card-top-derecha{
+  margin-left:auto!important;
+  display:flex!important;
+  align-items:flex-end!important;
+  flex-direction:column!important;
+  gap:4px!important;
+}
+
+body.mias-activa .mias-tiempo{
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:22px!important;
+  padding:3px 7px!important;
+  border:1px solid rgba(132,215,111,.24)!important;
+  border-radius:7px!important;
+  background:rgba(3,15,9,.78)!important;
+  color:#edf7ef!important;
+  font-size:9px!important;
+  font-weight:700!important;
+  line-height:1!important;
+  text-shadow:0 1px 3px rgba(0,0,0,.95)!important;
+  box-shadow:0 3px 10px rgba(0,0,0,.18)!important;
+}
+
+body.mias-activa .mias-estado{
+  position:static!important;
+  margin:0!important;
+}
+
+/* ---------------------------------------------------------------------
+   5. MURO: 4 cards por fila en Salas disponibles y Partidos disponibles.
+      Solo escritorio ancho; tablet conserva 2 y móvil 1.
+   --------------------------------------------------------------------- */
+@media(min-width:1180px){
+  body.muro-activo .rejilla-salas-abiertas,
+  body.muro-activo .rejilla-partidos-disponibles,
+  body.muro-activo .rejilla-muro{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+
+  /* Salas: compactas sin perder Anfitrión/Falta/Ver apuestas. */
+  body.muro-activo .rejilla-salas-abiertas .tarjeta.sala-card-compacta{
+    min-width:0!important;
+    min-height:0!important;
+    padding:9px 10px 8px!important;
+  }
+
+  body.muro-activo .sala-card-compacta .match-visual{
+    grid-template-rows:52px auto!important;
+    min-height:76px!important;
+    margin-bottom:3px!important;
+  }
+
+  body.muro-activo .sala-card-compacta .match-visual img.escudo{
+    width:48px!important;
+    height:48px!important;
+    max-width:48px!important;
+  }
+
+  body.muro-activo .sala-card-compacta .match-visual .escudo-letras{
+    width:46px!important;
+    height:46px!important;
+    font-size:13px!important;
+    border-radius:13px!important;
+  }
+
+  body.muro-activo .sala-card-compacta .match-vs{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+    font-size:12px!important;
+  }
+
+  body.muro-activo .sala-card-compacta .match-nombre{
+    font-size:10.5px!important;
+  }
+
+  body.muro-activo .sala-card-compacta .sala-card-meta{
+    padding:4px 0 5px!important;
+    font-size:10px!important;
+  }
+
+  body.muro-activo .sala-card-enfrentamiento{
+    grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)!important;
+    gap:5px!important;
+    padding:5px 0 4px!important;
+  }
+
+  body.muro-activo .sala-card-vs-mini{
+    width:26px!important;
+    height:26px!important;
+    font-size:8px!important;
+  }
+
+  body.muro-activo .sala-card-lado small{
+    font-size:8px!important;
+  }
+
+  body.muro-activo .sala-card-lado strong{
+    font-size:12px!important;
+  }
+
+  body.muro-activo .sala-card-falta-total{
+    min-height:27px!important;
+    padding:4px 0 5px!important;
+    gap:5px!important;
+  }
+
+  body.muro-activo .sala-card-falta-total>span{
+    font-size:8.5px!important;
+  }
+
+  body.muro-activo .sala-card-falta-total>b{
+    font-size:10px!important;
+  }
+
+  body.muro-activo .sala-card-ver-apuestas{
+    min-height:24px!important;
+    padding:0 7px!important;
+    font-size:8.5px!important;
+  }
+
+  body.muro-activo .sala-card-compacta .t-pie{
+    padding-top:5px!important;
+    font-size:9px!important;
+  }
+
+  /* Partidos disponibles: reducción paralela para 4 columnas. */
+  body.muro-activo .oportunidad-card-compacta{
+    min-width:0!important;
+    min-height:0!important;
+    padding:9px 10px 8px!important;
+  }
+
+  body.muro-activo .oportunidad-card-compacta .match-visual{
+    grid-template-rows:52px auto!important;
+    min-height:76px!important;
+    margin:0 0 4px!important;
+  }
+
+  body.muro-activo .oportunidad-card-compacta .match-visual img.escudo{
+    width:48px!important;
+    height:48px!important;
+    max-width:48px!important;
+  }
+
+  body.muro-activo .oportunidad-card-compacta .match-visual .escudo-letras{
+    width:46px!important;
+    height:46px!important;
+    font-size:13px!important;
+    border-radius:13px!important;
+  }
+
+  body.muro-activo .oportunidad-card-compacta .match-vs{
+    width:32px!important;
+    height:32px!important;
+    min-width:32px!important;
+    font-size:12px!important;
+  }
+
+  body.muro-activo .oportunidad-card-compacta .match-nombre{
+    font-size:10.5px!important;
+  }
+
+  body.muro-activo .oportunidad-card-compacta .t-pie{
+    padding-top:5px!important;
+    font-size:9px!important;
+  }
+}
+
+@media(min-width:760px) and (max-width:1179px){
+  body.muro-activo .rejilla-salas-abiertas,
+  body.muro-activo .rejilla-partidos-disponibles,
+  body.muro-activo .rejilla-muro{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+
+@media(max-width:759px){
+  body.muro-activo .rejilla-salas-abiertas,
+  body.muro-activo .rejilla-partidos-disponibles,
+  body.muro-activo .rejilla-muro{
+    grid-template-columns:1fr!important;
+  }
+
+  body.mias-activa .mias-tiempo{
+    font-size:8.5px!important;
+    padding:3px 6px!important;
+  }
+}
+
+
+/* =====================================================================
+   2026-08-30 — CREAR + MIS SALAS: 5 CARDS POR FILA
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   CREAR — 5 partidos por fila en escritorio ancho
+   --------------------------------------------------------------------- */
+@media (min-width:1500px){
+  body.crear-activa .crear-rejilla{
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+
+  body.crear-activa .crear-partido-card{
+    min-height:205px!important;
+    padding:9px 9px 8px!important;
+    border-radius:11px!important;
+  }
+
+  body.crear-activa .crear-partido-card .t-cab{
+    gap:6px!important;
+  }
+
+  body.crear-activa .crear-partido-card .chip{
+    max-width:72%!important;
+    padding:4px 7px!important;
+    font-size:9px!important;
+  }
+
+  body.crear-activa .crear-partido-card .chip-tiempo{
+    min-height:22px!important;
+    padding:3px 6px!important;
+    font-size:8.5px!important;
+  }
+
+  body.crear-activa .crear-match-visual{
+    min-height:122px!important;
+    grid-template-columns:minmax(0,1fr) 38px minmax(0,1fr)!important;
+    grid-template-rows:80px auto!important;
+    column-gap:5px!important;
+    margin-top:2px!important;
+  }
+
+  body.crear-activa .crear-match-visual .escudos{
+    grid-template-columns:minmax(0,1fr) 38px minmax(0,1fr)!important;
+    gap:5px!important;
+  }
+
+  body.crear-activa .crear-match-visual .escudo{
+    width:54px!important;
+    height:54px!important;
+    max-width:54px!important;
+  }
+
+  body.crear-activa .crear-match-visual .escudo-letras{
+    border-radius:14px!important;
+    font-size:13px!important;
+  }
+
+  body.crear-activa .crear-match-visual .match-vs{
+    padding:5px 7px!important;
+    font-size:12px!important;
+  }
+
+  body.crear-activa .crear-match-visual .match-nombre{
+    font-size:10px!important;
+  }
+
+  body.crear-activa .crear-partido-pie{
+    margin-top:4px!important;
+    padding-top:6px!important;
+    gap:5px!important;
+    font-size:9px!important;
+  }
+}
+
+/* Entre 1251 y 1499: 4 para que no se aplasten. */
+@media (min-width:1251px) and (max-width:1499px){
+  body.crear-activa .crear-rejilla{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:11px!important;
+  }
+}
+
+
+/* ---------------------------------------------------------------------
+   MIS SALAS — quitar "Filtrar por liga"
+   --------------------------------------------------------------------- */
+body.mias-activa .mias-filtros-cab-solo-contador{
+  min-height:0!important;
+  height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  position:relative!important;
+}
+
+body.mias-activa .mias-filtros-cab-solo-contador small{
+  position:absolute!important;
+  right:0!important;
+  top:10px!important;
+  z-index:2!important;
+  color:#638173!important;
+  font-size:8.5px!important;
+}
+
+/* Los tabs quedan directamente debajo del aviso, sin el rótulo. */
+body.mias-activa .mias-filtros-wrap{
+  margin-top:14px!important;
+}
+
+body.mias-activa .mias-ligas-scroll{
+  margin-top:0!important;
+}
+
+
+/* ---------------------------------------------------------------------
+   MIS SALAS — "TU SALA" ya no se cruza con el nombre del equipo
+   --------------------------------------------------------------------- */
+body.mias-activa .mias-card-top-izquierda{
+  min-width:0!important;
+  max-width:68%!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  flex-wrap:wrap!important;
+}
+
+body.mias-activa .mias-card-top-izquierda .mias-liga{
+  max-width:100%!important;
+}
+
+body.mias-activa .mias-anfitrion{
+  position:static!important;
+  left:auto!important;
+  right:auto!important;
+  top:auto!important;
+  bottom:auto!important;
+  flex:0 0 auto!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:20px!important;
+  padding:3px 6px!important;
+  margin:0!important;
+  border-radius:5px!important;
+  background:rgba(52,142,62,.90)!important;
+  color:#fff!important;
+  font-size:7.5px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  letter-spacing:.06em!important;
+  white-space:nowrap!important;
+}
+
+
+/* ---------------------------------------------------------------------
+   MIS SALAS — 5 cards por fila en escritorio ancho
+   --------------------------------------------------------------------- */
+@media (min-width:1500px){
+  body.mias-activa .mias-rejilla{
+    grid-template-columns:repeat(5,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+
+  body.mias-activa .mias-card{
+    border-radius:11px!important;
+  }
+
+  body.mias-activa .mias-card-visual{
+    min-height:158px!important;
+    padding:9px!important;
+  }
+
+  body.mias-activa .mias-card-top{
+    gap:5px!important;
+  }
+
+  body.mias-activa .mias-card-top-derecha{
+    gap:3px!important;
+  }
+
+  body.mias-activa .mias-liga{
+    padding:3px 7px!important;
+    font-size:8.5px!important;
+  }
+
+  body.mias-activa .mias-tiempo{
+    min-height:20px!important;
+    padding:3px 5px!important;
+    font-size:8px!important;
+  }
+
+  body.mias-activa .mias-estado{
+    padding:3px 6px!important;
+    font-size:8px!important;
+  }
+
+  body.mias-activa .mias-enfrentamiento{
+    grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr)!important;
+    gap:5px!important;
+    margin-top:13px!important;
+  }
+
+  body.mias-activa .mias-equipo .escudo{
+    width:50px!important;
+    height:50px!important;
+    max-width:50px!important;
+    margin-bottom:5px!important;
+    border-radius:14px!important;
+  }
+
+  body.mias-activa .mias-equipo strong{
+    font-size:9.5px!important;
+  }
+
+  body.mias-activa .mias-vs{
+    padding:5px 6px!important;
+    font-size:10px!important;
+  }
+
+  body.mias-activa .mias-card-info{
+    padding:8px 9px 8px!important;
+  }
+
+  body.mias-activa .mias-sin-apuesta{
+    min-height:31px!important;
+    gap:6px!important;
+    font-size:9px!important;
+  }
+
+  body.mias-activa .mias-posicion{
+    padding:4px 0!important;
+    font-size:9px!important;
+  }
+
+  body.mias-activa .mias-posicion strong{
+    font-size:9.5px!important;
+  }
+
+  body.mias-activa .mias-card-pie{
+    margin-top:6px!important;
+    padding-top:6px!important;
+    font-size:8.5px!important;
+  }
+
+  body.mias-activa .mias-card-pie strong{
+    font-size:9px!important;
+  }
+}
+
+/* De 1251 a 1499 dejamos 4 columnas. */
+@media (min-width:1251px) and (max-width:1499px){
+  body.mias-activa .mias-rejilla{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:11px!important;
+  }
+}
+
+
+/* =====================================================================
+   2026-08-30 — CREAR: contadores + mínimo informativo + cupos config
+   ===================================================================== */
+
+/* El contador de cada liga queda centrado verticalmente y ya no cae. */
+body.crear-activa .crear-liga-tab{
+  align-items:center!important;
+}
+
+body.crear-activa .crear-liga-tab > b{
+  flex:0 0 auto!important;
+  align-self:center!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:20px!important;
+  width:auto!important;
+  height:20px!important;
+  margin:0!important;
+  padding:0 6px!important;
+  line-height:20px!important;
+  vertical-align:middle!important;
+  transform:none!important;
+  position:static!important;
+  top:auto!important;
+  bottom:auto!important;
+}
+
+/* Apuesta mínima: visualmente informativa / no editable. */
+body.crear-activa .campo-informativo input[readonly]{
+  cursor:default!important;
+  user-select:none!important;
+  color:#b7c8bc!important;
+  background:#09140e!important;
+  border-color:#1c3324!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.01)!important;
+  opacity:1!important;
+}
+
+body.crear-activa .campo-informativo input[readonly]:focus{
+  outline:none!important;
+  border-color:#1c3324!important;
+  box-shadow:none!important;
+}
+
+body.crear-activa .campo-ayuda{
+  display:block!important;
+  margin-top:5px!important;
+  color:#708277!important;
+  font-size:9px!important;
+  line-height:1.25!important;
+}
+
+/* Cupos: mantiene el mismo lenguaje visual y respeta min/max del input. */
+body.crear-activa #tope{
+  appearance:textfield!important;
+  -moz-appearance:textfield!important;
+}
+
+body.crear-activa #tope::-webkit-inner-spin-button,
+body.crear-activa #tope::-webkit-outer-spin-button{
+  opacity:.55!important;
+}
+
+/* Mensaje de configuración compacto. */
+body.crear-activa #aviso-entrada{
+  margin-top:8px!important;
+  color:#87998d!important;
+  font-size:9.5px!important;
+  line-height:1.35!important;
+}
+
+
+/* =====================================================================
+   2026-08-30 — SALAS: creación 0 + publicación condicionada + editor único
+   ===================================================================== */
+
+/* Bloque informativo que Sala reutiliza desde "Define la apuesta". */
+body.sala-activa .selector-original-sala .caja-jugadas-informativa{
+  margin-top:10px!important;
+}
+
+/* Estado de publicación dentro de Sala. */
+.sala-aviso-publicacion strong{
+  color:#8fe67d;
+}
+
+.sala-btn-publicar,
+.sala-btn-publicada{
+  min-height:36px;
+  padding:0 13px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border-radius:8px;
+  font-size:10.5px;
+  font-weight:800;
+}
+
+.sala-btn-publicar{
+  border:1px solid #3f934b;
+  background:#153d20;
+  color:#91ec7d;
+  cursor:pointer;
+}
+
+.sala-btn-publicar:hover{
+  background:#1b4c28;
+  border-color:#5dbb67;
+  color:#fff;
+}
+
+.sala-btn-publicada{
+  border:1px solid #295436;
+  background:#0b2113;
+  color:#78b887;
+  cursor:pointer;
+}
+
+.sala-publicacion-info{
+  display:grid;
+  gap:10px;
+  padding-top:4px;
+}
+
+.sala-publicacion-info>strong{
+  color:#eef7f0;
+  font-size:13px;
+  line-height:1.35;
+}
+
+.sala-publicacion-info>p{
+  margin:0 0 4px;
+  color:#91a397;
+  font-size:11px;
+  line-height:1.5;
+}
+
+.sala-publicacion-icono{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  border:1px solid #3a7448;
+  background:#14331d;
+  color:#83e370;
+  font-size:20px;
+  font-weight:900;
+}
+
+.sala-publicacion-icono.pendiente{
+  border-color:#31583b;
+  background:#0d2114;
+  color:#9ccaa6;
+}
+
+/* Botón de publicación dentro de cada card de Mis salas. */
+body.mias-activa .mias-publicacion{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:6px;
+  padding-top:6px;
+  border-top:1px solid rgba(115,199,103,.10);
+}
+
+body.mias-activa .mias-btn-publicar{
+  min-height:25px;
+  padding:0 9px;
+  border:1px solid rgba(105,217,77,.42);
+  border-radius:7px;
+  background:rgba(31,93,42,.34);
+  color:#83df72;
+  font-size:8.5px;
+  font-weight:800;
+  cursor:pointer;
+}
+
+body.mias-activa .mias-btn-publicar:hover{
+  background:rgba(46,127,59,.50);
+  color:#fff;
+}
+
+body.mias-activa .mias-btn-publicar.publicada{
+  border-color:rgba(111,162,121,.28);
+  background:rgba(17,42,25,.50);
+  color:#7fa58a;
+}
+
+/* Mantiene los cards compactos a 5 columnas incluso con el CTA nuevo. */
+@media(min-width:1500px){
+  body.mias-activa .mias-publicacion{
+    margin-top:4px!important;
+    padding-top:4px!important;
+  }
+
+  body.mias-activa .mias-btn-publicar{
+    min-height:23px!important;
+    padding:0 7px!important;
+    font-size:8px!important;
+  }
+}
+
+/* FIX: un solo Define la apuesta + apuesta mínima en resumen de Sala */
+body.sala-activa .sala-resumen{
+  grid-template-columns:repeat(6,minmax(0,1fr))!important;
+}
+body.sala-activa .selector-original-sala #minimo[readonly],
+body.sala-activa .selector-original-sala #tope[readonly]{
+  cursor:default!important;
+  opacity:.82!important;
+  background:#07140d!important;
+}
+@media(max-width:1100px){
+  body.sala-activa .sala-resumen{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:620px){
+  body.sala-activa .sala-resumen{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+
+/* 2026-08-30 — Publicación manual + ajuste visual de selector Sala */
+
+/* Publicar sala ocupa el lugar del estado "Abierta". */
+body.mias-activa .mias-publicar-arriba{
+  appearance:none!important;
+  cursor:pointer!important;
+  border:1px solid rgba(109,225,83,.58)!important;
+  background:#176028!important;
+  color:#a7f299!important;
+  font-weight:800!important;
+  white-space:nowrap!important;
+}
+body.mias-activa .mias-publicar-arriba:hover{
+  background:#217d35!important;
+  color:#fff!important;
+}
+body.mias-activa .estado-publicada{
+  background:#12351c!important;
+  border-color:#285e33!important;
+  color:#86cf91!important;
+}
+
+/* El viejo botón inferior desaparece completamente. */
+body.mias-activa .mias-publicacion{
+  display:none!important;
+}
+
+/* Crear.js NO se toca.
+   Solo corregimos el contenedor cuando ese mismo selector se abre desde Sala. */
+body.sala-activa .hoja.selector-original-sala,
+body.sala-activa .hoja.selector-original-sala .hoja-interior,
+body.sala-activa .hoja.selector-original-sala #paso-dos,
+body.sala-activa .hoja.selector-original-sala .caja-jugadas,
+body.sala-activa .hoja.selector-original-sala .pie-fijo{
+  background:#07110c!important;
+  background-color:#07110c!important;
+  color:#eef7f0!important;
+}
+
+body.sala-activa .hoja.selector-original-sala .pie-fijo{
+  position:static!important;
+  inset:auto!important;
+  width:auto!important;
+  margin-top:10px!important;
+  padding:0!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+
+body.sala-activa .hoja.selector-original-sala .pie-fijo .pista{
+  background:transparent!important;
+  color:#809286!important;
+}
+
+body.sala-activa .hoja.selector-original-sala .hoja-interior{
+  min-height:100%!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+}
+
+body.sala-activa .sala-btn-publicar{
+  background:#176028!important;
+  border-color:#4aa95a!important;
+  color:#a7f299!important;
+}
+body.sala-activa .sala-btn-publicar:hover{
+  background:#217d35!important;
+  color:#fff!important;
+}
+
+
+/* =====================================================================
+   2026-08-30 — SALA: "Define la apuesta" VISUALMENTE IGUAL A CREAR
+   crear.js NO se modifica.
+   Este bloque neutraliza overrides viejos exclusivos de Sala.
+   ===================================================================== */
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear{
+  background:#07110c!important;
+  color:#eef7f0!important;
+  border-left-color:#1d3526!important;
+  box-shadow:-18px 0 42px rgba(0,0,0,.34)!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .hoja-interior{
+  background:#07110c!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear h2{
+  color:#f2faf4!important;
+  font-size:19px!important;
+  font-weight:800!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .hoja-sub{
+  color:#91a397!important;
+  font-size:13px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .hoja-cerrar{
+  width:30px!important;
+  height:30px!important;
+  background:#0c1a12!important;
+  border:1px solid #1b3123!important;
+  color:#9fb1a5!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .selector{
+  overflow:hidden!important;
+  background:#07110c!important;
+  border:1px solid #1d3526!important;
+  border-radius:11px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .buscador{
+  height:42px!important;
+  padding:0 12px!important;
+  background:#09150e!important;
+  border-bottom:1px solid #1d3526!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .buscador input{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  color:#eef7f0!important;
+  font-size:13px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .selector-cats{
+  background:#06100b!important;
+  border-right:1px solid #1d3526!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .cat{
+  min-height:35px!important;
+  padding:8px 12px!important;
+  background:transparent!important;
+  color:#9eafa4!important;
+  font-size:12px!important;
+  border:0!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .cat.activa{
+  background:#10251a!important;
+  color:#7dde68!important;
+  font-weight:700!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .selector-lista{
+  background:#07110c!important;
+  padding:8px!important;
+  max-height:390px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .tipo{
+  min-height:54px!important;
+  padding:9px 11px!important;
+  border:1px solid #1d3526!important;
+  border-radius:8px!important;
+  background:#09150e!important;
+  color:#eef7f0!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .tipo.puesto,
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .tipo.abierto{
+  background:#10251a!important;
+  border-color:#4c9a59!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .tipo-marca{
+  color:#73dc5d!important;
+  font-size:14px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .tipo-texto strong{
+  color:#eef7f0!important;
+  font-size:13px!important;
+  font-weight:700!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .tipo-texto small{
+  color:#809286!important;
+  font-size:11px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .caja-jugadas{
+  margin-top:10px!important;
+  padding:10px 12px!important;
+  background:#08140e!important;
+  border:1px solid #1d3526!important;
+  border-radius:9px!important;
+  color:#eaf4ec!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .jugadas-cab{
+  color:#8fa297!important;
+  font-size:10px!important;
+  margin-bottom:7px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .puesta{
+  padding:4px 8px!important;
+  background:#10251a!important;
+  color:#bfe3c7!important;
+  border:1px solid #294b34!important;
+  font-size:11px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .caja-jugadas label{
+  color:#91a398!important;
+  font-size:10px!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .caja-jugadas input,
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .caja-jugadas select{
+  min-height:38px!important;
+  height:38px!important;
+  padding:6px 10px!important;
+  background:#09150e!important;
+  border:1px solid #294333!important;
+  color:#eef7f0!important;
+  border-radius:7px!important;
+  font-size:14px!important;
+}
+
+/* La diferencia principal que se veía en tu captura:
+   el pie y el botón ahora tienen EXACTAMENTE la forma de Crear. */
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .pie-fijo{
+  position:static!important;
+  inset:auto!important;
+  width:auto!important;
+  margin-top:9px!important;
+  padding:9px 0 0!important;
+  background:#08140e!important;
+  border:0!important;
+  border-top:1px solid #1d3526!important;
+  box-shadow:none!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .pie-fijo .btn-favor.btn-ancho{
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:none!important;
+  min-height:38px!important;
+  height:38px!important;
+  margin:0!important;
+  padding:0 16px!important;
+  border-radius:7px!important;
+  background:#3f8f68!important;
+  border:1px solid #57a87e!important;
+  color:#fff!important;
+  font-size:12.5px!important;
+  font-weight:700!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .pie-fijo .btn-favor.btn-ancho:hover{
+  background:#4c9d75!important;
+  border-color:#6bb58e!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .pie-fijo .pista{
+  margin-top:7px!important;
+  background:transparent!important;
+  color:#809287!important;
+  text-align:center!important;
+}
+
+/* Evita cualquier caja blanca heredada. */
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear #paso-dos,
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .par,
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear .campo{
+  background:transparent!important;
+}
+
+@media(max-width:759px){
+  body.sala-activa .hoja.selector-original-sala.usar-visual-crear{
+    width:100%!important;
+    max-width:none!important;
+  }
+
+  body.sala-activa .hoja.selector-original-sala.usar-visual-crear .selector{
+    grid-template-columns:1fr!important;
+  }
+
+  body.sala-activa .hoja.selector-original-sala.usar-visual-crear .selector-cats{
+    display:flex!important;
+    overflow-x:auto!important;
+    border-right:0!important;
+  }
+}
+
+
+/* =====================================================================
+   2026-08-30 — Cupos editables en Agregar mercado + saldo header limpio
+   ===================================================================== */
+
+/* En Sala, cupos sí se puede aumentar. Apuesta mínima sigue bloqueada. */
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear #tope{
+  cursor:text!important;
+  opacity:1!important;
+  background:#09150e!important;
+  color:#eef7f0!important;
+}
+
+body.sala-activa .hoja.selector-original-sala.usar-visual-crear #minimo[readonly]{
+  cursor:default!important;
+  opacity:.82!important;
+}
+
+/* Header: ya no muestra "en juego", porque ese detalle vive en el lateral. */
+.superior .saldo-chip-simple{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:0 12px!important;
+  min-height:36px!important;
+}
+
+.superior .saldo-chip-simple .saldo-chip-icono{
+  width:18px!important;
+  height:18px!important;
+  flex:0 0 auto!important;
+  color:#73db68!important;
+}
+
+.superior .saldo-chip-simple strong{
+  color:#f4faf5!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  white-space:nowrap!important;
+}
+
+.superior .saldo-recargar{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:36px!important;
+  padding:0 14px!important;
+  margin-left:7px!important;
+  border:1px solid #2f9345!important;
+  border-radius:999px!important;
+  background:#229b3e!important;
+  color:#fff!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  cursor:pointer!important;
+  white-space:nowrap!important;
+}
+
+.superior .saldo-recargar:hover{
+  background:#2db34b!important;
+  border-color:#45bd5f!important;
+}
+
+@media(max-width:760px){
+  .superior .saldo-recargar{
+    padding:0 10px!important;
+    min-height:32px!important;
+    font-size:11px!important;
+  }
+
+  .superior .saldo-chip-simple{
+    min-height:32px!important;
+    padding:0 9px!important;
+  }
+
+  .superior .saldo-chip-simple .saldo-chip-icono{
+    width:16px!important;
+    height:16px!important;
+  }
+}
+
+
+/* ========================================================================
+   MIS SALAS — tabs CREADAS / PARTICIPO
+   Mockup aprobado
+   ======================================================================== */
+body.mias-activa .mias-pagina-tabs{
+  width:min(1500px,calc(100% - 48px))!important;
+  max-width:1500px!important;
+  margin:0 auto!important;
+}
+body.mias-activa .mias-resumen-tipos{
+  min-width:440px!important;
+}
+body.mias-activa .mias-resumen-tipos>div:nth-child(2){
+  min-width:170px!important;
+}
+body.mias-activa .mias-filtros-tabs{
+  margin-top:18px!important;
+  padding-bottom:15px!important;
+  border-bottom:1px solid rgba(78,133,94,.22)!important;
+}
+body.mias-activa .mias-tipo-tabs{
+  display:flex!important;
+  align-items:stretch!important;
+  gap:0!important;
+  width:max-content!important;
+  max-width:100%!important;
+  margin:0!important;
+  border-bottom:1px solid rgba(75,112,88,.22)!important;
+}
+body.mias-activa .mias-tipo-tab{
+  position:relative!important;
+  min-height:45px!important;
+  padding:0 28px!important;
+  border:0!important;
+  border-radius:0!important;
+  background:rgba(11,22,17,.78)!important;
+  color:#f1f5f2!important;
+  font-size:12px!important;
+  font-weight:800!important;
+  letter-spacing:.01em!important;
+  cursor:pointer!important;
+  transition:.18s ease!important;
+}
+body.mias-activa .mias-tipo-tab:hover{
+  background:#101c17!important;
+}
+body.mias-activa .mias-tipo-tab.activo::after{
+  content:""!important;
+  position:absolute!important;
+  left:0!important;
+  right:0!important;
+  bottom:-1px!important;
+  height:3px!important;
+  background:#24c853!important;
+}
+body.mias-activa .mias-tipo-tab-participo.activo::after{
+  background:#4b8fff!important;
+}
+body.mias-activa .mias-tipo-icono{
+  margin-right:8px!important;
+  color:#2cda5d!important;
+  font-size:16px!important;
+}
+body.mias-activa .mias-tipo-tab-participo .mias-tipo-icono{
+  color:#5797ff!important;
+}
+body.mias-activa .mias-tipo-tab b{
+  font-weight:800!important;
+}
+body.mias-activa .mias-contenido-tabs{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 285px!important;
+  gap:28px!important;
+  margin-top:16px!important;
+  align-items:start!important;
+}
+body.mias-activa .mias-listado-panel{
+  min-width:0!important;
+}
+body.mias-activa .mias-listado-cab{
+  display:flex!important;
+  justify-content:space-between!important;
+  align-items:center!important;
+  gap:18px!important;
+  margin:0 0 12px!important;
+}
+body.mias-activa .mias-listado-cab h2{
+  margin:0!important;
+  color:#36de68!important;
+  font-size:16px!important;
+  line-height:1.2!important;
+}
+body.mias-activa .mias-listado-cab h2.azul{
+  color:#5797ff!important;
+}
+body.mias-activa .mias-listado-cab p{
+  margin:4px 0 0!important;
+  color:#84968b!important;
+  font-size:11px!important;
+}
+body.mias-activa .mias-listado-meta{
+  display:flex!important;
+  align-items:center!important;
+  gap:14px!important;
+  color:#aab6af!important;
+  font-size:10px!important;
+  white-space:nowrap!important;
+}
+body.mias-activa .mias-listado-meta span:last-child{
+  padding:7px 12px!important;
+  border:1px solid #26372e!important;
+  border-radius:9px!important;
+  background:#0b1410!important;
+}
+body.mias-activa .mias-lista{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:4px!important;
+}
+body.mias-activa .mias-fila{
+  display:grid!important;
+  grid-template-columns:92px minmax(310px,1.5fr) minmax(235px,.9fr) minmax(150px,.55fr)!important;
+  min-height:94px!important;
+  border:1px solid #173f27!important;
+  border-radius:12px!important;
+  overflow:hidden!important;
+  background:linear-gradient(90deg,#07140d 0%,#08130e 62%,#07110c 100%)!important;
+  color:#eaf4ed!important;
+  cursor:pointer!important;
+  transition:border-color .18s ease,transform .18s ease,background .18s ease!important;
+}
+body.mias-activa .mias-fila:hover{
+  border-color:#2c9f4e!important;
+  background:linear-gradient(90deg,#08180f 0%,#0a1711 62%,#08130e 100%)!important;
+}
+body.mias-activa .mias-fila.participa{
+  border-color:#1e4f7f!important;
+}
+body.mias-activa .mias-fila.participa:hover{
+  border-color:#428de0!important;
+}
+body.mias-activa .mias-fila-tipo{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:5px!important;
+  padding:10px!important;
+  border-right:1px solid rgba(41,177,75,.18)!important;
+  background:linear-gradient(180deg,rgba(16,81,38,.38),rgba(7,31,17,.3))!important;
+}
+body.mias-activa .mias-fila.participa .mias-fila-tipo{
+  border-right-color:rgba(70,143,227,.2)!important;
+  background:linear-gradient(180deg,rgba(24,69,124,.4),rgba(8,25,48,.34))!important;
+}
+body.mias-activa .mias-fila-tipo-icono{
+  color:#29db5a!important;
+  font-size:22px!important;
+  line-height:1!important;
+}
+body.mias-activa .mias-fila.participa .mias-fila-tipo-icono{
+  color:#5797ff!important;
+}
+body.mias-activa .mias-fila-tipo strong{
+  color:#2fe263!important;
+  font-size:10px!important;
+  text-align:center!important;
+}
+body.mias-activa .mias-fila.participa .mias-fila-tipo strong{
+  color:#63a2ff!important;
+}
+body.mias-activa .mias-fila-partido{
+  position:relative!important;
+  display:flex!important;
+  align-items:center!important;
+  min-width:0!important;
+  padding:28px 22px 10px!important;
+  border-right:1px solid rgba(66,101,78,.2)!important;
+  background:
+    linear-gradient(90deg,rgba(3,17,10,.2),rgba(3,12,8,.66)),
+    radial-gradient(circle at 50% 110%,rgba(16,109,45,.25),transparent 55%)!important;
+}
+body.mias-activa .mias-fila-liga{
+  position:absolute!important;
+  top:9px!important;
+  left:20px!important;
+  max-width:75%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  padding:3px 8px!important;
+  border-radius:999px!important;
+  background:#101a15!important;
+  color:#eaf4ed!important;
+  font-size:9px!important;
+  font-weight:700!important;
+}
+body.mias-activa .mias-fila-equipos{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+body.mias-activa .mias-fila-equipo{
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  min-width:0!important;
+}
+body.mias-activa .mias-fila-equipo:last-child{
+  flex-direction:row-reverse!important;
+  text-align:right!important;
+}
+body.mias-activa .mias-fila-equipo .escudo{
+  width:43px!important;
+  height:43px!important;
+  min-width:43px!important;
+  border-radius:10px!important;
+  object-fit:contain!important;
+}
+body.mias-activa .mias-fila-equipo strong{
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:#fff!important;
+  font-size:12px!important;
+}
+body.mias-activa .mias-fila-vs{
+  display:grid!important;
+  place-items:center!important;
+  width:34px!important;
+  height:34px!important;
+  margin:auto!important;
+  border:1px solid #304036!important;
+  border-radius:50%!important;
+  background:#050a07!important;
+  color:#fff!important;
+  font-size:11px!important;
+  font-weight:900!important;
+}
+body.mias-activa .mias-fila-datos{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  gap:4px!important;
+  padding:10px 18px!important;
+  border-right:1px solid rgba(66,101,78,.2)!important;
+  color:#b8c5bd!important;
+  font-size:10px!important;
+}
+body.mias-activa .mias-fila-estados{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin-bottom:2px!important;
+}
+body.mias-activa .mias-fila-anfitrion strong{
+  color:#eef5f0!important;
+}
+body.mias-activa .mias-fila-accion{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:12px 16px!important;
+}
+body.mias-activa .mias-fila-publicar{
+  min-height:34px!important;
+  padding:0 18px!important;
+  border:0!important;
+  border-radius:8px!important;
+  background:#1ca846!important;
+  color:#fff!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  cursor:pointer!important;
+}
+body.mias-activa .mias-fila-publicar:hover{
+  background:#24bd50!important;
+}
+body.mias-activa .mias-fila-posicion{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:4px!important;
+  color:#aebbb3!important;
+  font-size:10px!important;
+}
+body.mias-activa .mias-fila-posicion strong{
+  color:#5da0ff!important;
+  font-size:11px!important;
+}
+body.mias-activa .mias-fila-ver{
+  color:#c9d4cd!important;
+  font-size:11px!important;
+}
+body.mias-activa .mias-ayuda{
+  display:grid!important;
+  gap:14px!important;
+}
+body.mias-activa .mias-ayuda-card{
+  padding:22px!important;
+  border:1px solid #203229!important;
+  border-radius:14px!important;
+  background:linear-gradient(180deg,#0a1510,#08110d)!important;
+}
+body.mias-activa .mias-ayuda-card h3{
+  margin:0 0 20px!important;
+  color:#fff!important;
+  font-size:16px!important;
+}
+body.mias-activa .mias-ayuda-item{
+  display:grid!important;
+  grid-template-columns:38px 1fr!important;
+  gap:12px!important;
+  padding:0 0 18px!important;
+  margin-bottom:18px!important;
+  border-bottom:1px solid rgba(93,124,104,.18)!important;
+}
+body.mias-activa .mias-ayuda-item:last-child{
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+}
+body.mias-activa .mias-ayuda-icono{
+  display:grid!important;
+  place-items:center!important;
+  width:38px!important;
+  height:38px!important;
+  border-radius:50%!important;
+  background:rgba(34,181,72,.16)!important;
+  color:#31df61!important;
+  font-size:20px!important;
+}
+body.mias-activa .mias-ayuda-item.azul .mias-ayuda-icono{
+  background:rgba(71,133,235,.16)!important;
+  color:#5d9cff!important;
+}
+body.mias-activa .mias-ayuda-item strong{
+  color:#31df61!important;
+  font-size:12px!important;
+}
+body.mias-activa .mias-ayuda-item.azul strong{
+  color:#5d9cff!important;
+}
+body.mias-activa .mias-ayuda-item p,
+body.mias-activa .mias-regla-card p{
+  margin:6px 0 0!important;
+  color:#b5c0b9!important;
+  font-size:11px!important;
+  line-height:1.55!important;
+}
+body.mias-activa .mias-ayuda-punto{
+  width:14px!important;
+  height:14px!important;
+  margin:8px auto 0!important;
+  border-radius:50%!important;
+  background:#24c853!important;
+  box-shadow:0 0 0 8px rgba(36,200,83,.08)!important;
+}
+body.mias-activa .mias-ayuda-blanco{
+  color:#eef4f0!important;
+}
+body.mias-activa .mias-regla-card{
+  display:grid!important;
+  grid-template-columns:42px 1fr!important;
+  gap:12px!important;
+}
+body.mias-activa .mias-regla-card h3{
+  margin:0!important;
+}
+body.mias-activa .mias-regla-icono{
+  display:grid!important;
+  place-items:center!important;
+  width:42px!important;
+  height:42px!important;
+  border-radius:50%!important;
+  background:#152019!important;
+  color:#fff!important;
+  font-size:24px!important;
+}
+body.mias-activa .mias-paginador{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:16px!important;
+  margin-top:14px!important;
+  padding:11px 14px!important;
+  border:1px solid #1b2d23!important;
+  border-radius:11px!important;
+  background:#08110d!important;
+}
+body.mias-activa .mias-paginas{
+  display:flex!important;
+  gap:5px!important;
+}
+body.mias-activa .mias-paginas button{
+  min-width:32px!important;
+  height:32px!important;
+  border:1px solid #28382f!important;
+  border-radius:7px!important;
+  background:#0b1510!important;
+  color:#c8d2cc!important;
+  cursor:pointer!important;
+}
+body.mias-activa .mias-paginas button.activo{
+  border-color:#239f47!important;
+  background:#168d39!important;
+  color:#fff!important;
+}
+body.mias-activa .mias-paginas button:disabled{
+  opacity:.35!important;
+  cursor:default!important;
+}
+body.mias-activa .mias-paginador label{
+  color:#aebbb3!important;
+  font-size:10px!important;
+}
+body.mias-activa .mias-paginador select{
+  margin-left:7px!important;
+  padding:6px 9px!important;
+  border:1px solid #2b3b32!important;
+  border-radius:7px!important;
+  background:#09120e!important;
+  color:#fff!important;
+}
+
+@media(max-width:1180px){
+  body.mias-activa .mias-contenido-tabs{
+    grid-template-columns:1fr!important;
+  }
+  body.mias-activa .mias-ayuda{
+    grid-template-columns:1fr 1fr!important;
+  }
+  body.mias-activa .mias-fila{
+    grid-template-columns:82px minmax(280px,1.4fr) minmax(210px,.9fr) 140px!important;
+  }
+}
+@media(max-width:900px){
+  body.mias-activa .mias-pagina-tabs{
+    width:calc(100% - 24px)!important;
+  }
+  body.mias-activa .mias-resumen-tipos{
+    min-width:0!important;
+    width:100%!important;
+  }
+  body.mias-activa .mias-tipo-tabs{
+    width:100%!important;
+  }
+  body.mias-activa .mias-tipo-tab{
+    flex:1!important;
+    padding:0 12px!important;
+    font-size:10px!important;
+  }
+  body.mias-activa .mias-listado-cab{
+    align-items:flex-start!important;
+    flex-direction:column!important;
+  }
+  body.mias-activa .mias-fila{
+    grid-template-columns:70px minmax(0,1fr)!important;
+  }
+  body.mias-activa .mias-fila-partido{
+    border-right:0!important;
+  }
+  body.mias-activa .mias-fila-datos{
+    grid-column:1 / -1!important;
+    display:grid!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    padding:10px 14px!important;
+    border-top:1px solid rgba(66,101,78,.2)!important;
+    border-right:0!important;
+  }
+  body.mias-activa .mias-fila-estados{
+    grid-column:1 / -1!important;
+  }
+  body.mias-activa .mias-fila-accion{
+    grid-column:1 / -1!important;
+    justify-content:flex-end!important;
+    border-top:1px solid rgba(66,101,78,.2)!important;
+  }
+  body.mias-activa .mias-ayuda{
+    grid-template-columns:1fr!important;
+  }
+}
+@media(max-width:560px){
+  body.mias-activa .mias-tipo-tabs{
+    overflow-x:auto!important;
+  }
+  body.mias-activa .mias-tipo-tab{
+    min-width:max-content!important;
+  }
+  body.mias-activa .mias-listado-meta{
+    flex-wrap:wrap!important;
+  }
+  body.mias-activa .mias-fila{
+    grid-template-columns:1fr!important;
+  }
+  body.mias-activa .mias-fila-tipo{
+    flex-direction:row!important;
+    min-height:38px!important;
+    border-right:0!important;
+    border-bottom:1px solid rgba(41,177,75,.18)!important;
+  }
+  body.mias-activa .mias-fila-partido{
+    padding:30px 12px 12px!important;
+  }
+  body.mias-activa .mias-fila-equipo{
+    flex-direction:column!important;
+    text-align:center!important;
+  }
+  body.mias-activa .mias-fila-equipo:last-child{
+    flex-direction:column!important;
+    text-align:center!important;
+  }
+  body.mias-activa .mias-fila-equipo .escudo{
+    width:38px!important;
+    height:38px!important;
+    min-width:38px!important;
+  }
+  body.mias-activa .mias-fila-datos,
+  body.mias-activa .mias-fila-accion{
+    grid-column:auto!important;
+  }
+  body.mias-activa .mias-paginador{
+    align-items:flex-start!important;
+    flex-direction:column!important;
+  }
+}
+
+
+/* ========================================================================
+   MIS SALAS — UNIFICACIÓN VISUAL ENTRE LOS DOS TABS
+   CREADAS y PARTICIPO usan exactamente la misma tarjeta/base.
+   Solo se conserva azul como identificador de "PARTICIPAS".
+   ======================================================================== */
+
+body.mias-activa .mias-fila,
+body.mias-activa .mias-fila.participa{
+  grid-template-columns:
+    115px
+    minmax(430px,1.65fr)
+    minmax(300px,.95fr)
+    minmax(210px,.62fr)!important;
+
+  height:126px!important;
+  min-height:126px!important;
+  max-height:126px!important;
+
+  border:1px solid #1d5a32!important;
+  border-radius:14px!important;
+  background:linear-gradient(90deg,#06130c 0%,#07150e 62%,#06110b 100%)!important;
+  overflow:hidden!important;
+}
+
+body.mias-activa .mias-fila:hover,
+body.mias-activa .mias-fila.participa:hover{
+  border-color:#2da24e!important;
+  background:linear-gradient(90deg,#08180f 0%,#091811 62%,#07140d 100%)!important;
+}
+
+/* Columna izquierda: misma caja y mismas medidas */
+body.mias-activa .mias-fila-tipo,
+body.mias-activa .mias-fila.participa .mias-fila-tipo{
+  width:auto!important;
+  height:100%!important;
+  min-height:0!important;
+  padding:12px 10px!important;
+  border-right:1px solid rgba(41,177,75,.22)!important;
+  background:linear-gradient(180deg,rgba(14,75,34,.42),rgba(7,31,17,.32))!important;
+}
+
+/* La única diferencia intencional es el color del identificador */
+body.mias-activa .mias-fila.participa .mias-fila-tipo-icono,
+body.mias-activa .mias-fila.participa .mias-fila-tipo strong{
+  color:#5797ff!important;
+}
+
+/* Partido: idéntico en ambos tabs */
+body.mias-activa .mias-fila-partido,
+body.mias-activa .mias-fila.participa .mias-fila-partido{
+  height:100%!important;
+  min-height:0!important;
+  padding:31px 26px 12px!important;
+  border-right:1px solid rgba(66,101,78,.22)!important;
+  background:
+    linear-gradient(90deg,rgba(3,17,10,.18),rgba(3,12,8,.62)),
+    radial-gradient(circle at 50% 110%,rgba(16,109,45,.24),transparent 56%)!important;
+}
+
+/* Datos: misma altura, mismas separaciones y sin crecer por contenido */
+body.mias-activa .mias-fila-datos,
+body.mias-activa .mias-fila.participa .mias-fila-datos{
+  height:100%!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  justify-content:center!important;
+  gap:5px!important;
+  padding:12px 20px!important;
+  overflow:hidden!important;
+  border-right:1px solid rgba(66,101,78,.22)!important;
+}
+
+/* El anfitrión ocupa una sola línea para no estirar la tarjeta */
+body.mias-activa .mias-fila-anfitrion{
+  display:block!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  line-height:1.2!important;
+}
+
+/* Acción derecha: mismas dimensiones en ambos tabs */
+body.mias-activa .mias-fila-accion,
+body.mias-activa .mias-fila.participa .mias-fila-accion{
+  height:100%!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  padding:12px 18px!important;
+  overflow:hidden!important;
+}
+
+/* La posición se ve compacta, como el botón Publicar */
+body.mias-activa .mias-fila-posicion{
+  width:100%!important;
+  max-width:170px!important;
+  gap:4px!important;
+  line-height:1.2!important;
+}
+
+body.mias-activa .mias-fila-posicion strong{
+  display:block!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+
+/* Títulos de sección: misma tipografía/tamaño, cambia solo el color */
+body.mias-activa .mias-listado-cab h2,
+body.mias-activa .mias-listado-cab h2.azul{
+  font-size:16px!important;
+  font-weight:800!important;
+  line-height:1.2!important;
+  margin:0!important;
+}
+
+body.mias-activa .mias-listado-cab h2{
+  color:#36de68!important;
+}
+body.mias-activa .mias-listado-cab h2.azul{
+  color:#5797ff!important;
+}
+
+/* Tabs: exactamente el mismo ancho/alto y comportamiento */
+body.mias-activa .mias-tipo-tab,
+body.mias-activa .mias-tipo-tab-participo{
+  min-width:320px!important;
+  height:54px!important;
+  min-height:54px!important;
+  padding:0 28px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+}
+
+/* Desktop medio */
+@media (max-width:1250px){
+  body.mias-activa .mias-fila,
+  body.mias-activa .mias-fila.participa{
+    grid-template-columns:
+      100px
+      minmax(340px,1.5fr)
+      minmax(260px,.95fr)
+      minmax(180px,.65fr)!important;
+  }
+}
+
+/* Tablet/móvil: ambos tipos siguen exactamente el mismo layout */
+@media (max-width:900px){
+  body.mias-activa .mias-fila,
+  body.mias-activa .mias-fila.participa{
+    height:auto!important;
+    max-height:none!important;
+    min-height:0!important;
+    grid-template-columns:70px minmax(0,1fr)!important;
+  }
+
+  body.mias-activa .mias-fila-tipo,
+  body.mias-activa .mias-fila.participa .mias-fila-tipo{
+    height:auto!important;
+  }
+
+  body.mias-activa .mias-fila-partido,
+  body.mias-activa .mias-fila.participa .mias-fila-partido{
+    height:auto!important;
+    min-height:108px!important;
+  }
+
+  body.mias-activa .mias-fila-datos,
+  body.mias-activa .mias-fila.participa .mias-fila-datos,
+  body.mias-activa .mias-fila-accion,
+  body.mias-activa .mias-fila.participa .mias-fila-accion{
+    height:auto!important;
+  }
+}
+
+@media (max-width:700px){
+  body.mias-activa .mias-tipo-tab,
+  body.mias-activa .mias-tipo-tab-participo{
+    min-width:max-content!important;
+    height:48px!important;
+    min-height:48px!important;
+    padding:0 18px!important;
+  }
+}
+
+@media (max-width:560px){
+  body.mias-activa .mias-fila,
+  body.mias-activa .mias-fila.participa{
+    grid-template-columns:1fr!important;
+  }
+
+  body.mias-activa .mias-fila-tipo,
+  body.mias-activa .mias-fila.participa .mias-fila-tipo{
+    flex-direction:row!important;
+    min-height:40px!important;
+    border-right:0!important;
+    border-bottom:1px solid rgba(41,177,75,.22)!important;
+  }
+}
+
+
+/* ========================================================================
+   MIS SALAS — AJUSTES FINALES DE OBSERVACIONES
+   ======================================================================== */
+
+/* Ya no hay título/descripción repetidos debajo del tab */
+body.mias-activa .mias-listado-cab-solo-meta{
+  min-height:34px!important;
+  justify-content:flex-end!important;
+  margin-bottom:8px!important;
+}
+body.mias-activa .mias-listado-cab-solo-meta .mias-listado-meta{
+  margin-left:auto!important;
+}
+
+/* Verde bastante más tenue en la base de las tarjetas */
+body.mias-activa .mias-fila,
+body.mias-activa .mias-fila.participa{
+  border-color:#173826!important;
+  background:
+    linear-gradient(90deg,#07110d 0%,#08120e 62%,#07100c 100%)!important;
+  box-shadow:none!important;
+}
+body.mias-activa .mias-fila:hover,
+body.mias-activa .mias-fila.participa:hover{
+  border-color:#24583a!important;
+  background:
+    linear-gradient(90deg,#08130f 0%,#091510 62%,#08120e 100%)!important;
+}
+
+/* Columna "TU SALA": menos verde encendido */
+body.mias-activa .mias-fila-tipo,
+body.mias-activa .mias-fila.participa .mias-fila-tipo{
+  border-right-color:rgba(76,112,88,.25)!important;
+  background:
+    linear-gradient(180deg,rgba(15,40,26,.62),rgba(8,24,15,.48))!important;
+}
+body.mias-activa .mias-fila-tipo-icono{
+  color:#45b766!important;
+}
+body.mias-activa .mias-fila-tipo strong{
+  color:#6bc481!important;
+}
+
+/* Partido y bloque de datos mucho más neutros */
+body.mias-activa .mias-fila-partido,
+body.mias-activa .mias-fila.participa .mias-fila-partido{
+  border-right-color:rgba(76,103,86,.22)!important;
+  background:
+    linear-gradient(90deg,rgba(6,15,10,.08),rgba(5,12,8,.3)),
+    radial-gradient(circle at 50% 115%,rgba(31,75,45,.10),transparent 60%)!important;
+}
+body.mias-activa .mias-fila-datos,
+body.mias-activa .mias-fila.participa .mias-fila-datos{
+  border-right-color:rgba(76,103,86,.22)!important;
+  color:#b8c3bc!important;
+}
+
+/* Iconos de cupos, dinero y fecha */
+body.mias-activa .mias-dato-linea{
+  display:flex!important;
+  align-items:center!important;
+  gap:7px!important;
+  min-width:0!important;
+  color:#bac6be!important;
+  line-height:1.25!important;
+}
+body.mias-activa .mias-dato-icono{
+  width:14px!important;
+  height:14px!important;
+  min-width:14px!important;
+  flex:0 0 14px!important;
+  color:#9fb0a5!important;
+}
+body.mias-activa .mias-dato-icono-calendario{
+  width:15px!important;
+  height:15px!important;
+  min-width:15px!important;
+  flex-basis:15px!important;
+}
+
+/* Estado Abierta también menos saturado */
+body.mias-activa .mias-estado.estado-abierta{
+  border-color:#245c35!important;
+  background:#10331d!important;
+  color:#86d59a!important;
+}
+
+/* Badge Publicada: solo un poquito más grande */
+body.mias-activa .mias-estado.estado-publicada{
+  min-height:29px!important;
+  padding:0 12px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:999px!important;
+  border-color:#28633a!important;
+  background:#12351f!important;
+  color:#82d398!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  line-height:1!important;
+}
+
+/* Botón Publicar conserva jerarquía pero no exagera el verde */
+body.mias-activa .mias-fila-publicar{
+  background:#219a45!important;
+}
+body.mias-activa .mias-fila-publicar:hover{
+  background:#27aa4d!important;
+}
+
+/* Línea activa del tab ligeramente menos brillante */
+body.mias-activa .mias-tipo-tab.activo::after{
+  background:#31b85a!important;
+}
+body.mias-activa .mias-tipo-tab-participo.activo::after{
+  background:#4b82d7!important;
+}
+
+/* Separadores interiores más suaves */
+body.mias-activa .mias-fila-accion,
+body.mias-activa .mias-fila.participa .mias-fila-accion{
+  background:rgba(4,11,7,.08)!important;
+}
+
+@media(max-width:900px){
+  body.mias-activa .mias-listado-cab-solo-meta{
+    min-height:30px!important;
+    align-items:flex-end!important;
+  }
+}
+
+
+/* ========================================================================
+   MIS SALAS — AJUSTE DE CONTRASTE Y TEXTO
+   - texto ligeramente más bajo/pequeño
+   - fondo aún más oscuro y menos verde
+   ======================================================================== */
+
+/* Fondo general de tarjeta mucho más neutro */
+body.mias-activa .mias-fila,
+body.mias-activa .mias-fila.participa{
+  border-color:#18251d!important;
+  background:
+    linear-gradient(90deg,#050908 0%,#060a08 58%,#050806 100%)!important;
+}
+
+/* Hover muy sutil */
+body.mias-activa .mias-fila:hover,
+body.mias-activa .mias-fila.participa:hover{
+  border-color:#24382b!important;
+  background:
+    linear-gradient(90deg,#060b09 0%,#070c09 58%,#060a08 100%)!important;
+}
+
+/* Columna izquierda casi negra con apenas tinte verde */
+body.mias-activa .mias-fila-tipo,
+body.mias-activa .mias-fila.participa .mias-fila-tipo{
+  background:
+    linear-gradient(180deg,rgba(9,18,13,.92),rgba(7,13,10,.90))!important;
+  border-right-color:rgba(72,90,78,.18)!important;
+}
+
+/* Partido: retirar prácticamente todo el resplandor verde */
+body.mias-activa .mias-fila-partido,
+body.mias-activa .mias-fila.participa .mias-fila-partido{
+  background:
+    linear-gradient(90deg,rgba(4,8,6,.16),rgba(4,8,6,.24))!important;
+  border-right-color:rgba(72,90,78,.18)!important;
+}
+
+/* Datos y acción también neutros */
+body.mias-activa .mias-fila-datos,
+body.mias-activa .mias-fila.participa .mias-fila-datos,
+body.mias-activa .mias-fila-accion,
+body.mias-activa .mias-fila.participa .mias-fila-accion{
+  background:#050908!important;
+  border-right-color:rgba(72,90,78,.18)!important;
+}
+
+/* Bajar un poco el tamaño del texto interno */
+body.mias-activa .mias-fila-liga{
+  font-size:8px!important;
+}
+
+body.mias-activa .mias-fila-equipo strong{
+  font-size:11px!important;
+  font-weight:700!important;
+}
+
+body.mias-activa .mias-fila-datos{
+  font-size:9px!important;
+}
+
+body.mias-activa .mias-dato-linea{
+  font-size:9px!important;
+  color:#aab6ae!important;
+}
+
+body.mias-activa .mias-fila-anfitrion,
+body.mias-activa .mias-fila-posicion,
+body.mias-activa .mias-fila-ver{
+  font-size:9px!important;
+}
+
+body.mias-activa .mias-fila-tipo strong{
+  font-size:9px!important;
+}
+
+/* Estado y fecha un poco más contenidos */
+body.mias-activa .mias-estado{
+  font-size:9px!important;
+}
+
+body.mias-activa .mias-tiempo{
+  font-size:9px!important;
+}
+
+/* Publicada: mantener el pequeño aumento anterior, pero sin exagerar */
+body.mias-activa .mias-estado.estado-publicada{
+  min-height:28px!important;
+  padding:0 11px!important;
+  font-size:10px!important;
+}
+
+/* Botón publicar un punto más discreto */
+body.mias-activa .mias-fila-publicar{
+  min-height:32px!important;
+  padding:0 16px!important;
+  font-size:10px!important;
+  background:#1f8f40!important;
+}
+body.mias-activa .mias-fila-publicar:hover{
+  background:#249947!important;
+}
+
+/* Iconos un poco más apagados */
+body.mias-activa .mias-dato-icono{
+  color:#8e9b93!important;
+}
+
+/* Verde de TU SALA más suave */
+body.mias-activa .mias-fila-tipo-icono{
+  color:#3fa85d!important;
+}
+body.mias-activa .mias-fila-tipo strong{
+  color:#5eb978!important;
+}
+
+/* Badge Abierta menos brillante */
+body.mias-activa .mias-estado.estado-abierta{
+  border-color:#23412e!important;
+  background:#0b1c12!important;
+  color:#6fbd84!important;
+}
+
+/* Badge Publicada menos brillante */
+body.mias-activa .mias-estado.estado-publicada{
+  border-color:#24432f!important;
+  background:#0d2115!important;
+  color:#73c188!important;
+}
+
+
+
+/* ========================================================================
+   MIS SALAS — TABS SUPERIORES MÁS PEQUEÑOS
+   ======================================================================== */
+body.mias-activa .mias-tipo-tabs{
+  width:max-content!important;
+  max-width:100%!important;
+}
+
+body.mias-activa .mias-tipo-tab,
+body.mias-activa .mias-tipo-tab-participo{
+  min-width:0!important;
+  width:auto!important;
+  height:42px!important;
+  min-height:42px!important;
+  padding:0 20px!important;
+  gap:5px!important;
+  font-size:10px!important;
+  font-weight:800!important;
+}
+
+body.mias-activa .mias-tipo-icono{
+  margin-right:4px!important;
+  font-size:13px!important;
+}
+
+body.mias-activa .mias-tipo-tab.activo::after,
+body.mias-activa .mias-tipo-tab-participo.activo::after{
+  height:2px!important;
+}
+
+@media(max-width:700px){
+  body.mias-activa .mias-tipo-tab,
+  body.mias-activa .mias-tipo-tab-participo{
+    height:40px!important;
+    min-height:40px!important;
+    padding:0 14px!important;
+    font-size:9px!important;
+  }
+
+  body.mias-activa .mias-tipo-icono{
+    font-size:12px!important;
+  }
+}
+
+
+/* ========================================================================
+   CASAS — MISMO LENGUAJE VISUAL DEL MURO
+   ======================================================================== */
+body.casas-activa{
+  background:#020a05!important;
+  color:#eef6f0!important;
+}
+body.casas-activa .envoltura{
+  width:min(1500px,calc(100% - 48px))!important;
+  max-width:1500px!important;
+  margin:0 auto!important;
+  padding:28px 0 54px!important;
+}
+body.casas-activa .casas-pagina{
+  width:100%!important;
+}
+body.casas-activa .casas-encabezado{
+  display:flex!important;
+  align-items:flex-end!important;
+  justify-content:space-between!important;
+  gap:20px!important;
+  padding:0 0 20px!important;
+  border-bottom:1px solid #15301f!important;
+}
+body.casas-activa .casas-kicker{
+  display:block!important;
+  margin:0 0 7px!important;
+  color:#57d870!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  letter-spacing:.14em!important;
+}
+body.casas-activa .casas-encabezado .titulo{
+  margin:0!important;
+  color:#f5faf6!important;
+  font-size:30px!important;
+  line-height:1.05!important;
+}
+body.casas-activa .casas-encabezado .sub{
+  margin:8px 0 0!important;
+  color:#8da195!important;
+  font-size:13px!important;
+}
+body.casas-activa .casas-contador{
+  display:flex!important;
+  align-items:baseline!important;
+  gap:7px!important;
+  min-width:max-content!important;
+  padding:9px 14px!important;
+  border:1px solid #19432a!important;
+  border-radius:999px!important;
+  background:#07150d!important;
+}
+body.casas-activa .casas-contador strong{
+  color:#61df78!important;
+  font-size:17px!important;
+}
+body.casas-activa .casas-contador span{
+  color:#9eb0a5!important;
+  font-size:11px!important;
+}
+
+/* CTA para operadores: ya no usa el aspecto claro heredado */
+body.casas-activa .casas-pagina .llamada{
+  width:100%!important;
+  max-width:none!important;
+  margin:18px 0 0!important;
+  padding:14px 16px!important;
+  border:1px solid #1c4b2d!important;
+  border-radius:12px!important;
+  background:linear-gradient(180deg,#0a1d11,#07150d)!important;
+  color:#eef6f0!important;
+  box-shadow:none!important;
+}
+body.casas-activa .casas-pagina .llamada:hover{
+  border-color:#2c7442!important;
+  background:linear-gradient(180deg,#0c2415,#081a10)!important;
+}
+body.casas-activa .casas-pagina .llamada-texto strong{
+  color:#f5faf6!important;
+}
+body.casas-activa .casas-pagina .llamada-texto small{
+  color:#8fa298!important;
+}
+
+/* Estado vacío */
+body.casas-activa .casas-vacio{
+  min-height:310px!important;
+  margin-top:22px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  padding:44px 24px!important;
+  border:1px solid #163521!important;
+  border-radius:16px!important;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(42,130,65,.10),transparent 42%),
+    linear-gradient(180deg,#07130c,#050d08)!important;
+}
+body.casas-activa .casas-vacio-icono{
+  display:grid!important;
+  place-items:center!important;
+  width:58px!important;
+  height:58px!important;
+  margin-bottom:17px!important;
+  border:1px solid #245c35!important;
+  border-radius:16px!important;
+  background:#0c2114!important;
+  color:#61d778!important;
+}
+body.casas-activa .casas-vacio-icono svg{
+  width:28px!important;
+  height:28px!important;
+}
+body.casas-activa .casas-vacio h2{
+  margin:0!important;
+  color:#f3f8f4!important;
+  font-size:18px!important;
+}
+body.casas-activa .casas-vacio p{
+  max-width:520px!important;
+  margin:9px auto 20px!important;
+  color:#85988d!important;
+  font-size:12px!important;
+  line-height:1.55!important;
+}
+body.casas-activa .casas-vacio-btn{
+  min-height:38px!important;
+  padding:0 18px!important;
+  border-radius:9px!important;
+}
+
+/* Listado de casas */
+body.casas-activa .casas-rejilla{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:14px!important;
+  margin-top:22px!important;
+}
+body.casas-activa .casa-tarjeta{
+  min-width:0!important;
+  margin:0!important;
+  padding:16px!important;
+  border:1px solid #173923!important;
+  border-radius:14px!important;
+  background:
+    radial-gradient(circle at 50% -20%,rgba(43,122,62,.11),transparent 48%),
+    linear-gradient(180deg,#08150d,#061009)!important;
+  color:#eef6f0!important;
+  box-shadow:none!important;
+}
+body.casas-activa .casa-tarjeta:hover{
+  border-color:#2c7041!important;
+  transform:translateY(-1px)!important;
+}
+body.casas-activa .casa-tarjeta .partido{
+  color:#f5faf6!important;
+  font-weight:800!important;
+}
+body.casas-activa .casa-tarjeta .liga,
+body.casas-activa .casa-tarjeta .lado-etiqueta{
+  color:#84978c!important;
+}
+body.casas-activa .casa-tarjeta .cuando{
+  border-color:#274432!important;
+  background:#0b1710!important;
+  color:#dce8df!important;
+}
+body.casas-activa .casa-tarjeta .mercado-nombre{
+  color:#b7c6bd!important;
+}
+body.casas-activa .casa-tarjeta .lado-monto{
+  color:#f4faf5!important;
+}
+body.casas-activa .casa-tarjeta.destacada{
+  border-color:#28683c!important;
+}
+body.casas-activa .casa-tarjeta .marca-destacada{
+  background:#12331d!important;
+  color:#71d489!important;
+}
+body.casas-activa .casa-tarjeta .barra{
+  background:#101c15!important;
+}
+
+/* El detalle #casa también hereda el shell oscuro */
+body.casa-activa{
+  background:#020a05!important;
+  color:#eef6f0!important;
+}
+body.casa-activa .envoltura{
+  width:min(1180px,calc(100% - 48px))!important;
+  max-width:1180px!important;
+  margin:0 auto!important;
+  padding:28px 0 54px!important;
+}
+
+@media(max-width:1200px){
+  body.casas-activa .casas-rejilla{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:900px){
+  body.casas-activa .envoltura,
+  body.casa-activa .envoltura{
+    width:calc(100% - 24px)!important;
+  }
+  body.casas-activa .casas-rejilla{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+@media(max-width:620px){
+  body.casas-activa .casas-encabezado{
+    align-items:flex-start!important;
+    flex-direction:column!important;
+  }
+  body.casas-activa .casas-encabezado .titulo{
+    font-size:25px!important;
+  }
+  body.casas-activa .casas-rejilla{
+    grid-template-columns:1fr!important;
+  }
+  body.casas-activa .casas-vacio{
+    min-height:260px!important;
+    padding:34px 18px!important;
+  }
+}

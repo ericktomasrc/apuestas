@@ -72,6 +72,8 @@ const ICONOS_MENU = {
   ingresos:   '<path d="M12 2v20"/><path d="M17 6.5c0-1.9-2.2-3-5-3s-5 1.1-5 3 2.2 2.6 5 3 5 1.4 5 3.2-2.2 3.3-5 3.3-5-1.2-5-3.1"/>',
   usuarios:   '<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.4 2.9-5.6 6.5-5.6s6.5 2.2 6.5 5.6"/><path d="M17 8a3.2 3.2 0 100-6.4"/><path d="M18 14.6c2.1.5 3.5 2 3.5 4.2"/>',
   roles:      '<path d="M12 2.5l7.5 3v5.4c0 4.4-3.1 8.4-7.5 10.1-4.4-1.7-7.5-5.7-7.5-10.1V5.5z"/><path d="M9 12l2 2 4-4.5"/>',
+  opciones:   '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6M7 17h8"/><path d="M17 15v4M15 17h4"/>',
+  historicoDeportivo: '<path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5M8 17h7"/>',
   deportes:   '<circle cx="12" cy="12" r="9.2"/><path d="M12 6.6l3.6 2.6-1.4 4.2H9.8L8.4 9.2z"/><path d="M12 2.8v3.8M4.5 8.6l3.9.6M19.5 8.6l-3.9.6M7.5 20l2.3-6.6M16.5 20l-2.3-6.6"/>',
   paises:     '<circle cx="12" cy="12" r="9.2"/><path d="M2.8 12h18.4"/><path d="M12 2.8c2.4 2.6 3.7 5.8 3.7 9.2s-1.3 6.6-3.7 9.2c-2.4-2.6-3.7-5.8-3.7-9.2S9.6 5.4 12 2.8z"/>',
   planes:     '<path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.4 1.1 6.2L12 17.1l-5.6 2.9 1.1-6.2L2.9 9.4l6.3-.9z"/>',
@@ -94,7 +96,9 @@ const SECCIONES = [
   { id:'usuarios',   nombre:'Usuarios',      permiso:'usuarios.ver' },
   { id:'roles',      nombre:'Roles',         permiso:'roles.gestionar' },
   { grupo:'Catálogo' },
+  { id:'opciones',   nombre:'Opciones de juego', permiso:'deportes.ver' },
   { id:'deportes',   nombre:'Deportes',      permiso:'deportes.ver' },
+  { id:'historicoDeportivo', nombre:'Histórico deportivo', permiso:'deportes.ver' },
   { grupo:'Configuración' },
   { id:'paises',     nombre:'Países',        permiso:'paises.ver' },
   { id:'planes',     nombre:'Membresías',    permiso:'comisiones.ver' },
@@ -142,7 +146,7 @@ function dibujarMenu() {
     // costumbre por si algún día se traduce desde la base.
     a.innerHTML = icono(s.id) + `<span>${esc(s.nombre)}</span>`;
     a.dataset.id = s.id;
-    a.onclick = ev => { ev.preventDefault(); ir(s.id); };
+    a.onclick = ev => { ev.preventDefault(); document.body.classList.remove('menu-panel-abierto'); ir(s.id); };
     menu.append(a);
   }
 }
@@ -174,9 +178,19 @@ function ir(id) {
   document.getElementById('contenido').innerHTML =
     '<div class="cargando-vista"><span class="giro"></span>Cargando</div>';
 
-  // Si la vista falla, la pantalla no puede quedarse girando para
-  // siempre: se muestra qué pasó y cómo reintentar.
-  VISTAS[id]().catch(err => {
+  // Si la vista todavía no está registrada, no se rompe el panel.
+  const vista = VISTAS[id];
+  if (typeof vista !== 'function') {
+    document.getElementById('contenido').innerHTML = `
+      <div class="cargando-vista">
+        <p>No se encontró la vista <strong>${esc(id)}</strong>.<br>
+        <span style="color:var(--mal)">Revisa que los archivos del panel estén actualizados.</span></p>
+      </div>`;
+    return;
+  }
+
+  // Si la vista falla, la pantalla no puede quedarse girando para siempre.
+  Promise.resolve(vista()).catch(err => {
     document.getElementById('contenido').innerHTML = `
       <div class="cargando-vista">
         <p>No se pudo cargar esta sección.<br>

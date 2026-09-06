@@ -109,8 +109,36 @@ function credencialesConfirmadas() {
  * reponerlo evita que un fallo deje el botón en "Guardando…" para
  * siempre.
  */
+let procesosGlobalesActivos = 0;
+
+function bloquearProceso(texto = 'Procesando') {
+  procesosGlobalesActivos += 1;
+  const capa = document.getElementById('bloqueo-global');
+  const titulo = document.getElementById('bloqueo-global-titulo');
+  if (titulo) titulo.textContent = `${texto || 'Procesando'}…`;
+  if (capa) capa.classList.add('visible');
+  document.body.classList.add('proceso-global-activo');
+
+  let liberado = false;
+  return () => {
+    if (liberado) return;
+    liberado = true;
+    procesosGlobalesActivos = Math.max(0, procesosGlobalesActivos - 1);
+    if (procesosGlobalesActivos === 0) {
+      capa?.classList.remove('visible');
+      document.body.classList.remove('proceso-global-activo');
+    }
+  };
+}
+
+function procesoEnCurso() {
+  return procesosGlobalesActivos > 0;
+}
+
 function ocupar(boton, texto = 'Guardando') {
-  if (!boton) return () => {};
+  const liberarPantalla = bloquearProceso(texto);
+  if (!boton) return liberarPantalla;
+
   const original = boton.innerHTML;
   boton.dataset.ocupado = '1';
   boton.disabled = true;
@@ -124,6 +152,7 @@ function ocupar(boton, texto = 'Guardando') {
     boton.disabled = false;
     boton.innerHTML = original;
     if (modal) delete modal.dataset.ocupado;
+    liberarPantalla();
   };
 }
 

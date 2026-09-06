@@ -60,7 +60,13 @@ export async function registrarCapas(
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        imgSrc: ["'self'", 'data:', 'https://api.qrserver.com'],
+        imgSrc: [
+          "'self'",
+          'data:',
+          'https://api.qrserver.com',
+          // Escudos de equipos y logos de ligas de API-Football.
+          'https://media.api-sports.io',
+        ],
         scriptSrc: ["'self'", "'unsafe-inline'"],
 
         // ⚠️ Concesión deliberada.

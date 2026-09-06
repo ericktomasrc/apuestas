@@ -339,32 +339,44 @@ export function registrarRutasCasa(
   }, async (peticion) => {
     await conPermiso(peticion, 'casa.ver');
 
-    const [cfg, balance, saldo, libro, abiertas] = await Promise.all([
+    const [cfg, balance, cuentas, financiamientos, libro, abiertas] = await Promise.all([
       configCasa(),
       pool.query(`SELECT * FROM v_balance_casa_oficial`),
-      // Todas las cuentas declaradas, con correo.
-      //
-      // El alias no basta para identificar a alguien al acreditarle
-      // dinero: dos personas pueden elegir nombres parecidos, y aquí
-      // se mueve capital real.
       pool.query(
         `SELECT u.id, u.alias, u.email,
-                u.es_casa_oficial, u.financiada_por_plataforma,
-                u.nota_transparencia,
+                cco.activa,
+                cco.origen_fondos,
+                cco.es_casa_oficial,
+                cco.nota_transparencia,
+                cco.declarada_en,
+                cco.desactivada_en,
                 COALESCE(s.disponible_centavos, 0) AS disponible_centavos,
                 COALESCE(s.retenido_centavos, 0)   AS retenido_centavos,
-                s.moneda, s.simbolo, s.decimales
-           FROM v_usuarios u
+                s.moneda, s.simbolo, s.decimales,
+                (SELECT count(*)::int
+                   FROM v_casas c
+                  WHERE c.operador_id = u.id) AS casas_creadas
+           FROM cuentas_casa_operador cco
+           JOIN v_usuarios u ON u.id = cco.usuario_id
       LEFT JOIN v_saldos s ON s.usuario_id = u.id
-          WHERE u.es_casa_oficial OR u.financiada_por_plataforma
-          ORDER BY u.es_casa_oficial DESC, u.alias`,
+          ORDER BY cco.activa DESC, cco.es_casa_oficial DESC, u.alias`,
       ),
       pool.query(
-        `SELECT l.*, u.alias, a.alias AS autorizo
+        `SELECT l.id, l.momento, l.usuario_id, l.monto_centavos, l.moneda,
+                l.motivo, u.alias, u.email, a.alias AS autorizo
            FROM libro_casa l
       LEFT JOIN v_usuarios u ON u.id = l.usuario_id
       LEFT JOIN v_usuarios a ON a.id = l.autorizado_por
-          ORDER BY l.momento DESC LIMIT 60`,
+          WHERE l.tipo = 'FINANCIAMIENTO'
+          ORDER BY l.momento DESC
+          LIMIT 100`,
+      ),
+      pool.query(
+        `SELECT l.*, u.alias, u.email, a.alias AS autorizo
+           FROM libro_casa l
+      LEFT JOIN v_usuarios u ON u.id = l.usuario_id
+      LEFT JOIN v_usuarios a ON a.id = l.autorizado_por
+          ORDER BY l.momento DESC LIMIT 100`,
       ),
       pool.query(
         `SELECT count(*)::int AS n FROM v_casas
@@ -375,7 +387,8 @@ export function registrarRutasCasa(
     return {
       config: cfg,
       balance: balance.rows[0],
-      cuentas: saldo.rows,
+      cuentas: cuentas.rows,
+      financiamientos: financiamientos.rows,
       abiertas: abiertas.rows[0].n,
       libro: libro.rows,
     };
@@ -414,19 +427,28 @@ export function registrarRutasCasa(
 
     await enTransaccion(async (c) => {
       const { rows } = await c.query(
-        `SELECT es_casa_oficial, financiada_por_plataforma
-           FROM v_usuarios WHERE id = $1`,
+        `SELECT cco.activa, cco.origen_fondos
+           FROM cuentas_casa_operador cco
+          WHERE cco.usuario_id = $1`,
         [d.usuarioId],
       );
       if (rows.length === 0) {
-        throw Object.assign(new Error('no existe'), { codigo: 'USUARIO_NO_EXISTE' });
-      }
-      // Financiar una cuenta sin declararla es la casa disfrazada.
-      if (!rows[0].es_casa_oficial && !rows[0].financiada_por_plataforma) {
-        throw Object.assign(new Error('sin declarar'), {
+        throw Object.assign(new Error('no declarada'), {
           codigo: 'CUENTA_NO_DECLARADA',
+          mensajeUsuario: 'La cuenta no está declarada para operar la casa.',
+        });
+      }
+      if (!rows[0].activa) {
+        throw Object.assign(new Error('inactiva'), {
+          codigo: 'CUENTA_CASA_INACTIVA',
+          mensajeUsuario: 'La cuenta está inactiva y no puede recibir nuevos financiamientos.',
+        });
+      }
+      if (!['PLATAFORMA', 'MIXTO'].includes(rows[0].origen_fondos)) {
+        throw Object.assign(new Error('fondos propios'), {
+          codigo: 'CUENTA_FONDOS_PROPIOS',
           mensajeUsuario:
-            'Esa cuenta no está declarada como financiada por la plataforma. Márcala primero: es lo primero que audita un regulador.',
+            'Esta cuenta está declarada para trabajar con fondos propios. No recibe financiamiento de la plataforma.',
         });
       }
 
@@ -500,20 +522,20 @@ export function registrarRutasCasa(
 
   app.post('/admin/casa/declarar', {
     schema: {
-      ...doc('Declarar una cuenta como financiada', 'casa.gestionar',
-        'Una cuenta financiada por la plataforma que NO se declara es la casa disfrazada, y anula la credibilidad de todo el registro.'),
+      ...doc('Declarar una cuenta para operar la casa', 'casa.gestionar',
+        'Autoriza una cuenta para operar la casa y deja registrado el origen de sus fondos. Declarar no significa financiar.'),
       body: {
         type: 'object',
         properties: {
           usuarioId: { type: 'string', format: 'uuid' },
           esCasaOficial: { type: 'boolean' },
-          financiada: { type: 'boolean' },
+          origenFondos: { type: 'string', enum: ['PROPIOS','PLATAFORMA','MIXTO'] },
           nota: { type: 'string', maxLength: 200 },
           motivo: { type: 'string', minLength: 5, maxLength: 200 },
           confirmarPassword: { type: 'string' },
           confirmarCodigo: { type: 'string' },
         },
-        required: ['usuarioId', 'motivo'],
+        required: ['usuarioId', 'origenFondos', 'motivo'],
       },
     },
   }, async (peticion) => {
@@ -522,7 +544,7 @@ export function registrarRutasCasa(
       .object({
         usuarioId: z.string().uuid(),
         esCasaOficial: z.boolean().default(false),
-        financiada: z.boolean().default(false),
+        origenFondos: z.enum(['PROPIOS','PLATAFORMA','MIXTO']),
         nota: z.string().max(200).optional(),
         motivo: z.string().min(5).max(200),
         confirmarPassword: z.string().optional(),
@@ -533,25 +555,174 @@ export function registrarRutasCasa(
     const ip = ipDe(peticion.headers, peticion.ip, process.env.CONFIAR_EN_PROXY === 'true');
 
     await enTransaccion(async (c) => {
+      const usuario = await c.query(
+        `SELECT id, alias, email FROM v_usuarios WHERE id = $1`,
+        [d.usuarioId],
+      );
+      if (usuario.rows.length === 0) {
+        throw Object.assign(new Error('no existe'), {
+          codigo: 'USUARIO_NO_EXISTE',
+          mensajeUsuario: 'La cuenta no existe.',
+        });
+      }
+
+      const actual = await c.query(
+        `SELECT activa FROM cuentas_casa_operador WHERE usuario_id = $1 FOR UPDATE`,
+        [d.usuarioId],
+      );
+
+      if (actual.rows[0]?.activa) {
+        throw Object.assign(new Error('ya declarada'), {
+          codigo: 'CUENTA_YA_DECLARADA',
+          mensajeUsuario: 'Esta cuenta ya está declarada y activa.',
+        });
+      }
+
+      await c.query(
+        `INSERT INTO cuentas_casa_operador
+           (usuario_id, activa, origen_fondos, es_casa_oficial,
+            nota_transparencia, declarada_en, declarada_por,
+            desactivada_en, actualizado_en, motivo_ultima_accion)
+         VALUES ($1, TRUE, $2, $3, $4, now(), $5, NULL, now(), $6)
+         ON CONFLICT (usuario_id) DO UPDATE
+           SET activa = TRUE,
+               origen_fondos = EXCLUDED.origen_fondos,
+               es_casa_oficial = EXCLUDED.es_casa_oficial,
+               nota_transparencia = EXCLUDED.nota_transparencia,
+               desactivada_en = NULL,
+               actualizado_en = now(),
+               motivo_ultima_accion = EXCLUDED.motivo_ultima_accion`,
+        [d.usuarioId, d.origenFondos, d.esCasaOficial, d.nota ?? null,
+         sesion.usuarioId, d.motivo],
+      );
+
+      // Se mantienen los flags anteriores para compatibilidad con el resto
+      // del proyecto mientras el módulo migra al registro separado.
       await c.query(
         `UPDATE usuarios
             SET es_casa_oficial = $2,
                 financiada_por_plataforma = $3,
                 nota_transparencia = $4
           WHERE id = $1`,
-        [d.usuarioId, d.esCasaOficial, d.financiada || d.esCasaOficial, d.nota ?? null],
+        [
+          d.usuarioId,
+          d.esCasaOficial,
+          d.origenFondos === 'PLATAFORMA' || d.origenFondos === 'MIXTO' || d.esCasaOficial,
+          d.nota ?? null,
+        ],
       );
+
       await anotarEnLibro({
         tipo: 'CUENTA_MARCADA',
         usuarioId: d.usuarioId,
         motivo: d.motivo,
         autorizadoPor: sesion.usuarioId,
         ip,
-        detalle: { esCasaOficial: d.esCasaOficial, financiada: d.financiada },
+        detalle: {
+          accion: actual.rows.length ? 'CUENTA_REACTIVADA' : 'CUENTA_DECLARADA',
+          origenFondos: d.origenFondos,
+          esCasaOficial: d.esCasaOficial,
+          email: usuario.rows[0].email,
+        },
       }, c);
     }, sesion.usuarioId);
 
     return { ok: true };
+  });
+
+  app.patch('/admin/casa/cuentas/:usuarioId/estado', {
+    schema: {
+      ...doc('Activar o desactivar una cuenta declarada', 'casa.gestionar',
+        'Desactivar conserva todo el historial. Una cuenta inactiva no debe recibir nuevos financiamientos.'),
+      params: {
+        type: 'object',
+        properties: { usuarioId: { type: 'string', format: 'uuid' } },
+        required: ['usuarioId'],
+      },
+      body: {
+        type: 'object',
+        properties: {
+          activa: { type: 'boolean' },
+          motivo: { type: 'string', minLength: 5, maxLength: 200 },
+          confirmarPassword: { type: 'string' },
+          confirmarCodigo: { type: 'string' },
+        },
+        required: ['activa', 'motivo'],
+      },
+    },
+  }, async (peticion) => {
+    const sesion = await conPermiso(peticion, 'casa.gestionar');
+    const { usuarioId } = z.object({ usuarioId: z.string().uuid() }).parse(peticion.params);
+    const d = z.object({
+      activa: z.boolean(),
+      motivo: z.string().min(5).max(200),
+      confirmarPassword: z.string().optional(),
+      confirmarCodigo: z.string().optional(),
+    }).parse(peticion.body);
+
+    const ip = ipDe(peticion.headers, peticion.ip, process.env.CONFIAR_EN_PROXY === 'true');
+
+    await enTransaccion(async (c) => {
+      const actual = await c.query(
+        `SELECT cco.*, u.email, u.alias
+           FROM cuentas_casa_operador cco
+           JOIN v_usuarios u ON u.id = cco.usuario_id
+          WHERE cco.usuario_id = $1
+          FOR UPDATE OF cco`,
+        [usuarioId],
+      );
+
+      if (actual.rows.length === 0) {
+        throw Object.assign(new Error('no declarada'), {
+          codigo: 'CUENTA_NO_DECLARADA',
+          mensajeUsuario: 'La cuenta no está declarada.',
+        });
+      }
+
+      const x = actual.rows[0];
+      if (Boolean(x.activa) === d.activa) {
+        throw Object.assign(new Error('sin cambio'), {
+          codigo: 'SIN_CAMBIOS',
+          mensajeUsuario: d.activa
+            ? 'La cuenta ya está activa.'
+            : 'La cuenta ya está inactiva.',
+        });
+      }
+
+      await c.query(
+        `UPDATE cuentas_casa_operador
+            SET activa = $2,
+                desactivada_en = CASE WHEN $2 THEN NULL ELSE now() END,
+                actualizado_en = now(),
+                motivo_ultima_accion = $3
+          WHERE usuario_id = $1`,
+        [usuarioId, d.activa, d.motivo],
+      );
+
+      await c.query(
+        `UPDATE usuarios
+            SET es_casa_oficial = CASE WHEN $2 THEN $3 ELSE FALSE END,
+                financiada_por_plataforma =
+                  CASE WHEN $2 THEN ($4 IN ('PLATAFORMA','MIXTO') OR $3) ELSE FALSE END
+          WHERE id = $1`,
+        [usuarioId, d.activa, Boolean(x.es_casa_oficial), x.origen_fondos],
+      );
+
+      await anotarEnLibro({
+        tipo: 'CUENTA_MARCADA',
+        usuarioId,
+        motivo: d.motivo,
+        autorizadoPor: sesion.usuarioId,
+        ip,
+        detalle: {
+          accion: d.activa ? 'CUENTA_ACTIVADA' : 'CUENTA_DESACTIVADA',
+          origenFondos: x.origen_fondos,
+          email: x.email,
+        },
+      }, c);
+    }, sesion.usuarioId);
+
+    return { ok: true, activa: d.activa };
   });
 
   // ===================================================================

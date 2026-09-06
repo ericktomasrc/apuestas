@@ -22,10 +22,50 @@ import 'dotenv/config';
 import { ProveedorApiFootball } from '../infraestructura/proveedores/apifootball.proveedor.js';
 import { pool, enTransaccion } from '../infraestructura/db.js';
 
+/**
+ * SOLO DESARROLLO.
+ *
+ * En producción las ligas continúan habilitándose manualmente desde
+ * Panel → Deportes. Esta bandera únicamente acelera las pruebas locales
+ * con datos/saldo simulados.
+ *
+ * Para activarlo:
+ *   DEV_AUTO_MERCADOS=true
+ *
+ * Incluso si alguien deja esa variable activa por error, NODE_ENV=production
+ * impide la habilitación automática.
+ */
+const AUTO_MERCADOS_DEV =
+  process.env.NODE_ENV !== 'production'
+  && process.env.DEV_AUTO_MERCADOS === 'true';
+
+/** Mercados que el sistema ya sabe liquidar para fútbol. */
+const MERCADOS_DEV_BASE = [
+  'DOBLE_OPORTUNIDAD',
+  'TOTAL_GOLES',
+  'AMBOS_ANOTAN',
+] as const;
+
+/**
+ * Estos dependen de estadísticas por partido. Solo se habilitan cuando
+ * API-Football declara statistics_fixtures=true para la temporada.
+ */
+const MERCADOS_DEV_ESTADISTICAS = [
+  'TOTAL_CORNERS',
+  'TOTAL_TARJETAS',
+] as const;
+
 async function main(): Promise<void> {
   console.log('\n─────────────────────────────────────────────────');
   console.log('  Catálogo de ligas · API-Football');
   console.log('─────────────────────────────────────────────────\n');
+
+  if (AUTO_MERCADOS_DEV) {
+    console.log('  ⚙ DEV_AUTO_MERCADOS=true');
+    console.log('  ⚠ SOLO DEV: las ligas importadas recibirán mercados automáticamente.\n');
+  } else {
+    console.log('  Mercados automáticos DEV: desactivados.\n');
+  }
 
   let proveedor: ProveedorApiFootball;
   try {
@@ -57,6 +97,7 @@ async function main(): Promise<void> {
   const deporteId = dep.rows[0].id;
 
   let nuevas = 0, actualizadas = 0;
+  let mercadosDevHabilitados = 0;
   const porPais = new Map<string, number>();
 
   await enTransaccion(async (c) => {
@@ -75,16 +116,62 @@ async function main(): Promise<void> {
       const nombre = `${f.league.name}${f.country?.name && f.country.name !== 'World'
         ? ` (${f.country.name})` : ''}`.slice(0, 120);
 
+      // API-Football incluye el logo de la competición en league.logo.
+      // Se guarda una sola vez en catálogo; el navegador lo reutiliza
+      // después sin gastar peticiones adicionales del proveedor.
+      const logoUrl = typeof f.league?.logo === 'string' && f.league.logo.trim()
+        ? f.league.logo.trim().slice(0, 500)
+        : null;
+
       const r = await c.query(
-        `INSERT INTO ligas (api_id, deporte_id, nombre, pais, tiene_estadisticas)
-         VALUES ($1,$2,$3,$4,$5)
+        `INSERT INTO ligas
+           (api_id, deporte_id, nombre, pais, tiene_estadisticas, logo_url)
+         VALUES ($1,$2,$3,$4,$5,$6)
          ON CONFLICT (api_id) WHERE eliminado_en IS NULL
          DO UPDATE SET nombre = EXCLUDED.nombre,
-                       tiene_estadisticas = EXCLUDED.tiene_estadisticas
-         RETURNING (xmax = 0) AS es_nueva`,
-        [String(f.league.id), deporteId, nombre, pais, conStats],
+                       tiene_estadisticas = EXCLUDED.tiene_estadisticas,
+                       logo_url = EXCLUDED.logo_url
+         RETURNING id, (xmax = 0) AS es_nueva`,
+        [String(f.league.id), deporteId, nombre, pais, conStats, logoUrl],
       );
       if (r.rows[0]?.es_nueva) nuevas++; else actualizadas++;
+
+      if (AUTO_MERCADOS_DEV) {
+        const ligaId = r.rows[0]?.id as string | undefined;
+        if (!ligaId) throw new Error(`No se obtuvo id para la liga ${nombre}`);
+
+        const mercados = [
+          ...MERCADOS_DEV_BASE,
+          ...(conStats ? MERCADOS_DEV_ESTADISTICAS : []),
+        ];
+
+        for (const tipo of mercados) {
+          // Si existía pero estaba deshabilitado, lo restauramos en DEV.
+          // Después INSERT cubre el caso de una liga que nunca tuvo ese mercado.
+          const restaurado = await c.query(
+            `UPDATE mercados_por_liga
+                SET eliminado_en = NULL,
+                    verificado_en = COALESCE(verificado_en, now())
+              WHERE liga_id = $1
+                AND tipo_mercado = $2
+                AND eliminado_en IS NOT NULL`,
+            [ligaId, tipo],
+          );
+
+          if (restaurado.rowCount === 0) {
+            const insertado = await c.query(
+              `INSERT INTO mercados_por_liga
+                 (liga_id, tipo_mercado, verificado_en)
+               VALUES ($1,$2,now())
+               ON CONFLICT DO NOTHING`,
+              [ligaId, tipo],
+            );
+            if ((insertado.rowCount ?? 0) > 0) mercadosDevHabilitados++;
+          } else {
+            mercadosDevHabilitados += restaurado.rowCount ?? 0;
+          }
+        }
+      }
     }
   }, undefined);
 
@@ -101,10 +188,16 @@ async function main(): Promise<void> {
   );
 
   console.log(`\n  Ligas con mercados habilitados: ${habilitadas.rows[0].n}`);
-  console.log('\n  ⚠️  Registrar una liga NO la activa.');
-  console.log('      Ve a Panel → Deportes y habilita los mercados de');
-  console.log('      las que quieras mostrar. Solo esas se sincronizan');
-  console.log('      y solo esas consumen cuota.\n');
+
+  if (AUTO_MERCADOS_DEV) {
+    console.log(`  Mercados DEV habilitados/restaurados en esta ejecución: ${mercadosDevHabilitados}`);
+    console.log('  ⚠ MODO DEV: esta habilitación automática está bloqueada con NODE_ENV=production.\n');
+  } else {
+    console.log('\n  Registrar una liga NO la activa.');
+    console.log('  Ve a Panel → Deportes y habilita manualmente los mercados');
+    console.log('  de las ligas que quieras mostrar.\n');
+  }
+
   console.log(`  Quedan ${proveedor.restantes ?? '?'} peticiones hoy.\n`);
 
   await pool.end();

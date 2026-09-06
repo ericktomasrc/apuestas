@@ -3,89 +3,235 @@
 /**
  * Crear una sala.
  *
- * Dos decisiones distintas, dos pasos: primero sobre qué partido,
- * después qué se apuesta. Se pueden agregar varias apuestas al mismo
- * partido —hasta el tope que fija el sistema— porque cada una corre y
- * se liquida por su cuenta: que una quede sin contraparte no arrastra
- * a las demás.
- *
- * El anfitrión NO elige su ventaja: la cuota es la misma para los dos
- * lados y la línea termina siempre en `.5`. Y crear la sala **no
- * compromete dinero**: apuesta después, como todos, o no apuesta.
+ * Paso 1: elegir partido. Las ligas se muestran en una sola barra
+ * horizontal desplazable y las tarjetas reutilizan la composición del Muro.
+ * Paso 2 permanece intacto: "Define la apuesta".
  */
+function limpiarEstadoEditorSalaEnCrear() {
+  S.datos.modoEditorSala = false;
+  S.datos.editorMercadosOriginales = null;
+  S.datos.editorSalaMeta = null;
+  S.datos.configurando = null;
+  S.datos.nueva = null;
+}
+
 PANTALLAS.crear = async () => {
+  // Si venimos de "Agregar mercado" dentro de una sala, no se permite
+  // que ese estado contamine una creación nueva.
+  limpiarEstadoEditorSalaEnCrear();
+
   const r = await api('/partidos?limite=30');
   const partidos = r.partidos ?? [];
   S.datos.partidos = partidos;
 
   if (partidos.length === 0) {
     return pintar(armazon(`
-      <h1 class="titulo">Crear una sala</h1>
-      <div class="vacio">
-        <h3>No hay partidos disponibles</h3>
-        <p>Todavía no hay eventos cargados sobre los que apostar,
-        o los que hay empiezan muy pronto.</p>
-        <button class="btn btn-plano" onclick="ir('muro')">Ver salas abiertas</button>
+      <div class="crear-pagina crear-vacia">
+        <span class="crear-kicker">Nueva sala</span>
+        <h1 class="titulo">Elige el partido</h1>
+        <p class="sub">Selecciona el encuentro. Después defines las apuestas.</p>
+        <div class="vacio">
+          <h3>No hay partidos disponibles</h3>
+          <p>Todavía no hay eventos cargados sobre los que apostar,
+          o los que hay empiezan muy pronto.</p>
+          <button class="btn btn-plano" onclick="ir('muro')">Ver salas abiertas</button>
+        </div>
       </div>`));
   }
 
-  // Agrupados por liga: al elegir partido, la liga es lo primero que
-  // se busca.
-  const porLiga = {};
-  for (const p of partidos) (porLiga[p.liga] ||= []).push(p);
+  const ligas = [];
+  const vistas = new Set();
+  for (const p of partidos) {
+    const liga = nombreLigaCrear(p);
+    if (!vistas.has(liga)) {
+      vistas.add(liga);
+      ligas.push(liga);
+    }
+  }
+
+  S.datos.ligasCrear = ligas;
+  S.datos.ligaCrearIndice = Number.isInteger(S.datos.ligaCrearIndice)
+    && S.datos.ligaCrearIndice >= -1
+    && S.datos.ligaCrearIndice < ligas.length
+      ? S.datos.ligaCrearIndice
+      : -1;
 
   pintar(armazon(`
-    <h1 class="titulo">Crear una sala</h1>
-    <p class="sub">Elige el partido. Después defines las apuestas.</p>
-
-    ${Object.entries(porLiga).map(([liga, lista]) => `
-      <div class="rotulo" style="margin-top:22px">
-        ${esc(liga)} <span>${lista.length} partido(s)</span>
+    <div class="crear-pagina">
+      <div class="crear-encabezado">
+        <div>
+          <span class="crear-kicker">Nueva sala</span>
+          <h1 class="titulo">Elige el partido</h1>
+          <p class="sub">Selecciona el encuentro. Después defines las apuestas.</p>
+        </div>
+        <div class="crear-total">
+          <strong>${partidos.length}</strong>
+          <span>partidos disponibles</span>
+        </div>
       </div>
 
-      <div class="rejilla-partidos">
-        ${lista.map(p => `
-          <div class="sala" onclick="elegirPartido('${p.id}')" role="button" tabindex="0"
-               onkeydown="if(event.key==='Enter')elegirPartido('${p.id}')">
-            <div class="sala-cab">
-              <div style="min-width:0;display:flex;align-items:center;gap:8px">
-                ${escudosPartido(p)}
-                <div style="min-width:0">
-                <div class="partido">${esc(p.equipo_local)}
-                  <span style="color:var(--tenue);font-weight:500">vs</span>
-                  ${esc(p.equipo_visitante)}</div>
-                </div>
-              </div>
-              <div class="cuando">${cuando(p.inicia_en)}</div>
-            </div>
-
-            <div id="ctx-${p.id}"></div>
-
-            <div class="sala-pie">
-              <span>${p.mercados.length} tipo(s)</span>
-              <span>${p.salas_abiertas > 0
-                ? `${p.salas_abiertas} sala(s)`
-                : 'Sé el primero'}</span>
-            </div>
-          </div>`).join('')}
+      <div class="crear-ligas-wrap">
+        <div class="crear-ligas" id="crear-ligas" aria-label="Filtrar partidos por liga">
+          <button type="button" class="crear-liga-tab" data-indice="-1"
+            onclick="clicLigaCrear(event,-1)">
+            <span class="crear-liga-logo-fallback">★</span>
+            <span>Todas</span><b>${partidos.length}</b>
+          </button>
+          ${ligas.map((liga, i) => {
+            const info = infoLigaCrear(liga);
+            return `
+            <button type="button" class="crear-liga-tab" data-indice="${i}"
+              title="${esc(liga)}" onclick="clicLigaCrear(event,${i})">
+              ${info.logoUrl
+                ? `<img class="crear-liga-logo" src="${esc(info.logoUrl)}" alt=""
+                     loading="lazy" onerror="this.style.display='none'">`
+                : `<span class="crear-liga-logo-fallback">${esc(liga.slice(0,1).toUpperCase())}</span>`}
+              <span>${esc(liga)}</span><b>${info.cantidad}</b>
+            </button>`;
+          }).join('')}
+        </div>
       </div>
-    `).join('')}
+
+      <div class="crear-listado-cab">
+        <strong id="crear-liga-titulo"></strong>
+        <span id="crear-liga-cantidad"></span>
+      </div>
+
+      <div class="rejilla-partidos-disponibles crear-rejilla" id="crear-partidos"></div>
+    </div>
   `));
 
-  // Las estadísticas van en cada tarjeta: se miran al ELEGIR el
-  // partido, que es cuando ayudan a decidir. Dentro del panel de
-  // apuestas llegan tarde — ahí ya se eligió.
-  //
-  // Se cargan después de pintar para que la lista aparezca de
-  // inmediato aunque el proveedor tarde.
-  for (const p of partidos) {
-    bloqueContexto(p.id, p.equipo_local, p.equipo_visitante, true)
-      .then(html => {
-        const caja = document.getElementById('ctx-' + p.id);
-        if (caja) caja.innerHTML = html;
-      });
-  }
+  pintarPartidosCrear();
+  activarArrastreLigasCrear();
 };
+
+function nombreLigaCrear(p) {
+  return String(p?.liga ?? '').trim() || 'Sin liga';
+}
+
+function infoLigaCrear(nombre) {
+  const partidos = S.datos.partidos ?? [];
+  const deLiga = partidos.filter(p => nombreLigaCrear(p) === nombre);
+  return {
+    cantidad: deLiga.length,
+    logoUrl: deLiga.find(p => p.liga_logo_url)?.liga_logo_url ?? null,
+  };
+}
+
+function clicLigaCrear(evento, indice) {
+  // Si el gesto terminó siendo un arrastre horizontal, no se cambia
+  // el filtro al soltar el mouse sobre un tab.
+  if (S.datos.arrastroLigasCrear) {
+    evento?.preventDefault();
+    return;
+  }
+  seleccionarLigaCrear(indice);
+}
+
+function seleccionarLigaCrear(indice) {
+  const ligas = S.datos.ligasCrear ?? [];
+  const n = Number(indice);
+  S.datos.ligaCrearIndice = Number.isInteger(n) && n >= 0 && n < ligas.length ? n : -1;
+  pintarPartidosCrear();
+
+  const activo = document.querySelector('.crear-liga-tab.activo');
+  activo?.scrollIntoView?.({ behavior:'smooth', block:'nearest', inline:'nearest' });
+}
+
+function pintarPartidosCrear() {
+  const contenedor = document.getElementById('crear-partidos');
+  if (!contenedor) return;
+
+  const partidos = S.datos.partidos ?? [];
+  const ligas = S.datos.ligasCrear ?? [];
+  const indice = Number.isInteger(S.datos.ligaCrearIndice) ? S.datos.ligaCrearIndice : -1;
+  const liga = indice >= 0 && indice < ligas.length ? ligas[indice] : null;
+  const visibles = liga ? partidos.filter(p => nombreLigaCrear(p) === liga) : partidos;
+
+  document.querySelectorAll('.crear-liga-tab').forEach(b => {
+    const activo = Number(b.dataset.indice) === indice;
+    b.classList.toggle('activo', activo);
+    b.setAttribute('aria-pressed', activo ? 'true' : 'false');
+  });
+
+  const titulo = document.getElementById('crear-liga-titulo');
+  const cantidad = document.getElementById('crear-liga-cantidad');
+  if (titulo) titulo.textContent = liga ?? 'Todos los partidos';
+  if (cantidad) cantidad.textContent = `${visibles.length} partido${visibles.length === 1 ? '' : 's'}`;
+
+  contenedor.innerHTML = visibles.map(p => `
+    <article class="tarjeta oportunidad oportunidad-card-compacta crear-partido-card"
+      onclick="elegirPartido('${p.id}')" role="button" tabindex="0"
+      onkeydown="if(event.key==='Enter')elegirPartido('${p.id}')">
+      <div class="t-cab">
+        <span class="chip">${esc(nombreLigaCrear(p))}</span>
+        <span class="chip-tiempo">${cuando(p.inicia_en)}</span>
+      </div>
+
+      <div class="match-visual match-visual-partido crear-match-visual">
+        ${escudosPartido(p)}
+        <span class="match-vs" aria-hidden="true">VS</span>
+        <span class="match-nombre match-nombre-local">${esc(p.equipo_local)}</span>
+        <span class="match-nombre match-nombre-visita">${esc(p.equipo_visitante)}</span>
+      </div>
+
+      <div class="t-pie partido-card-pie crear-partido-pie">
+        <span>${(p.mercados ?? []).length} tipo(s) de apuesta</span>
+        <span class="t-entrar">${p.salas_abiertas > 0
+          ? `${p.salas_abiertas} sala(s) abierta(s)`
+          : 'Sé el primero'}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.4" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
+        </span>
+      </div>
+    </article>`).join('');
+}
+
+function activarArrastreLigasCrear() {
+  const rail = document.getElementById('crear-ligas');
+  if (!rail || rail.dataset.arrastreListo === '1') return;
+  rail.dataset.arrastreListo = '1';
+
+  let presionado = false;
+  let inicioX = 0;
+  let inicioScroll = 0;
+
+  rail.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    presionado = true;
+    inicioX = e.clientX;
+    inicioScroll = rail.scrollLeft;
+    S.datos.arrastroLigasCrear = false;
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!presionado) return;
+    const dx = e.clientX - inicioX;
+    if (!S.datos.arrastroLigasCrear && Math.abs(dx) < 7) return;
+    S.datos.arrastroLigasCrear = true;
+    rail.classList.add('arrastrando');
+    rail.scrollLeft = inicioScroll - dx;
+    e.preventDefault();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (!presionado) return;
+    presionado = false;
+    rail.classList.remove('arrastrando');
+    // El click se dispara después de mouseup. Se deja la marca activa
+    // ese instante y se limpia en la siguiente tarea del navegador.
+    setTimeout(() => { S.datos.arrastroLigasCrear = false; }, 0);
+  });
+
+  // Touch/trackpad usan el scroll nativo. Con rueda de mouse, la franja
+  // también avanza horizontalmente cuando hay más ligas de las visibles.
+  rail.addEventListener('wheel', e => {
+    if (rail.scrollWidth <= rail.clientWidth) return;
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    rail.scrollLeft += delta;
+    e.preventDefault();
+  }, { passive:false });
+}
 
 // ---------------------------------------------------------------------
 //  Paso 2: definir las apuestas
@@ -238,15 +384,9 @@ function pintarSelector() {
   // acción final: en vez de publicar una sala nueva, guarda altas/bajas
   // de mercados existentes.
   if (S.datos.modoEditorSala) {
-    document.getElementById('paso-dos').innerHTML = `
-      <div class="caja-jugadas selector-guardar-cambios">
-        <button class="btn btn-favor btn-ancho" onclick="guardarMercadosSalaDesdeSelector()">
-          Guardar cambios
-        </button>
-      </div>`;
+    document.getElementById('paso-dos').innerHTML = bloqueQuienEntra();
   } else {
-    // «Quién puede entrar» aparece con la primera jugada: un botón
-    // intermedio para llegar a dos campos es un paso de más.
+    // «Quién puede entrar» aparece con la primera jugada.
     document.getElementById('paso-dos').innerHTML = vacio ? '' : bloqueQuienEntra();
   }
 }
@@ -259,8 +399,10 @@ function maxParticipantesSala() {
 
 function bloqueQuienEntra() {
   const dec = S.pais?.decimales ?? 2;
-  const minimo = S.pais?.minimoApuesta ?? 500;
-  const maxCupos = maxParticipantesSala();
+  const meta = S.datos.modoEditorSala ? (S.datos.editorSalaMeta ?? {}) : {};
+  const minimo = Number(meta.minimoCentavos ?? S.pais?.minimoApuesta ?? 500);
+  const maxCupos = Number(meta.maxCupos ?? maxParticipantesSala());
+  const cupos = Number(meta.cupos ?? 2);
 
   return `
   <div class="caja-jugadas">
@@ -268,30 +410,47 @@ function bloqueQuienEntra() {
       <span style="font-weight:600;letter-spacing:.05em;text-transform:uppercase;
         color:var(--tenue)">Quién puede entrar</span>
     </div>
+
     <div class="par">
-      <div class="campo">
+      <div class="campo campo-informativo">
         <label for="minimo">Apuesta mínima</label>
-        <input id="minimo" type="text" inputmode="decimal"
+        <input id="minimo" type="text"
           value="${(minimo / (10 ** dec)).toFixed(dec)}"
-          oninput="limpiarMinimo(this)" onblur="corregirMinimo(this)">
+          readonly aria-readonly="true" tabindex="-1">
+        <small class="campo-ayuda">Valor definido por la configuración.</small>
       </div>
+
       <div class="campo">
         <label for="tope">Cupos</label>
-        <input id="tope" inputmode="numeric" value="${Math.min(10, maxCupos)}"
-          oninput="limpiarCupos(this)" onblur="corregirCupos(this)">
+        <input id="tope" type="number" inputmode="numeric"
+          min="2" max="${maxCupos}" step="1" value="${cupos}"
+          ${S.datos.modoEditorSala
+            ? 'readonly aria-readonly="true" tabindex="-1"'
+            : 'oninput="limpiarCupos(this)" onblur="corregirCupos(this)"'}>
+        <small class="campo-ayuda">Máximo permitido: ${maxCupos} cupos.</small>
       </div>
     </div>
+
     <p class="pista" id="aviso-entrada">
-      Cada persona pone ${plata(minimo)} o más. Caben hasta ${maxCupos}.</p>
+      Apuesta mínima ${plata(minimo)} · Cupos permitidos: de 2 a ${maxCupos}.</p>
 
     <div class="pie-fijo">
-      <button class="btn btn-favor btn-ancho" onclick="publicarSala()">
-        Publicar la sala</button>
-      <p class="pista" style="text-align:center">
-        No compromete dinero: apuestas después si quieres.</p>
+      ${S.datos.modoEditorSala ? `
+        <button class="btn btn-favor btn-ancho" onclick="guardarMercadosSalaDesdeSelector()">
+          Guardar cambios</button>
+        <p class="pista" style="text-align:center">
+          La apuesta mínima y los cupos son informativos al editar mercados.</p>
+      ` : `
+        <button class="btn btn-favor btn-ancho" onclick="publicarSala()">
+          Crear sala</button>
+        <p class="pista" style="text-align:center">
+          Se crea con aporte 0. Aparecerá en Salas cuando el anfitrión tenga un aporte mayor a cero.</p>
+      `}
     </div>
   </div>`;
 }
+
+
 
 /**
  * Se impide escribir el valor inválido, no solo se avisa después.
@@ -328,16 +487,29 @@ function corregirMinimo(campo) {
 }
 
 function limpiarCupos(campo) {
-  let v = campo.value.replace(/\D/g, '').replace(/^0+/, '');
   const max = maxParticipantesSala();
-  if (Number(v) > max) v = String(max);
-  campo.value = v;
+  let v = String(campo.value ?? '').replace(/\D/g, '').replace(/^0+/, '');
+
+  if (v === '') {
+    campo.value = '';
+    validarEntrada();
+    return;
+  }
+
+  let n = Number(v);
+  if (n > max) n = max;
+  campo.value = String(n);
   validarEntrada();
 }
 
 function corregirCupos(campo) {
-  const v = Number(campo.value);
-  if (!(v >= 2)) campo.value = '2';
+  const max = maxParticipantesSala();
+  let v = Number(campo.value);
+
+  if (!Number.isInteger(v) || v < 2) v = 2;
+  if (v > max) v = max;
+
+  campo.value = String(v);
   validarEntrada();
 }
 
@@ -351,17 +523,15 @@ function validarEntrada() {
 
   // Los mensajes explican QUÉ pasa, no cómo se llama la regla.
   // «El mínimo permitido» era jerga mía: nadie sabe qué significa.
-  if (monto <= 0) {
-    nota.innerHTML = mal(`Escribe cuánto tiene que poner cada persona.`);
-  } else if (monto < piso) {
-    nota.innerHTML = mal(
-      `${plata(monto)} es muy poco. En Perú la apuesta más baja permitida es ${plata(piso)}.`);
+  if (monto <= 0 || monto < piso) {
+    nota.innerHTML = mal(`No se pudo cargar la apuesta mínima configurada.`);
   } else if (cupos < 2) {
-    nota.innerHTML = mal('Tienen que caber al menos 2: solo no hay contra quién apostar.');
+    nota.innerHTML = mal('El mínimo es 2 cupos.');
   } else if (cupos > maxCupos) {
-    nota.innerHTML = mal(`El máximo son ${maxCupos} participantes por sala.`);
+    nota.innerHTML = mal(`El máximo permitido por configuración es ${maxCupos} cupos.`);
   } else {
-    nota.innerHTML = `Cada persona pone ${plata(monto)} o más. Caben hasta ${cupos}.`;
+    nota.innerHTML =
+      `Apuesta mínima ${plata(monto)} · ${cupos} cupos · máximo permitido ${maxCupos}.`;
   }
 }
 
@@ -524,7 +694,8 @@ async function publicarSala() {
       }),
     });
     cerrarHoja();
-    aviso(`Sala ${r.codigo} publicada`, 'bien');
-    ir('sala', r.id);
-  }, null, 'Publicando');
+    limpiarEstadoEditorSalaEnCrear();
+    aviso(`Sala ${r.codigo} creada`, 'bien');
+    ir('mias');
+  }, null, 'Creando');
 }

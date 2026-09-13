@@ -19,6 +19,8 @@
  * mediodía y el sistema deja de recibir resultados sin avisar.
  */
 
+import { registrarConsumoApiFootball } from '../../servicios/consumo-api-football.servicio.js';
+
 import {
   ErrorProveedor,
   type ProveedorDeportes,
@@ -60,6 +62,25 @@ const ESTADOS: Record<string, EstadoPartido> = {
   WO: 'CANCELADO',
 };
 
+
+export interface CoberturaTemporadaApiFootball {
+  ligaApiId: string;
+  temporada: number;
+  fixturesEventos: boolean;
+  fixturesAlineaciones: boolean;
+  fixturesEstadisticas: boolean;
+  jugadoresEstadisticas: boolean;
+  standings: boolean;
+  jugadores: boolean;
+  topScorers: boolean;
+  topAssists: boolean;
+  topCards: boolean;
+  lesiones: boolean;
+  predicciones: boolean;
+  cuotas: boolean;
+  raw: unknown;
+}
+
 interface RespuestaApi<T> {
   errors: unknown;
   results: number;
@@ -96,14 +117,12 @@ export class ProveedorApiFootball implements ProveedorDeportes {
   // -------------------------------------------------------------------
 
   private async pedir<T>(ruta: string, params: Record<string, string | number>): Promise<T[]> {
-    const q = new URLSearchParams(
-      Object.entries(params).map(([k, v]) => [k, String(v)]),
-    );
+    const q = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]));
     const url = `${this.base}/${ruta}?${q}`;
-
     const enCache = this.cache.get(url);
     if (enCache && Date.now() < enCache.expira) return enCache.valor as T[];
 
+    const inicio = Date.now();
     let respuesta: Response;
     try {
       respuesta = await fetch(url, {
@@ -111,59 +130,38 @@ export class ProveedorApiFootball implements ProveedorDeportes {
         signal: AbortSignal.timeout(15_000),
       });
     } catch (e) {
-      // Un fallo de red no es un fallo del sistema: el proceso lo
-      // registra como incidente y vuelve a intentar en el siguiente
-      // ciclo.
-      throw new ErrorProveedor(
-        'SIN_RESPUESTA',
-        `No se pudo contactar al proveedor: ${e instanceof Error ? e.message : e}`,
-      );
+      await registrarConsumoApiFootball({ ruta, parametros: params, estadoHttp: null, exito: false, duracionMs: Date.now() - inicio, codigoError: 'SIN_RESPUESTA', detalleError: e instanceof Error ? e.message : String(e) });
+      throw new ErrorProveedor('SIN_RESPUESTA', `No se pudo contactar al proveedor: ${e instanceof Error ? e.message : e}`);
     }
 
-    // Cuántas peticiones quedan hoy. Se guarda para poder avisarlo
-    // antes de que se agoten.
-    const quedan = respuesta.headers.get('x-ratelimit-requests-remaining');
-    if (quedan !== null) this.restantes = Number(quedan);
+    const quedanRaw = respuesta.headers.get('x-ratelimit-requests-remaining') ?? respuesta.headers.get('x-ratelimit-remaining');
+    const limiteRaw = respuesta.headers.get('x-ratelimit-requests-limit') ?? respuesta.headers.get('x-ratelimit-limit');
+    const retryRaw = respuesta.headers.get('retry-after');
+    const quedan = quedanRaw === null ? null : Number(quedanRaw);
+    const limite = limiteRaw === null ? null : Number(limiteRaw);
+    const retryAfterSeg = retryRaw === null ? null : Number(retryRaw);
+    if (quedan !== null && Number.isFinite(quedan)) this.restantes = quedan;
 
     if (respuesta.status === 429) {
-      throw new ErrorProveedor(
-        'CUOTA_AGOTADA',
-        'Se agotaron las peticiones del día. El plan gratuito da 100.',
-      );
+      await registrarConsumoApiFootball({ ruta, parametros: params, estadoHttp: 429, exito: false, duracionMs: Date.now() - inicio, restantes: quedan, limite, retryAfterSeg, codigoError: 'CUOTA_AGOTADA', detalleError: 'API-Football respondió HTTP 429' });
+      throw new ErrorProveedor('CUOTA_AGOTADA', retryAfterSeg && Number.isFinite(retryAfterSeg) ? `API-Football alcanzó el límite. Reintentar después de ${retryAfterSeg} s.` : 'API-Football alcanzó el límite de peticiones.');
     }
     if (!respuesta.ok) {
-      throw new ErrorProveedor(
-        'RESPUESTA_INVALIDA',
-        `El proveedor respondió ${respuesta.status}`,
-      );
+      await registrarConsumoApiFootball({ ruta, parametros: params, estadoHttp: respuesta.status, exito: false, duracionMs: Date.now() - inicio, restantes: quedan, limite, codigoError: 'RESPUESTA_INVALIDA', detalleError: `HTTP ${respuesta.status}` });
+      throw new ErrorProveedor('RESPUESTA_INVALIDA', `El proveedor respondió ${respuesta.status}`);
     }
 
     const cuerpo = (await respuesta.json()) as RespuestaApi<T>;
-
-    // La API devuelve 200 con `errors` lleno cuando la clave es mala o
-    // un parámetro no le gusta. Sin esta comprobación, un error de
-    // credenciales pasaría por «no hay partidos».
-    if (cuerpo.errors && !Array.isArray(cuerpo.errors)
-        && Object.keys(cuerpo.errors).length > 0) {
+    if (cuerpo.errors && !Array.isArray(cuerpo.errors) && Object.keys(cuerpo.errors).length > 0) {
       const detalle = JSON.stringify(cuerpo.errors);
-
-      // El más común con el plan gratuito, y el que menos se entiende
-      // por sí solo.
-      if (detalle.includes('do not have access to this season')) {
-        throw new ErrorProveedor(
-          'TEMPORADA_SIN_ACCESO',
-          'El plan gratuito solo cubre las temporadas 2022-2024. '
-          + 'Pon API_FOOTBALL_TEMPORADA=2023 en el .env para trabajar con '
-          + 'partidos ya jugados, o sube al plan de pago para la temporada actual.',
-        );
-      }
-
-      throw new ErrorProveedor(
-        'RESPUESTA_INVALIDA',
-        `El proveedor rechazó la consulta: ${detalle}`,
-      );
+      const temporadaSinAcceso = detalle.includes('do not have access to this season');
+      const codigo = temporadaSinAcceso ? 'TEMPORADA_SIN_ACCESO' : 'RESPUESTA_INVALIDA';
+      await registrarConsumoApiFootball({ ruta, parametros: params, estadoHttp: respuesta.status, exito: false, duracionMs: Date.now() - inicio, restantes: quedan, limite, codigoError: codigo, detalleError: detalle });
+      if (temporadaSinAcceso) throw new ErrorProveedor('TEMPORADA_SIN_ACCESO', 'El proveedor no permite acceder a la temporada solicitada con la suscripción actual.');
+      throw new ErrorProveedor('RESPUESTA_INVALIDA', `El proveedor rechazó la consulta: ${detalle}`);
     }
 
+    await registrarConsumoApiFootball({ ruta, parametros: params, estadoHttp: respuesta.status, exito: true, duracionMs: Date.now() - inicio, restantes: quedan, limite });
     this.cache.set(url, { valor: cuerpo.response, expira: Date.now() + 60_000 });
     return cuerpo.response;
   }
@@ -474,6 +472,62 @@ export class ProveedorApiFootball implements ProveedorDeportes {
    */
   async todasLasLigas(): Promise<unknown[]> {
     return this.pedir<unknown>('leagues', {});
+  }
+
+
+  /**
+   * Cobertura real de una liga para una temporada concreta.
+   * Se usa por el histórico para no pedir estadísticas que el proveedor
+   * declara como no disponibles.
+   */
+  async coberturaTemporada(
+    ligaApiId: string,
+    temporada: number,
+  ): Promise<CoberturaTemporadaApiFootball | null> {
+    const filas = await this.pedir<any>('leagues', {
+      id: ligaApiId,
+      season: temporada,
+    });
+    const liga = filas[0];
+    const season = liga?.seasons?.find((x: any) => Number(x.year) === temporada);
+    if (!season) return null;
+
+    const c = season.coverage ?? {};
+    return {
+      ligaApiId,
+      temporada,
+      fixturesEventos: c.fixtures?.events === true,
+      fixturesAlineaciones: c.fixtures?.lineups === true,
+      fixturesEstadisticas: c.fixtures?.statistics_fixtures === true,
+      jugadoresEstadisticas: c.fixtures?.statistics_players === true,
+      standings: c.standings === true,
+      jugadores: c.players === true,
+      topScorers: c.top_scorers === true,
+      topAssists: c.top_assists === true,
+      topCards: c.top_cards === true,
+      lesiones: c.injuries === true,
+      predicciones: c.predictions === true,
+      cuotas: c.odds === true,
+      raw: season.coverage ?? {},
+    };
+  }
+
+  /** Partidos de una liga/temporada sin reprogramarlos ni transformarlos. */
+  async fixturesHistoricos(ligaApiId: string, temporada: number): Promise<any[]> {
+    return this.pedir<any>('fixtures', {
+      league: ligaApiId,
+      season: temporada,
+    });
+  }
+
+  /** Estadísticas crudas de un fixture terminado. */
+  async estadisticasHistoricas(fixtureId: string): Promise<any[]> {
+    return this.pedir<any>('fixtures/statistics', { fixture: fixtureId });
+  }
+
+  /** Cronología cruda de eventos de un fixture terminado. */
+  async eventosHistoricos(fixtureId: string): Promise<any[]> {
+    return this.pedir<any>('fixtures/events', { fixture: fixtureId });
   }
 
   /**

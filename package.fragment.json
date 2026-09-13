@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "historico:v2": "tsx src/herramientas/importar-historico-deportivo-v2.ts"
+  }
+}

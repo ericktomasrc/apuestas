@@ -127,12 +127,17 @@ async function main(): Promise<void> {
   deporteId = (await pool.query(`SELECT id FROM deportes WHERE clave='FUTBOL'`)).rows[0].id;
   ligaApiId = ligaApiPrueba();
   const liga = await pool.query(
-    `INSERT INTO ligas (deporte_id, api_id, nombre, pais)
-     VALUES ($1,$2,'Liga test','PE') RETURNING id`,
+    `INSERT INTO ligas (deporte_id, api_id, nombre, pais, seleccionada_panel)
+     VALUES ($1,$2,'Liga test','PE',TRUE) RETURNING id`,
     [deporteId, ligaApiId],
   );
 
-  // La liga necesita mercados habilitados para que se sincronice.
+  // La liga de prueba debe estar seleccionada en Panel → Deportes.
+  // Desde la migración 025, pertenecer al catálogo y estar habilitada para
+  // sincronización son estados distintos.
+
+  // Además necesita mercados habilitados para que las pruebas cubran el
+  // mismo escenario funcional que una liga activa del panel.
   //
   // Sin esto no llegan partidos: cada liga cuesta una petición diaria
   // al proveedor, así que solo se piden los de las ligas que alguien

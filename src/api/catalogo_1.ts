@@ -594,7 +594,7 @@ export function registrarRutasCatalogo(
         type: 'object',
         properties: {
           activo: { type: 'boolean' },
-          hora: { type: 'string', pattern: '^([01]\\d|2[0-3]):[0-5]\\d$' },
+          hora: { type: 'string', pattern: '^([01]\\\\d|2[0-3]):[0-5]\\\\d$' },
           vecesPorDia: { type: 'integer', enum: [1, 2, 3, 4, 6] },
         },
         required: ['activo', 'hora', 'vecesPorDia'],

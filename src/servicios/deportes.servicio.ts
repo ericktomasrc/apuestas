@@ -50,26 +50,18 @@ export async function sincronizarFixtures(
   const hasta = new Date(Date.now() + dias * 24 * 3600 * 1000);
 
   const { rows: ligasRows } = await pool.query(
-    // Solo las ligas CON MERCADOS HABILITADOS.
+    // Solo las ligas seleccionadas en Panel → Deportes.
     //
-    // Cada liga cuesta una petición diaria al proveedor, y el plan
-    // gratuito da 100 al día. Sincronizar ligas que nadie puede usar
-    // —porque no tienen mercados— gasta cuota en partidos que jamás
-    // van a aparecer en el muro.
-    //
-    // Así se pueden registrar cientos de ligas y activar solo las que
-    // se quieren mostrar, desde Panel → Deportes.
+    // El catálogo puede contener más de mil ligas, pero la sincronización
+    // solo consulta las seleccionadas por el administrador.
     `SELECT l.id, l.api_id, l.deporte_id
-       -- La vista ya excluye las ocultas: una liga oculta no debe
-       -- consumir cuota del proveedor ni traer partidos que nadie
-       -- va a ver.
        FROM v_ligas l
-      WHERE EXISTS (SELECT 1 FROM mercados_por_liga m
-                     WHERE m.liga_id = l.id AND m.eliminado_en IS NULL)`,
+       JOIN ligas bl ON bl.id = l.id
+      WHERE bl.seleccionada_panel = TRUE`,
   );
 
   if (ligasRows.length === 0) {
-    // Ninguna liga habilitada todavía. No es un error: es el estado
+    // Ninguna liga seleccionada todavía. No es un error: es el estado
     // inicial, y avisarlo evita que alguien crea que el proveedor
     // falló.
     return {
@@ -77,7 +69,7 @@ export async function sincronizarFixtures(
       ignorados: 0, adoptados: 0, fallidos: 0,
       errores: [{
         apiId: '—', partido: '—',
-        motivo: 'Ninguna liga tiene mercados habilitados. Actívalos en Panel → Deportes.',
+        motivo: 'Ninguna liga está seleccionada. Activa al menos una en Panel → Deportes.',
       }],
     };
   }
@@ -106,7 +98,7 @@ export async function sincronizarFixtures(
       adoptados: 0, fallidos: 0,
       errores: [{
         apiId: '—', partido: '—',
-        motivo: 'Ninguna liga activa tiene identificador del proveedor. '
+        motivo: 'Ninguna liga seleccionada tiene identificador del proveedor. '
           + 'Importa el catálogo con «npm run ligas» y habilita mercados ahí.',
       }],
     };

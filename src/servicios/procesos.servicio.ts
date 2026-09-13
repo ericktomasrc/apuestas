@@ -12,6 +12,13 @@ import { pool } from './../infraestructura/db.js';
 import { procesarCierres, procesarLiquidaciones } from './../servicios/salas.servicio.js';
 import {sincronizarFixtures, actualizarEstados, anularSinDato, registrarIncidente, } from './../servicios/deportes.servicio.js';
 import {ProveedorDeportes} from './../infraestructura/proveedores/deportes.proveedor.js';
+import {
+  ZONA_HORARIA_AUTOMATIZACION,
+  relojNegocio,
+  siguienteEjecucionEnZona,
+  reservarRanuraAutomatica,
+  finalizarRanuraAutomatica,
+} from './automatizacion-tiempo.servicio.js';
 
 export interface ResultadoProceso {
   nombre: string;
@@ -204,6 +211,166 @@ export async function salud(): Promise<Salud> {
 }
 
 // =====================================================================
+//  Automatización configurable de Deportes
+// =====================================================================
+
+interface ConfiguracionCargaPartidos {
+  activo: boolean;
+  hora: string;
+  vecesPorDia: number;
+}
+
+export interface EstadoCargaPartidosAutomatica {
+  ejecutando: boolean;
+  ultimoIntento: string | null;
+  ultimaFinalizacion: string | null;
+  ultimaDuracionMs: number | null;
+  ultimoOk: boolean | null;
+  ultimoResultado: unknown | null;
+  ultimoError: string | null;
+  proximaEjecucion: string | null;
+}
+
+const estadoCargaPartidos: EstadoCargaPartidosAutomatica = {
+  ejecutando: false,
+  ultimoIntento: null,
+  ultimaFinalizacion: null,
+  ultimaDuracionMs: null,
+  ultimoOk: null,
+  ultimoResultado: null,
+  ultimoError: null,
+  proximaEjecucion: null,
+};
+
+export function obtenerEstadoCargaPartidosAutomatica(): EstadoCargaPartidosAutomatica {
+  return { ...estadoCargaPartidos };
+}
+
+function calcularProximaCargaPartidos(
+  horaInicial: string,
+  vecesPorDia: number,
+  desde = new Date(),
+): string {
+  return siguienteEjecucionEnZona(
+    horariosCargaPartidos(horaInicial, vecesPorDia),
+    desde,
+  ) ?? new Date(desde.getTime() + 24 * 60 * 60 * 1000).toISOString();
+}
+
+const VECES_PERMITIDAS = new Set([1, 2, 3, 4, 6]);
+
+function booleanoConfiguracion(valor: unknown, defecto: boolean): boolean {
+  if (typeof valor !== 'string') return defecto;
+  const normalizado = valor.trim().toLowerCase();
+  if (['true', '1', 'si', 'sí', 'on'].includes(normalizado)) return true;
+  if (['false', '0', 'no', 'off'].includes(normalizado)) return false;
+  return defecto;
+}
+
+function horaConfiguracion(valor: unknown, defecto = '04:00'): string {
+  if (typeof valor !== 'string') return defecto;
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(valor.trim()) ? valor.trim() : defecto;
+}
+
+function vecesConfiguracion(valor: unknown, defecto = 1): number {
+  const n = Number(valor);
+  return Number.isInteger(n) && VECES_PERMITIDAS.has(n) ? n : defecto;
+}
+
+/**
+ * Lee la configuración persistente creada por 028_automatizacion_deportes.sql.
+ *
+ * Si la migración todavía no fue aplicada o la BD está temporalmente
+ * inaccesible, conserva el comportamiento histórico: activo, 04:00, 1 vez/día.
+ */
+export async function obtenerConfiguracionCargaPartidos(): Promise<ConfiguracionCargaPartidos> {
+  try {
+    const r = await pool.query(
+      `SELECT clave, valor
+         FROM configuracion
+        WHERE clave = ANY($1::text[])
+          AND eliminado_en IS NULL`,
+      [[
+        'deportes_auto_activo',
+        'deportes_auto_hora',
+        'deportes_auto_veces',
+      ]],
+    );
+
+    const valores = new Map<string, string>(
+      r.rows.map((fila) => [String(fila.clave), String(fila.valor)]),
+    );
+
+    return {
+      activo: booleanoConfiguracion(valores.get('deportes_auto_activo'), true),
+      hora: horaConfiguracion(valores.get('deportes_auto_hora'), '04:00'),
+      vecesPorDia: vecesConfiguracion(valores.get('deportes_auto_veces'), 1),
+    };
+  } catch (e) {
+    console.error(
+      '[automatizacion_partidos] no se pudo leer configuracion; se usan valores seguros',
+      e instanceof Error ? e.message : String(e),
+    );
+    return { activo: true, hora: '04:00', vecesPorDia: 1 };
+  }
+}
+
+function minutosDelDia(hora: string): number {
+  const [h, m] = hora.split(':').map(Number);
+  return h * 60 + m;
+}
+
+/**
+ * Calcula horas fijas y equidistantes. Reiniciar el servidor no desplaza
+ * el horario porque siempre se vuelve a calcular desde la hora inicial.
+ *
+ * Ejemplo: 04:00 + 3/día => 04:00, 12:00, 20:00.
+ */
+export function horariosCargaPartidos(
+  horaInicial: string,
+  vecesPorDia: number,
+): string[] {
+  const hora = horaConfiguracion(horaInicial, '04:00');
+  const veces = vecesConfiguracion(vecesPorDia, 1);
+  const inicio = minutosDelDia(hora);
+  const paso = (24 * 60) / veces;
+
+  return Array.from({ length: veces }, (_, i) => {
+    const total = Math.round((inicio + i * paso) % (24 * 60));
+    const h = Math.floor(total / 60);
+    const m = total % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  });
+}
+
+/**
+ * Ejecuta solamente la carga de partidos. Este es el proceso que controla
+ * el switch "Carga automática de partidos".
+ */
+export async function ejecutarCargaPartidos(
+  proveedor: ProveedorDeportes,
+): Promise<ResultadoProceso[]> {
+  if (estadoCargaPartidos.ejecutando) {
+    return [{ nombre:'fixtures', ok:false, duracionMs:0, error:'La carga de partidos ya se está ejecutando.' }];
+  }
+  estadoCargaPartidos.ejecutando=true;
+  estadoCargaPartidos.ultimoIntento=new Date().toISOString();
+  const inicio=Date.now();
+  try {
+    const resultados=[await correr('fixtures',()=>sincronizarFixtures(proveedor,30))];
+    const r=resultados[0];
+    estadoCargaPartidos.ultimaFinalizacion=new Date().toISOString();
+    estadoCargaPartidos.ultimaDuracionMs=Date.now()-inicio;
+    estadoCargaPartidos.ultimoOk=r.ok;
+    estadoCargaPartidos.ultimoResultado=r.detalle ?? null;
+    estadoCargaPartidos.ultimoError=r.ok ? null : (r.error ?? 'Error no especificado');
+    return resultados;
+  } finally {
+    estadoCargaPartidos.ejecutando=false;
+  }
+}
+
+// =====================================================================
 //  Scheduler
 // =====================================================================
 
@@ -219,7 +386,11 @@ export function iniciarScheduler(proveedor: ProveedorDeportes): () => void {
   const registrar = (r: ResultadoProceso[]): void => {
     for (const p of r) {
       if (!p.ok) console.error(`[${p.nombre}] ${p.error}`);
-      else if (p.detalle && Object.values(p.detalle).some((v) => Number(v) > 0)) {
+      else if (
+        p.detalle
+        && typeof p.detalle === 'object'
+        && Object.values(p.detalle as Record<string, unknown>).some((v) => Number(v) > 0)
+      ) {
         console.log(`[${p.nombre}] ${JSON.stringify(p.detalle)} (${p.duracionMs}ms)`);
       }
     }
@@ -231,53 +402,117 @@ export function iniciarScheduler(proveedor: ProveedorDeportes): () => void {
     setInterval(() => void cicloHora().then(registrar), 60 * 60_000),
   ];
 
-  // El ciclo diario se ancla a las 4 de la madrugada, no a las 24
-  // horas del arranque.
-  //
-  // Con `setInterval` de 24h, la hora depende de cuándo se levantó el
-  // servidor: reiniciar a las 3 de la tarde deja la sincronización a
-  // esa hora para siempre. A las 4am no hay nadie apostando y los
-  // fixtures del día ya están publicados.
-  const programarDiario = (): void => {
-    const ahora = new Date();
-    const proxima = new Date(ahora);
-    proxima.setHours(4, 0, 0, 0);
-    if (proxima <= ahora) proxima.setDate(proxima.getDate() + 1);
+  /*
+   * La carga automática de partidos se comprueba cada minuto contra la
+   * configuración guardada en PostgreSQL. Así:
+   *
+   * - ON/OFF se puede cambiar sin reiniciar el servidor.
+   * - la hora se puede cambiar sin reiniciar.
+   * - la cantidad de veces por día se puede cambiar sin reiniciar.
+   * - reiniciar el servidor NO mueve las horas programadas.
+   *
+   * `ultimaRanuraPartidos` evita ejecutar dos veces la misma ranura mientras
+   * esta instancia siga viva.
+   */
+  const revisarCargaAutomaticaPartidos = async (): Promise<void> => {
+    const config = await obtenerConfiguracionCargaPartidos();
+    if (!config.activo) {
+      estadoCargaPartidos.proximaEjecucion = null;
+      return;
+    }
 
-    const faltan = proxima.getTime() - ahora.getTime();
-    console.log(`  Próxima sincronización: ${proxima.toLocaleString('es-PE')}`);
+    estadoCargaPartidos.proximaEjecucion =
+      calcularProximaCargaPartidos(config.hora, config.vecesPorDia);
 
-    timers.push(setTimeout(() => {
-      void cicloDiario(proveedor).then(registrar);
-      programarDiario();   // se reprograma para el día siguiente
-    }, faltan) as unknown as NodeJS.Timeout);
+    const reloj = relojNegocio();
+    const horarios = horariosCargaPartidos(config.hora, config.vecesPorDia);
+    if (!horarios.includes(reloj.hhmm)) return;
+
+    const ranura = `${reloj.fecha}T${reloj.hhmm}`;
+    const reservada = await reservarRanuraAutomatica('PARTIDOS', ranura);
+    if (!reservada) return;
+
+    const inicio = Date.now();
+    try {
+      const resultados = await ejecutarCargaPartidos(proveedor);
+      const principal = resultados[0];
+      await finalizarRanuraAutomatica('PARTIDOS', ranura, {
+        estado: principal?.ok ? 'COMPLETADO' : 'ERROR',
+        duracionMs: Date.now() - inicio,
+        error: principal?.ok ? null : (principal?.error ?? 'Error no especificado'),
+        detalle: principal?.detalle ?? null,
+      });
+      registrar(resultados);
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e);
+      await finalizarRanuraAutomatica('PARTIDOS', ranura, {
+        estado: 'ERROR',
+        duracionMs: Date.now() - inicio,
+        error,
+      }).catch(() => undefined);
+      console.error(`[fixtures] ${error}`);
+    }
   };
-  programarDiario();
+  timers.push(
+    setInterval(
+      () => void revisarCargaAutomaticaPartidos(),
+      30_000,
+    ),
+  );
 
-  // El ciclo diario corre TAMBIÉN al arrancar, no solo 24 horas
-  // después.
-  //
-  // Sin esto, levantar el servidor y no ver partidos parece un fallo:
-  // el primer `setInterval` de 24h no se dispara hasta mañana. Y si el
-  // servidor se reinicia a diario —lo normal en desarrollo— el ciclo
-  // no llegaría a correr nunca.
-  //
-  // Se espera 5 segundos para que la base y el pool estén listos.
+  /*
+   * La conciliación sigue siendo independiente del switch de partidos.
+   * Desactivar "Carga automática de partidos" NO debe desactivar controles
+   * contables ni otros procesos del sistema.
+   */
+  let ultimaConciliacionDiaria = '';
+
+  const revisarConciliacionDiaria = async (): Promise<void> => {
+    const reloj = relojNegocio();
+    if (reloj.hhmm !== '04:00') return;
+
+    const fecha = reloj.fecha;
+    if (fecha === ultimaConciliacionDiaria) return;
+    ultimaConciliacionDiaria = fecha;
+
+    registrar([await correr('conciliacion', () => conciliar())]);
+  };
+
+  timers.push(
+    setInterval(
+      () => void revisarConciliacionDiaria(),
+      30_000,
+    ),
+  );
+
+  /*
+   * Al arrancar ya NO se fuerza una sincronización de fixtures.
+   * La carga automática queda gobernada por su configuración y sus horas.
+   * Los ciclos de 1 min, 5 min y 1 hora permanecen intactos.
+   */
   const arranque = setTimeout(() => {
-    void cicloDiario(proveedor).then((r) => {
-      registrar(r);
-      const sync = r.find((x) => x.nombre === 'sincronizarFixtures');
-      if (sync?.ok && sync.detalle) {
-        const n = Number((sync.detalle as Record<string, unknown>).nuevos ?? 0);
-        console.log(n > 0
-          ? `  ${n} partido(s) nuevos al arrancar`
-          : '  Sin partidos nuevos. ¿Alguna liga tiene mercados habilitados?');
-      }
-    });
+    void (async () => {
+      const config = await obtenerConfiguracionCargaPartidos();
+      const horarios = horariosCargaPartidos(config.hora, config.vecesPorDia);
+      console.log(`  Zona horaria de automatización: ${ZONA_HORARIA_AUTOMATIZACION}`);
+      console.log(
+        config.activo
+          ? `  Carga automática de partidos: ACTIVA (${horarios.join(', ')})`
+          : '  Carga automática de partidos: DESACTIVADA',
+      );
+
+      // Si el servidor arrancó exactamente dentro de una ranura programada,
+      // la revisión puede ejecutarla sin alterar el horario.
+      await revisarCargaAutomaticaPartidos();
+      await revisarConciliacionDiaria();
+    })();
   }, 5_000);
 
   return () => {
     clearTimeout(arranque);
-    timers.forEach((t) => { clearInterval(t); clearTimeout(t); });
+    timers.forEach((t) => {
+      clearInterval(t);
+      clearTimeout(t);
+    });
   };
 }

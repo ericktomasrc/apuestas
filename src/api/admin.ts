@@ -58,6 +58,7 @@ import {
 import { registrarRutasCasa } from './casa.js';
 import { registrarRutasOpcionesJuego } from './opciones-juego.js';
 import { registrarRutasHistorialDeportivo } from './historico-deportivo.js';
+import { registrarRutasAnalisisHistorico } from './analisis-historico.js';
 
 type ExigirSesion = (peticion: FastifyRequest) => Promise<Sesion>;
 
@@ -147,6 +148,7 @@ export function registrarRutasAdmin(
   registrarRutasCatalogo(app, exigirSesion, conPermiso, proveedor);
   registrarRutasOpcionesJuego(app, conPermiso);
   registrarRutasHistorialDeportivo(app, conPermiso);
+  registrarRutasAnalisisHistorico(app, conPermiso);
 
   const docBase = (summary: string, permiso: string, description?: string) => ({
     tags: ['admin'],

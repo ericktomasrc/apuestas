@@ -26,7 +26,8 @@
     "test:seguridad": "tsx src/pruebas/seguridad.test.ts",
     "test:casa": "tsx src/pruebas/casa.test.ts",
     "ligas": "tsx src/herramientas/ligas.ts",
-    "migrar": "tsx src/herramientas/migrar.ts"
+    "migrar": "tsx src/herramientas/migrar.ts",
+	"historico": "tsx src/herramientas/importar-historico-deportivo.ts"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

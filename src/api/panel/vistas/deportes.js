@@ -5,61 +5,56 @@
  * Esta es la pantalla que pone en marcha todo lo demás.
  */
 VISTAS.deportes = async () => {
-  // Los filtros viven en S para sobrevivir al redibujado: cambiar un
-  // mercado no debe devolverte a la página 1 de mil ligas.
   S.f = S.f ?? {};
   S.f.liga = S.f.liga ?? {
-    pais: '', deporte: '', buscar: '', soloActivas: false, desde: 0,
+    pais: '', deporte: '', buscar: '', desde: 0, vista: 'activas',
   };
   const f = S.f.liga;
+  f.vista = f.vista === 'catalogo' ? 'catalogo' : 'activas';
+
   const q = new URLSearchParams({ limite: '25', desde: String(f.desde) });
   if (f.pais) q.set('pais', f.pais);
   if (f.deporte) q.set('deporte', f.deporte);
   if (f.buscar) q.set('buscar', f.buscar);
-  if (f.soloActivas) q.set('soloActivas', 'true');
+  if (f.vista === 'activas') q.set('soloSeleccionadas', 'true');
 
   const r = await api('/deportes?' + q);
   S.datos.catalogo = r;
-
-  const sinMercados = r.ligas.filter(l => l.mercados.length === 0).length;
-
   const prov = await api('/deportes/estado-proveedor').catch(() => null);
+  const seleccionadas = Number(r.seleccionadas ?? r.activas ?? 0);
+  const total = Number(r.catalogoTotal ?? r.total ?? 0);
+  const sinSeleccionar = Math.max(0, total - seleccionadas);
+  const esActivas = f.vista === 'activas';
 
-  render(cab('Deportes', 'Qué ligas están cargadas y qué se puede apostar en cada una',
+  const pestanas = `
+    <div class="marco" style="padding:8px 10px;margin-bottom:16px;display:flex;
+      align-items:center;gap:8px;justify-content:space-between;flex-wrap:wrap">
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="${esActivas ? 'btn' : 'btn-plano'} btn-chico"
+          onclick="cambiarVistaLigas('activas')">
+          Ligas activas <span class="num" style="margin-left:5px">${seleccionadas}</span>
+        </button>
+        <button class="${!esActivas ? 'btn' : 'btn-plano'} btn-chico"
+          onclick="cambiarVistaLigas('catalogo')">
+          Catálogo de ligas <span class="num" style="margin-left:5px">${total}</span>
+        </button>
+      </div>
+      <span class="pista" style="margin:0">
+        ${esActivas
+          ? 'Solo se muestran las ligas seleccionadas para trabajar.'
+          : `${sinSeleccionar} sin activar · las activas aparecen primero.`}
+      </span>
+    </div>`;
+
+  render(cab('Deportes', esActivas
+      ? 'Ligas seleccionadas, sus mercados y sus partidos'
+      : 'Catálogo completo de ligas disponibles',
     puede('deportes.gestionar')
-      ? `<button class="btn-plano" onclick="sincronizarAhora()">Traer partidos</button>
-         ${r.total > 50
-           // Con el catálogo del proveedor importado, agregar una liga
-           // a mano casi siempre es un error: el identificador tiene
-           // que coincidir con el suyo o no llegan partidos. Se deja
-           // accesible pero sin destacar.
-           ? `<button class="btn-plano" onclick="nuevaLiga()">Agregar a mano</button>`
-           : `<button class="btn" onclick="nuevaLiga()">Agregar liga</button>`}`
+      ? `<button class="btn-plano" onclick="sincronizarAhora()">Sincronizar partidos</button>`
       : '') + `
 
+    ${pestanas}
     ${prov ? bloqueProveedor(prov) : ''}
-
-    <!-- Fichas, no tarjetas.
-         Con dos deportes las tarjetas grandes ya ocupaban media
-         pantalla; con seis serían inusables. Aquí lo que importa es
-         cuántas ligas hay en cada uno, no destacar el número. -->
-    <div class="fichas-dato">
-      ${r.deportes.map(d => `
-        <span class="ficha-dato">
-          ${esc(d.nombre)}
-          <b>${d.ligas}</b>
-          <small>${d.activas > 0 ? `${d.activas} activa(s)` : 'sin activar'}</small>
-        </span>`).join('')}
-    </div>
-
-    ${sinMercados > 0 ? `<div class="banda">
-      <p><strong>${sinMercados} liga(s) sin mercados habilitados</strong>
-      Sus partidos aparecen, pero no se puede apostar sobre ellos.</p>
-    </div>` : ''}
-
-    <h2>Ligas <span style="font-weight:400;color:var(--tenue);font-size:14px">
-      ${r.activas} activa(s) de ${r.total}</span></h2>
-
     ${barraDeportes(r.deportes, f.deporte)}
 
     <div class="marco" style="padding:12px 14px;margin-bottom:12px;display:flex;
@@ -70,10 +65,6 @@ VISTAS.deportes = async () => {
           placeholder="liga o país — «Peru», «Libertadores», «PE»"
           onchange="S.f.liga.buscar=this.value;S.f.liga.desde=0;VISTAS.deportes()">
       </div>
-      <!-- Campo con lista, no desplegable.
-           Con 90 países, desplegar la lista entera obliga a
-           desplazarse buscando el que se quiere. Escribiendo tres
-           letras aparece. -->
       <div class="campo buscador-pais" style="margin:0;min-width:190px">
         <label for="f_pais">País</label>
         <input id="f_pais" autocomplete="off" role="combobox"
@@ -90,66 +81,113 @@ VISTAS.deportes = async () => {
             aria-label="Quitar filtro">×</button>` : ''}
         <div class="lista-paises" id="lista-paises"></div>
       </div>
-      <div class="permiso" style="margin:0 0 6px">
-        <input type="checkbox" id="f_activas" ${f.soloActivas ? 'checked' : ''}
-          onchange="S.f.liga.soloActivas=this.checked;S.f.liga.desde=0;VISTAS.deportes()">
-        <label for="f_activas" style="margin:0">Solo con mercados</label>
-      </div>
-      ${(f.buscar || f.pais || f.soloActivas) ? `
+      ${(f.buscar || f.pais) ? `
         <button class="btn-plano btn-chico" onclick="limpiarFiltroLigas()">Limpiar</button>` : ''}
     </div>
 
-    ${r.ligas.length ? `<div class="marco"><table>
-      <thead><tr><th>Liga</th><th>Deporte</th><th>Se puede apostar a</th>
-        <th class="der">Partidos</th><th></th></tr></thead>
-      <tbody>${r.ligas.map(l => `<tr>
-        <td>
-          <div style="display:flex;align-items:center;gap:9px">
-            ${l.logo_url
-              ? `<img src="${esc(l.logo_url)}" alt="" width="28" height="28"
-                   style="object-fit:contain;border-radius:6px;background:#fff;padding:2px"
-                   onerror="this.style.display='none'">`
-              : ''}
-            <div>
-              <strong>${esc(l.nombre)}</strong>
-              ${l.pais ? `<span class="etiqueta et-gris">${esc(l.pais)}</span>` : ''}
-              <br><span class="num" style="color:var(--tenue);font-size:11.5px">${esc(l.api_id)}</span>
-            </div>
-          </div>
-        </td>
-        <td>${esc(l.deporte)}</td>
-        <td>${l.mercados.length
-          ? l.mercados.map(m => `<span class="etiqueta ${m.verificadoEn ? 'et-bien' : 'et-aviso'}"
-              title="${m.verificadoEn ? 'Verificado con un partido real' : 'Sin verificar: puede anularse por falta de dato'}"
-              style="margin:1px">${esc(nombreMercado(m.tipo))}</span>`).join(' ')
-          : '<span style="color:var(--tenue);font-size:12.5px">Nada todavía</span>'}</td>
-        <td class="der num">${l.partidos}</td>
-        <td class="der"><div class="fila-acciones">
-          ${puede('deportes.gestionar')
-            ? `<button class="btn-plano btn-chico"
-                 onclick='editarMercados(${JSON.stringify({
-                   id: l.id, nombre: l.nombre, deporte: l.deporte,
-                   mercados: l.mercados,
-                 }).replace(/'/g, "&#39;")})'>Mercados</button>
-               ${l.partidos === 0
-                 ? `<button class="btn-plano btn-chico" onclick="borrarLiga('${l.id}','${esc(l.nombre)}')">Quitar</button>`
-                 : `<span class="pista-boton" title="Espera a que se resuelvan sus partidos">En juego</span>`}`
-            : ''}
-          <button class="btn-plano btn-chico" onclick="verPartidos('${l.id}','${esc(l.nombre)}')">Partidos</button>
-        </div></td>
-      </tr>`).join('')}</tbody></table></div>
+    ${!esActivas && sinSeleccionar > 0 ? `
+      <div class="banda" style="margin-bottom:12px">
+        <p><strong>${sinSeleccionar} liga(s) del catálogo todavía no están activas.</strong><br>
+        Usa «Activar liga» para incorporarlas al grupo que se sincroniza.</p>
+      </div>` : ''}
 
-      ${paginador(r)}`
-      : vacio('Todavía no hay ligas. Sin ellas no llegan partidos y no se pueden crear salas.',
-          puede('deportes.gestionar')
-            ? '<button class="btn" onclick="nuevaLiga()">Agregar la primera</button>' : '')}
-
-    <p class="pista">Un mercado <strong>verificado</strong> es uno que ya se
-    comprobó con un partido real: el proveedor entregó el dato. Habilitar sin
-    verificar produce anulaciones por falta de dato, y cada anulación es
-    comisión que se pierde.</p>
+    ${r.ligas.length
+      ? (esActivas ? tablaLigasActivas(r.ligas) : tablaCatalogoLigas(r.ligas)) + paginador(r)
+      : vacio(esActivas
+          ? 'No hay ligas activas con estos filtros.'
+          : 'No hay ligas que coincidan con estos filtros.', '')}
   `);
 };
+
+function cambiarVistaLigas(vista) {
+  S.f.liga.vista = vista === 'catalogo' ? 'catalogo' : 'activas';
+  S.f.liga.desde = 0;
+  VISTAS.deportes();
+}
+
+function ligaTitulo(l) {
+  return `<div style="display:flex;align-items:center;gap:9px">
+    ${l.logo_url
+      ? `<img src="${esc(l.logo_url)}" alt="" width="28" height="28"
+           style="object-fit:contain;border-radius:6px;background:#fff;padding:2px"
+           onerror="this.style.display='none'">`
+      : ''}
+    <div>
+      <strong>${esc(l.nombre)}</strong>
+      ${l.pais ? `<span class="etiqueta et-gris">${esc(l.pais)}</span>` : ''}
+      <br><span class="num" style="color:var(--tenue);font-size:11.5px">${esc(l.api_id)}</span>
+    </div>
+  </div>`;
+}
+
+function tablaLigasActivas(ligas) {
+  return `<div class="marco"><table>
+    <thead><tr><th>Estado</th><th>Liga</th><th>Deporte</th><th>Mercados</th>
+      <th class="der">Partidos</th><th></th></tr></thead>
+    <tbody>${ligas.map(l => `<tr>
+      <td><span class="etiqueta et-bien">✓ Activa</span></td>
+      <td>${ligaTitulo(l)}</td>
+      <td>${esc(l.deporte)}</td>
+      <td>${l.mercados.length
+        ? l.mercados.map(m => `<span class="etiqueta ${m.verificadoEn ? 'et-bien' : 'et-aviso'}"
+            style="margin:1px">${esc(nombreMercado(m.tipo))}</span>`).join(' ')
+        : '<span class="pista">Sin mercados configurados</span>'}</td>
+      <td class="der num">${l.partidos}</td>
+      <td class="der"><div class="fila-acciones">
+        ${puede('deportes.gestionar') ? `<button class="btn-plano btn-chico"
+          onclick='editarMercados(${JSON.stringify({id:l.id,nombre:l.nombre,deporte:l.deporte,mercados:l.mercados}).replace(/'/g,"&#39;")})'>Mercados</button>` : ''}
+        <button class="btn-plano btn-chico" onclick="verPartidos('${l.id}','${esc(l.nombre)}')">Partidos</button>
+        ${puede('deportes.gestionar') ? `<button class="btn-plano btn-chico"
+          onclick="seleccionarLiga('${l.id}','${esc(l.nombre)}',false)">Desactivar</button>` : ''}
+      </div></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function tablaCatalogoLigas(ligas) {
+  return `<div class="marco"><table>
+    <thead><tr><th>Estado</th><th>Liga</th><th>Deporte</th><th class="der">Mercados</th>
+      <th class="der">Partidos</th><th class="der">Acción</th></tr></thead>
+    <tbody>${ligas.map(l => `<tr>
+      <td>${l.seleccionada
+        ? '<span class="etiqueta et-bien">✓ Activa</span>'
+        : '<span class="etiqueta et-gris">No activa</span>'}</td>
+      <td>${ligaTitulo(l)}</td>
+      <td>${esc(l.deporte)}</td>
+      <td class="der num">${l.mercados.length}</td>
+      <td class="der num">${l.partidos}</td>
+      <td class="der">${puede('deportes.gestionar')
+        ? (l.seleccionada
+          ? `<button class="btn-plano btn-chico" onclick="seleccionarLiga('${l.id}','${esc(l.nombre)}',false)">Desactivar</button>`
+          : `<button class="btn btn-chico" onclick="seleccionarLiga('${l.id}','${esc(l.nombre)}',true)">Activar liga</button>`)
+        : (l.seleccionada ? 'Activa' : '—')}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+async function seleccionarLiga(id, nombre, seleccionada) {
+  const ejecutar = async () => {
+    await accion(async () => {
+      const r = await api('/ligas/' + id + '/seleccion', {
+        method: 'PUT',
+        body: JSON.stringify({ seleccionada }),
+      });
+      VISTAS.deportes();
+      if (seleccionada && r.mercadosAuto > 0) {
+        aviso(`${nombre}: activa · ${r.mercadosAuto} mercado(s) base preparados`, 'bien');
+      }
+    }, seleccionada ? 'Liga activada' : 'Liga desactivada', seleccionada ? 'Activando' : 'Desactivando');
+  };
+
+  if (seleccionada) return ejecutar();
+  confirmar({
+    titulo: 'Desactivar liga',
+    mensaje: `«${nombre}» dejará de sincronizar partidos nuevos.`,
+    consecuencia: 'Los partidos ya guardados y su historial no se eliminan.',
+    textoBoton: 'Desactivar',
+    alAceptar: ejecutar,
+  });
+}
 
 function nombreMercado(clave) {
   for (const lista of Object.values(S.datos.catalogo?.mercadosDisponibles ?? {})) {
@@ -446,7 +484,7 @@ function bloqueProveedor(p) {
 
   ${p.ligasActivas.length === 0 ? `
     <div class="banda" style="margin-bottom:18px">
-      <p><strong>Ninguna liga está activa</strong>
+      <p><strong>Ninguna liga está seleccionada</strong>
       Una liga registrada no aparece en la app hasta que le habilites
       mercados. Usa el botón «Mercados» de la liga que quieras mostrar.</p>
     </div>` : ''}`;
@@ -455,14 +493,14 @@ function bloqueProveedor(p) {
 /**
  * Sincroniza ahora, sin esperar al ciclo diario.
  *
- * Consume cuota: una petición por liga activa. Por eso se avisa antes
+ * La sincronización consulta únicamente las ligas seleccionadas. Por eso se avisa antes
  * en vez de después.
  */
 function sincronizarAhora() {
   confirmar({
     titulo: 'Traer partidos ahora',
     mensaje: 'Se van a pedir los partidos de las próximas dos semanas.',
-    consecuencia: 'Consume una petición por liga activa. El sistema ya lo hace solo una vez al día.',
+    consecuencia: 'Solo se consultarán las ligas seleccionadas. El sistema también lo hace automáticamente.',
     textoBoton: 'Traer ahora',
     alAceptar: async () => {
       await accion(async () => {
@@ -520,7 +558,7 @@ function paginaLigas(desde) {
 }
 
 function limpiarFiltroLigas() {
-  S.f.liga = { pais: '', buscar: '', soloActivas: false, desde: 0 };
+  S.f.liga = { pais: '', deporte: '', buscar: '', desde: 0, vista: S.f.liga?.vista ?? 'activas' };
   VISTAS.deportes();
 }
 

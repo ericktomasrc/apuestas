@@ -118,7 +118,8 @@ export function registrarRutasSalas(
     const cfg = await config();
 
     const { rows } = await pool.query(
-      `SELECT p.id, p.equipo_local, p.equipo_visitante, p.inicia_en,
+      `SELECT p.id, p.equipo_local, p.equipo_visitante,
+              p.logo_local, p.logo_visitante, p.inicia_en,
               l.nombre AS liga,
               (SELECT bl.logo_url FROM ligas bl WHERE bl.id = l.id) AS liga_logo_url, d.clave AS deporte, d.nombre AS deporte_nombre,
               COALESCE(array_agg(ml.tipo_mercado ORDER BY ml.tipo_mercado)
@@ -134,7 +135,8 @@ export function registrarRutasSalas(
         WHERE p.estado = 'PROGRAMADO'
           AND p.inicia_en > now() + make_interval(mins => $1)
           AND ($2::text IS NULL OR d.clave = $2)
-        GROUP BY p.id, p.equipo_local, p.equipo_visitante, p.inicia_en,
+        GROUP BY p.id, p.equipo_local, p.equipo_visitante,
+                 p.logo_local, p.logo_visitante, p.inicia_en,
                  l.id, l.nombre, d.clave, d.nombre
         ORDER BY p.inicia_en ASC
         LIMIT $3`,

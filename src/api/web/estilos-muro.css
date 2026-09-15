@@ -10609,3 +10609,348 @@ body.casa-activa .envoltura{
     padding:34px 18px!important;
   }
 }
+
+/* ===== MURO V11: referencia exacta = mockup aprobado ===== */
+html body.muro-v11-activo{background:#f4f7f9!important;color:#102443!important}
+html body.muro-v11-activo main{padding:0!important;background:#f4f7f9!important;background-image:none!important;min-height:calc(100vh - 76px)!important}
+html body.muro-v11-activo .envoltura{width:100%!important;max-width:none!important;margin:0!important;padding:0!important;background:transparent!important}
+html body.muro-v11-activo .superior{height:76px!important;min-height:76px!important;background:linear-gradient(90deg,#0ca249,#12b153)!important;border:0!important;box-shadow:0 1px 5px rgba(18,48,74,.12)!important}
+html body.muro-v11-activo .superior-fila{width:100%!important;max-width:none!important;height:76px!important;padding:0 42px!important;gap:16px!important;background:transparent!important}
+html body.muro-v11-activo .marca{width:235px!important;min-width:235px!important;height:60px!important;padding:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
+html body.muro-v11-activo .marca img{width:215px!important;max-width:215px!important;height:58px!important;object-fit:contain!important;object-position:left center!important;background:transparent!important;filter:none!important}
+html body.muro-v11-activo .nav-escritorio{display:flex!important;gap:3px!important;flex:1 1 auto!important}
+html body.muro-v11-activo .nav-escritorio a{min-height:44px!important;padding:0 14px!important;border-radius:9px!important;background:transparent!important;color:#fff!important;font-size:13px!important;font-weight:700!important}
+html body.muro-v11-activo .nav-escritorio a.activo{background:rgba(0,105,48,.35)!important}
+html body.muro-v11-activo .nav-escritorio a svg{width:18px!important;height:18px!important;stroke:#fff!important}
+.muro-v11-buscador{width:235px;height:38px;display:flex;align-items:center;gap:8px;padding:0 13px;border-radius:20px;background:rgba(255,255,255,.13);color:#fff}
+.muro-v11-buscador svg{width:16px;height:16px}.muro-v11-buscador input{width:100%;border:0;outline:0;background:transparent;color:#fff;font-size:11px}.muro-v11-buscador input::placeholder{color:rgba(255,255,255,.9)}
+html body.muro-v11-activo .yo{width:42px!important;height:42px!important;background:#fff!important;color:#078b40!important;border:0!important}
+.muro-v11{width:calc(100% - 52px);max-width:1510px;margin:18px auto 0;display:grid;grid-template-columns:334px minmax(0,1fr) 324px;grid-template-areas:"hero centro derecha" "trust trust trust";column-gap:24px;row-gap:18px;align-items:start}
+.muro-v11-hero{grid-area:hero;width:334px;height:810px;overflow:hidden;border-radius:13px;background:#03150d;box-shadow:0 5px 18px rgba(30,55,80,.08)}.muro-v11-hero img{width:100%;height:100%;display:block;object-fit:cover}
+.muro-v11-centro{grid-area:centro;min-width:0}.muro-v11-derecha{grid-area:derecha;display:flex;flex-direction:column;gap:18px}
+.muro-v11-titulo h1,.muro-v11-titulo h2{margin:0!important;color:#102443!important;font-size:30px!important;line-height:1.05!important;letter-spacing:-.7px!important}.muro-v11-titulo p{margin:6px 0 0!important;color:#607593!important;font-size:14px!important}
+.muro-v11-filtros{min-height:48px;margin:7px 0 10px;display:flex;align-items:center;gap:10px}.muro-v11-chip{height:38px;padding:0 16px;border:1px solid #dbe3ea;border-radius:9px;background:#fff;color:#405675;font-weight:700}.muro-v11-chip.activo{background:#0eaa4d;border-color:#0eaa4d;color:#fff}.muro-v11-chip b{display:inline-grid;place-items:center;min-width:22px;height:22px;margin-left:7px;border-radius:12px;background:#eef7f2;color:#0ca44a;font-size:10px}.muro-v11-chip.activo b{background:rgba(255,255,255,.18);color:#fff}
+html body.muro-v11-activo .muro-liga-filtro{height:38px!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important}html body.muro-v11-activo .muro-liga-filtro>span{display:none!important}html body.muro-v11-activo .muro-liga-filtro select{height:38px!important;min-width:190px!important;padding:0 36px 0 14px!important;border:1px solid #dbe3ea!important;border-radius:9px!important;background:#fff!important;color:#405675!important}
+.muro-v11-partidos{margin-top:28px}
+html body.muro-v11-activo .muro-v11-vacio{width:100%!important;height:205px!important;min-height:205px!important;margin:0!important;padding:22px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;border:1px solid #dbe3ea!important;border-radius:11px!important;background:#fff!important;background-image:none!important;text-align:center!important;box-shadow:0 4px 14px rgba(30,55,80,.05)!important}
+html body.muro-v11-activo .muro-v11-vacio h3{margin:0 0 9px!important;color:#102443!important;font-size:16px!important}html body.muro-v11-activo .muro-v11-vacio p{margin:0 0 15px!important;color:#667b98!important;font-size:12px!important}html body.muro-v11-activo .muro-v11-vacio .primario{background:#0eaa4d!important;color:#fff!important;border:0!important}
+html body.muro-v11-activo .muro-v11-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}html body.muro-v11-activo .muro-v11-grid .tarjeta{min-width:0!important;margin:0!important;border:1px solid #dbe3ea!important;border-radius:11px!important;background:#fff!important;color:#102443!important;box-shadow:0 4px 14px rgba(30,55,80,.06)!important}
+html body.muro-v11-activo .muro-v11-derecha .bloque{margin:0!important;overflow:hidden!important;border:1px solid #dbe3ea!important;border-radius:12px!important;background:#fff!important;background-image:none!important;color:#102443!important;box-shadow:0 4px 14px rgba(30,55,80,.06)!important}html body.muro-v11-activo .muro-v11-derecha .bloque h3{min-height:48px!important;margin:0!important;padding:0 16px!important;display:flex!important;align-items:center!important;border-bottom:1px solid #e4eaf0!important;background:#fff!important;color:#102443!important;font-size:13px!important}html body.muro-v11-activo .muro-v11-derecha .bloque-vacio{min-height:86px!important;padding:18px 16px!important;background:#fff!important;color:#607593!important;font-size:12px!important;line-height:1.5!important}
+html body.muro-v11-activo .muro-v11-derecha .muro-promo-referencia{width:100%!important;margin:0!important;padding:0!important;overflow:hidden!important;border:0!important;border-radius:12px!important;background:transparent!important}html body.muro-v11-activo .muro-v11-derecha .muro-promo-referencia img{width:100%!important;height:auto!important;display:block!important}
+.muro-v11-confianza{grid-area:trust;width:100%;height:86px;overflow:hidden;border:1px solid #dfe6ec;border-radius:12px;background:#fff;box-shadow:0 4px 14px rgba(30,55,80,.06)}.muro-v11-confianza img{width:100%;height:100%;display:block;object-fit:fill;background:#fff}
+html body.muro-v11-activo .muro-premium,html body.muro-v11-activo .portada-tandabet,html body.muro-v11-activo .muro-tabs-compactos,html body.muro-v11-activo .muro-confianza-imagen{display:none!important}
+@media(max-width:1280px){.muro-v11{grid-template-columns:285px minmax(0,1fr) 285px;column-gap:16px}.muro-v11-hero{width:285px;height:692px}.muro-v11-buscador{display:none}}
+@media(max-width:980px){.muro-v11{width:calc(100% - 28px);grid-template-columns:1fr;grid-template-areas:"centro" "derecha" "hero" "trust"}.muro-v11-hero{width:100%;height:auto}.muro-v11-hero img{height:auto}html body.muro-v11-activo .muro-v11-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:640px){html body.muro-v11-activo .muro-v11-grid{grid-template-columns:1fr!important}.muro-v11-confianza{height:auto}.muro-v11-confianza img{height:auto}}
+
+/* V12: correcciones solicitadas */
+html body.muro-v11-activo .muro-v11-buscador{display:none!important}
+html body.muro-v11-activo .marca{width:235px!important;min-width:235px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+html body.muro-v11-activo .marca img{width:215px!important;height:58px!important;max-width:215px!important;object-fit:contain!important;object-position:left center!important;background:transparent!important;border:0!important;border-radius:0!important}
+html body.muro-v11-activo .muro-v11-hero img{object-position:center top!important}
+html body.muro-v11-activo .muro-v11-confianza{height:86px!important;padding:0!important;background:#fff!important;border:1px solid #dfe6ec!important;overflow:hidden!important}
+html body.muro-v11-activo .muro-v11-confianza img{display:block!important;width:100%!important;height:86px!important;object-fit:fill!important;background:#fff!important}
+
+/* ===== V14 — ajustes visuales finales del mockup aprobado ===== */
+html body.muro-v11-activo .superior-fila{display:flex!important;align-items:center!important;flex-wrap:nowrap!important}
+html body.muro-v11-activo .marca{width:220px!important;min-width:220px!important;height:58px!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;overflow:visible!important}
+html body.muro-v11-activo .marca img{width:205px!important;height:auto!important;max-width:205px!important;max-height:52px!important;object-fit:contain!important;object-position:left center!important;display:block!important}
+html body.muro-v11-activo .nav-escritorio{white-space:nowrap!important;min-width:0!important}
+html body.muro-v11-activo .nav-escritorio a{white-space:nowrap!important;flex:0 0 auto!important}
+.muro-header-buscador{flex:0 0 235px;width:235px;height:38px;margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 13px;border-radius:20px;background:rgba(255,255,255,.13);color:#fff;overflow:hidden;white-space:nowrap}
+.muro-header-buscador svg{width:16px;height:16px;min-width:16px;stroke:#fff}
+.muro-header-buscador input{display:block;width:100%;min-width:0;height:100%;padding:0;border:0!important;outline:0!important;background:transparent!important;color:#fff!important;font-size:11px!important;line-height:38px!important;white-space:nowrap!important}
+.muro-header-buscador input::placeholder{color:rgba(255,255,255,.92)!important;opacity:1!important;white-space:nowrap!important}
+html body.muro-v11-activo .superior-der{flex:0 0 auto!important;white-space:nowrap!important}
+
+/* títulos laterales: icono pegado al título, como el aprobado */
+html body.muro-v11-activo .muro-v11-derecha .bloque h3{display:grid!important;grid-template-columns:22px 1fr auto!important;column-gap:8px!important;align-items:center!important;justify-content:stretch!important;text-align:left!important}
+html body.muro-v11-activo .muro-v11-derecha .bloque h3 .side-title-icon{position:static!important;width:22px!important;height:22px!important;margin:0!important;display:grid!important;place-items:center!important;color:#0eaa4d!important;font-style:normal!important;font-size:17px!important;line-height:1!important}
+html body.muro-v11-activo .muro-v11-derecha .bloque h3 span{justify-self:end!important}
+
+/* franja inferior reconstruida en HTML/SVG: nunca se deforma */
+html body.muro-v11-activo .muro-v11-confianza{height:86px!important;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;align-items:center!important;padding:0 18px!important;overflow:hidden!important;background:#fff!important}
+html body.muro-v11-activo .muro-v11-confianza>img{display:none!important}
+.muro-v11-confianza .trust-item{height:58px;min-width:0;display:flex;align-items:center;justify-content:center;gap:14px;padding:0 18px;border-right:1px solid #e1e7ed;color:#102443}
+.muro-v11-confianza .trust-item:last-child{border-right:0}
+.muro-v11-confianza .trust-item svg{width:38px;height:38px;min-width:38px;fill:none;stroke:#0eaa4d;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.muro-v11-confianza .trust-item div{min-width:0;display:flex;flex-direction:column;gap:5px;white-space:nowrap}
+.muro-v11-confianza .trust-item strong{font-size:13px;line-height:1.1;color:#102443;white-space:nowrap}
+.muro-v11-confianza .trust-item span{font-size:11px;line-height:1.1;color:#607593;white-space:nowrap}
+
+@media(max-width:1450px){
+  html body.muro-v11-activo .superior-fila{padding:0 24px!important}
+  html body.muro-v11-activo .marca{width:190px!important;min-width:190px!important}
+  html body.muro-v11-activo .marca img{width:178px!important;max-width:178px!important}
+  html body.muro-v11-activo .nav-escritorio a{padding:0 10px!important;font-size:12px!important}
+  .muro-header-buscador{flex-basis:210px;width:210px}
+  .muro-v11-confianza .trust-item{gap:9px;padding:0 10px}
+  .muro-v11-confianza .trust-item svg{width:32px;height:32px;min-width:32px}
+  .muro-v11-confianza .trust-item strong{font-size:11px}
+  .muro-v11-confianza .trust-item span{font-size:10px}
+}
+@media(max-width:1180px){.muro-header-buscador{display:none}.muro-v11-confianza{grid-template-columns:repeat(5,minmax(145px,1fr))!important;overflow-x:auto!important}}
+
+/* ===== V15 — correcciones sobre el mockup aprobado ===== */
+/* Logo: respeta exactamente la relación 210x38 del PNG; nunca se estira. */
+html body.muro-v11-activo .marca{
+  width:235px!important;min-width:235px!important;height:58px!important;
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  padding:0!important;overflow:visible!important;
+}
+html body.muro-v11-activo .marca img.marca-logo-referencia{
+  width:210px!important;height:38px!important;max-width:none!important;max-height:none!important;
+  object-fit:contain!important;object-position:left center!important;
+  image-rendering:auto!important;transform:none!important;filter:none!important;
+}
+/* Buscador: una sola línea, sin salto ni borde interno del input. */
+html body.muro-v11-activo .muro-header-buscador{
+  flex:0 0 280px!important;width:280px!important;min-width:280px!important;height:40px!important;
+  box-sizing:border-box!important;display:flex!important;align-items:center!important;gap:9px!important;
+  padding:0 15px!important;margin-left:auto!important;overflow:hidden!important;white-space:nowrap!important;
+  border:0!important;outline:0!important;border-radius:22px!important;background:rgba(255,255,255,.13)!important;
+}
+html body.muro-v11-activo .muro-header-buscador input{
+  flex:1 1 auto!important;width:auto!important;min-width:0!important;height:38px!important;
+  box-sizing:border-box!important;margin:0!important;padding:0!important;border:0!important;outline:0!important;
+  border-radius:0!important;box-shadow:none!important;background:transparent!important;color:#fff!important;
+  font-size:11px!important;line-height:38px!important;white-space:nowrap!important;overflow:hidden!important;
+  text-overflow:ellipsis!important;-webkit-appearance:none!important;appearance:none!important;
+}
+html body.muro-v11-activo .muro-header-buscador input:focus{border:0!important;outline:0!important;box-shadow:none!important}
+html body.muro-v11-activo .muro-header-buscador input::-webkit-search-decoration,
+html body.muro-v11-activo .muro-header-buscador input::-webkit-search-cancel-button,
+html body.muro-v11-activo .muro-header-buscador input::-webkit-search-results-button,
+html body.muro-v11-activo .muro-header-buscador input::-webkit-search-results-decoration{-webkit-appearance:none!important}
+/* Tarjetas derechas: icono inmediatamente al lado del título. */
+html body.muro-v11-activo .muro-v11-derecha .bloque h3{
+  display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:9px!important;
+  padding:0 16px!important;text-align:left!important;
+}
+html body.muro-v11-activo .muro-v11-derecha .bloque h3 .side-title-icon{
+  position:static!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  flex:0 0 22px!important;width:22px!important;height:22px!important;margin:0!important;color:#0eaa4d!important;
+}
+html body.muro-v11-activo .muro-v11-derecha .bloque h3 .side-title-icon svg{
+  display:block!important;width:22px!important;height:22px!important;fill:none!important;stroke:currentColor!important;
+  stroke-width:2!important;stroke-linecap:round!important;stroke-linejoin:round!important;
+}
+html body.muro-v11-activo .muro-v11-derecha .bloque h3>span{margin-left:auto!important;justify-self:auto!important}
+/* Franja inferior: SVG vectorial, proporciones fijas, sin imágenes estiradas. */
+html body.muro-v11-activo .muro-v11-confianza{height:86px!important;padding:0 18px!important;background:#fff!important}
+html body.muro-v11-activo .muro-v11-confianza .trust-item{height:58px!important;gap:14px!important;padding:0 18px!important}
+html body.muro-v11-activo .muro-v11-confianza .trust-item svg{width:38px!important;height:38px!important;min-width:38px!important;max-width:38px!important;transform:none!important}
+@media(max-width:1450px){
+ html body.muro-v11-activo .marca{width:210px!important;min-width:210px!important}
+ html body.muro-v11-activo .marca img.marca-logo-referencia{width:190px!important;height:auto!important;aspect-ratio:210/38!important}
+ html body.muro-v11-activo .muro-header-buscador{flex-basis:245px!important;width:245px!important;min-width:245px!important}
+}
+@media(max-width:1220px){html body.muro-v11-activo .muro-header-buscador{display:none!important}}
+
+
+/* ===== V16 — corrección final de cabecera ===== */
+html body.muro-v11-activo .marca{
+  flex:0 0 235px!important;width:235px!important;min-width:235px!important;height:64px!important;
+  padding:0!important;margin:0!important;display:flex!important;align-items:center!important;
+  justify-content:flex-start!important;background:transparent!important;border:0!important;
+  box-shadow:none!important;overflow:visible!important;
+}
+html body.muro-v11-activo .marca img.marca-logo-referencia{
+  display:block!important;width:220px!important;height:auto!important;max-width:220px!important;
+  max-height:58px!important;aspect-ratio:auto!important;object-fit:contain!important;
+  object-position:left center!important;transform:none!important;filter:none!important;image-rendering:auto!important;
+}
+html body.muro-v11-activo .muro-header-buscador{
+  flex:0 0 300px!important;width:300px!important;min-width:300px!important;height:42px!important;
+  padding:0 16px!important;display:flex!important;align-items:center!important;gap:10px!important;
+  white-space:nowrap!important;overflow:hidden!important;box-sizing:border-box!important;
+}
+html body.muro-v11-activo .muro-header-buscador input{
+  flex:1 1 0!important;width:0!important;min-width:0!important;height:40px!important;padding:0!important;
+  margin:0!important;border:0!important;outline:0!important;box-shadow:none!important;
+  background:transparent!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+}
+html body.muro-v11-activo .muro-v11-derecha .bloque h3{
+  height:58px!important;min-height:58px!important;padding:0 18px!important;display:flex!important;
+  align-items:center!important;justify-content:flex-start!important;gap:10px!important;white-space:nowrap!important;
+}
+html body.muro-v11-activo .muro-v11-derecha .bloque h3 .side-title-icon{
+  position:static!important;flex:0 0 24px!important;width:24px!important;height:24px!important;margin:0!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  color:#0caf55!important;opacity:1!important;visibility:visible!important;
+}
+html body.muro-v11-activo .muro-v11-derecha .bloque h3 .side-title-icon svg{
+  display:block!important;width:24px!important;height:24px!important;fill:none!important;
+  stroke:#0caf55!important;stroke-width:2.2!important;opacity:1!important;visibility:visible!important;
+}
+html body.muro-v11-activo .muro-v11-derecha .bloque h3>span{margin-left:auto!important}
+@media(max-width:1450px){
+  html body.muro-v11-activo .marca{flex-basis:210px!important;width:210px!important;min-width:210px!important}
+  html body.muro-v11-activo .marca img.marca-logo-referencia{width:195px!important;max-width:195px!important;height:auto!important}
+  html body.muro-v11-activo .muro-header-buscador{flex-basis:255px!important;width:255px!important;min-width:255px!important}
+}
+@media(max-width:1220px){html body.muro-v11-activo .muro-header-buscador{display:none!important}}
+
+
+/* ===== V17 · LOGO MODERNO Y MINIMALISTA ===== */
+html body.muro-v11-activo .marca.marca-moderna{
+  flex:0 0 248px!important;width:248px!important;min-width:248px!important;height:64px!important;
+  padding:0!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;
+  gap:11px!important;background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important;
+  color:#fff!important;white-space:nowrap!important;
+}
+html body.muro-v11-activo .marca-moderna .marca-tb{
+  flex:0 0 58px!important;width:58px!important;height:48px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;
+}
+html body.muro-v11-activo .marca-moderna .marca-tb svg{
+  display:block!important;width:58px!important;height:44px!important;overflow:visible!important;filter:none!important;
+}
+html body.muro-v11-activo .marca-moderna .marca-tb svg path{fill:#fff!important}
+html body.muro-v11-activo .marca-moderna .marca-nombre{
+  display:inline-flex!important;align-items:baseline!important;gap:0!important;font-family:"Bricolage Grotesque",Arial,sans-serif!important;
+  font-size:31px!important;line-height:1!important;font-weight:700!important;letter-spacing:-1.25px!important;color:#fff!important;
+}
+html body.muro-v11-activo .marca-moderna .marca-nombre span{color:#fff!important;font-weight:700!important}
+html body.muro-v11-activo .marca-moderna .marca-nombre strong{color:#9ee52b!important;font-weight:800!important}
+html body.muro-v11-activo .marca-moderna:hover{opacity:.96!important;transform:none!important}
+html body.muro-v11-activo .marca-moderna:focus-visible{outline:2px solid rgba(255,255,255,.75)!important;outline-offset:4px!important;border-radius:10px!important}
+@media(max-width:1450px){
+ html body.muro-v11-activo .marca.marca-moderna{flex-basis:218px!important;width:218px!important;min-width:218px!important;gap:8px!important}
+ html body.muro-v11-activo .marca-moderna .marca-tb{flex-basis:50px!important;width:50px!important}
+ html body.muro-v11-activo .marca-moderna .marca-tb svg{width:50px!important;height:40px!important}
+ html body.muro-v11-activo .marca-moderna .marca-nombre{font-size:27px!important}
+}
+@media(max-width:760px){
+ html body.muro-v11-activo .marca.marca-moderna{flex:0 0 62px!important;width:62px!important;min-width:62px!important}
+ html body.muro-v11-activo .marca-moderna .marca-nombre{display:none!important}
+}
+
+
+/* =====================================================================
+   MURO V13 — tarjetas de partidos/salas: escudos reales + nombres legibles
+   Se deja al final para ganar a las reglas históricas del muro sin afectar
+   Crear, Sala, Billetera u otras pantallas.
+   ===================================================================== */
+html body.muro-v11-activo .muro-v11-grid .tarjeta{
+  padding:12px 13px 11px!important;
+  min-height:205px!important;
+  height:auto!important;
+  overflow:hidden!important;
+}
+html body.muro-v11-activo .muro-v11-grid .tarjeta .t-cab{
+  min-width:0!important;
+  gap:8px!important;
+}
+html body.muro-v11-activo .muro-v11-grid .tarjeta .chip{
+  display:block!important;
+  flex:1 1 auto!important;
+  max-width:none!important;
+  min-width:0!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  text-overflow:ellipsis!important;
+}
+html body.muro-v11-activo .muro-v11-grid .tarjeta .chip-tiempo{
+  flex:0 0 auto!important;
+}
+html body.muro-v11-activo .muro-match-nuevo{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 38px minmax(0,1fr)!important;
+  align-items:start!important;
+  gap:7px!important;
+  min-height:116px!important;
+  margin:10px 0 2px!important;
+  padding:0!important;
+}
+html body.muro-v11-activo .muro-match-nuevo .muro-equipo{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:7px!important;
+  text-align:center!important;
+}
+html body.muro-v11-activo .muro-match-nuevo .muro-equipo-local{grid-column:1!important}
+html body.muro-v11-activo .muro-match-nuevo .muro-equipo-visita{grid-column:3!important}
+html body.muro-v11-activo .muro-match-nuevo .muro-equipo-escudo{
+  width:58px!important;
+  height:58px!important;
+  display:grid!important;
+  place-items:center!important;
+  flex:0 0 58px!important;
+}
+html body.muro-v11-activo .muro-match-nuevo .muro-equipo-escudo img.escudo,
+html body.muro-v11-activo .muro-match-nuevo .muro-equipo-escudo .escudo{
+  width:54px!important;
+  height:54px!important;
+  max-width:54px!important;
+  max-height:54px!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  object-fit:contain!important;
+  box-shadow:none!important;
+}
+html body.muro-v11-activo .muro-match-nuevo .muro-equipo-escudo .escudo-letras{
+  width:52px!important;
+  height:52px!important;
+  display:grid!important;
+  place-items:center!important;
+  border:1px solid #cfe4d7!important;
+  border-radius:12px!important;
+  background:#eff8f2!important;
+  color:#17713f!important;
+  font-size:14px!important;
+  font-weight:800!important;
+}
+html body.muro-v11-activo .muro-match-nuevo .match-vs{
+  grid-column:2!important;
+  grid-row:1!important;
+  align-self:center!important;
+  justify-self:center!important;
+  width:34px!important;
+  height:34px!important;
+  margin:11px 0 0!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:50%!important;
+  background:#34423d!important;
+  color:#fff!important;
+  font-size:11px!important;
+  font-weight:800!important;
+}
+html body.muro-v11-activo .muro-match-nuevo .match-nombre{
+  width:100%!important;
+  min-width:0!important;
+  min-height:34px!important;
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;
+  overflow:hidden!important;
+  white-space:normal!important;
+  text-overflow:ellipsis!important;
+  color:#243a59!important;
+  text-shadow:none!important;
+  font-size:12px!important;
+  font-weight:700!important;
+  line-height:1.35!important;
+  text-align:center!important;
+  word-break:normal!important;
+  overflow-wrap:anywhere!important;
+}
+html body.muro-v11-activo .muro-v11-grid .tarjeta .t-pie{
+  margin-top:7px!important;
+  padding-top:9px!important;
+  min-height:28px!important;
+}
+@media(max-width:1280px){
+  html body.muro-v11-activo .muro-match-nuevo .muro-equipo-escudo{width:52px!important;height:52px!important;flex-basis:52px!important}
+  html body.muro-v11-activo .muro-match-nuevo .muro-equipo-escudo img.escudo{width:48px!important;height:48px!important}
+}
+@media(max-width:640px){
+  html body.muro-v11-activo .muro-match-nuevo{grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr)!important}
+  html body.muro-v11-activo .muro-match-nuevo .match-nombre{font-size:13px!important}
+}

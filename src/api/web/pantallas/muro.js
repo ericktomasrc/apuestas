@@ -8,11 +8,9 @@
  * sección cientos de tarjetas hacia abajo.
  */
 PANTALLAS.muro = async () => {
-  const seccion = S.datos.seccionMuro ?? 'salas';
-  const filtro = 'faltan';
-  const consulta = filtro === 'faltan' ? '?soloNecesitanGente=true' : '';
-  const limiteSalas = S.datos.limiteSalas ?? 12;
-  const limitePartidos = S.datos.limitePartidos ?? 12;
+  const consulta = '?soloNecesitanGente=true';
+  const limiteSalas = S.datos.limiteSalas ?? 6;
+  const limitePartidos = S.datos.limitePartidos ?? 6;
   const ligaSalas = S.datos.ligaSalasMuro ?? 'todas';
   const ligaPartidos = S.datos.ligaPartidosMuro ?? 'todas';
 
@@ -29,97 +27,54 @@ PANTALLAS.muro = async () => {
   S.datos.actividad = act.actividad ?? [];
   S.datos.ligas = lig.ligas ?? [];
 
-  const ligasSalas = [...new Set(salas.map(s => s.liga).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, 'es'));
-  const ligasPartidos = [...new Set(libres.map(p => p.liga).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, 'es'));
+  const ligasSalas = [...new Set(salas.map(s => s.liga).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  const ligasPartidos = [...new Set(libres.map(p => p.liga).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+  const salasFiltradas = ligaSalas === 'todas' ? salas : salas.filter(s => s.liga === ligaSalas);
+  const libresFiltrados = ligaPartidos === 'todas' ? libres : libres.filter(p => p.liga === ligaPartidos);
 
-  const salasFiltradas = ligaSalas === 'todas'
-    ? salas
-    : salas.filter(s => s.liga === ligaSalas);
-  const libresFiltrados = ligaPartidos === 'todas'
-    ? libres
-    : libres.filter(p => p.liga === ligaPartidos);
+  const salasHtml = salasFiltradas.length
+    ? `<div class="rejilla-salas rejilla-muro muro-v11-grid">${salasFiltradas.slice(0,limiteSalas).map(tarjetaSala).join('')}</div>`
+    : `<div class="vacio muro-v11-vacio"><h3>No hay salas con cupos ahora</h3><p>Las salas visibles ya están completas o no admiten nuevas posiciones.</p><button class="primario" onclick="ir('crear')">Crear una sala</button></div>`;
 
-  const contenidoSalas = salasFiltradas.length === 0
-    ? vacioMuro(filtro, libres.length)
-    : `
-      <div class="muro-toolbar muro-toolbar-salas">
-        <div class="muro-toolbar-izq">
-          <div class="filtros muro-filtros">
-            <button class="filtro activo" type="button">Con cupos</button>
-          </div>
-          ${selectorLigaMuro('salas', ligasSalas, ligaSalas)}
-        </div>
-        <span class="muro-contador">${Math.min(limiteSalas, salasFiltradas.length)} de ${salasFiltradas.length}</span>
-      </div>
-      <div class="rejilla-salas rejilla-muro rejilla-salas-abiertas">${salasFiltradas.slice(0, limiteSalas).map(tarjetaSala).join('')}</div>
-      ${salasFiltradas.length > limiteSalas ? `
-        <div class="muro-mas-wrap">
-          <button class="btn btn-plano muro-mas" onclick="mostrarMasMuro('salas')">
-            Ver más salas
-          </button>
-        </div>` : ''}`;
-
-  const contenidoPartidos = libresFiltrados.length === 0
-    ? `<div class="vacio muro-vacio">
-         <h3>No hay partidos disponibles ahora</h3>
-         <p>Cuando haya partidos habilitados para crear una sala, aparecerán aquí.</p>
-       </div>`
-    : `
-      <div class="muro-toolbar">
-        <div class="muro-toolbar-izq">
-          <div>
-            <h2 class="seccion-titulo">Partidos disponibles</h2>
-            <p class="seccion-sub">Elige un partido y abre una sala.</p>
-          </div>
-          ${selectorLigaMuro('partidos', ligasPartidos, ligaPartidos)}
-        </div>
-        <span class="muro-contador">${Math.min(limitePartidos, libresFiltrados.length)} de ${libresFiltrados.length}</span>
-      </div>
-      <div class="rejilla-salas rejilla-muro rejilla-partidos-disponibles">${libresFiltrados.slice(0, limitePartidos).map(tarjetaOportunidad).join('')}</div>
-      ${libresFiltrados.length > limitePartidos ? `
-        <div class="muro-mas-wrap">
-          <button class="btn btn-plano muro-mas" onclick="mostrarMasMuro('partidos')">
-            Ver más partidos
-          </button>
-        </div>` : ''}`;
+  const partidosHtml = libresFiltrados.length
+    ? `<div class="rejilla-salas rejilla-muro muro-v11-grid">${libresFiltrados.slice(0,limitePartidos).map(tarjetaOportunidad).join('')}</div>`
+    : `<div class="vacio muro-v11-vacio"><h3>No hay partidos disponibles ahora</h3><p>Cuando haya partidos habilitados para crear una sala, aparecerán aquí.</p></div>`;
 
   pintar(armazon(`
-    <div class="muro-premium">
-      ${portada(salas.length, libres.length)}
-
-      <div class="muro-tabs-compactos" role="tablist" aria-label="Explorar TandaBet">
-        <button class="muro-tab-compacto ${seccion === 'salas' ? 'activo' : ''}"
-          role="tab" aria-selected="${seccion === 'salas'}"
-          onclick="cambiarSeccionMuro('salas')">
-          Salas disponibles <b>${salas.length}</b>
-        </button>
-        <button class="muro-tab-compacto ${seccion === 'partidos' ? 'activo' : ''}"
-          role="tab" aria-selected="${seccion === 'partidos'}"
-          onclick="cambiarSeccionMuro('partidos')">
-          Partidos disponibles <b>${libres.length}</b>
-        </button>
+    <div class="muro-v11">
+      <aside class="muro-v11-hero"><img src="muro-lateral-aprobado.png" alt="TandaBet"></aside>
+      <div class="muro-v11-centro">
+        <section>
+          <div class="muro-v11-titulo"><h1>Salas disponibles</h1><p>Encuentra salas activas y elige dónde participar.</p></div>
+          <div class="muro-v11-filtros">
+            <button class="muro-v11-chip activo">Con cupos <b>${salas.length}</b></button>
+            <button class="muro-v11-chip">Todas <b>${salas.length}</b></button>
+            ${ligasSalas.length ? selectorLigaMuro('salas',ligasSalas,ligaSalas) : ''}
+          </div>${salasHtml}
+        </section>
+        <section class="muro-v11-partidos">
+          <div class="muro-v11-titulo"><h2>Partidos disponibles</h2><p>Elige un partido y crea tu propia sala.</p></div>
+          <div class="muro-v11-filtros">
+            <button class="muro-v11-chip activo">Todos <b>${libres.length}</b></button>
+            <button class="muro-v11-chip">Sin salas <b>${libres.length}</b></button>
+            ${ligasPartidos.length ? selectorLigaMuro('partidos',ligasPartidos,ligaPartidos) : ''}
+          </div>${partidosHtml}
+        </section>
       </div>
-
-      <section class="muro-feed">
-        ${seccion === 'salas' ? contenidoSalas : contenidoPartidos}
-      </section>
-
-      <div class="solo-angosto muro-actividad-movil">
-        ${bloqueActividad(act.actividad ?? [], 3)}
+      <aside class="muro-v11-derecha">
+        ${bloqueActividad(act.actividad ?? [],1)}
+        ${bloqueLigas(lig.ligas ?? [],3)}
+        ${promoTandaBet()}
+      </aside>
+      <div class="muro-v11-confianza" aria-label="Beneficios TandaBet">
+        <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M12 2 20 5v6c0 5-3.4 9-8 11-4.6-2-8-6-8-11V5l8-3Z"/><path d="m8.5 12 2.2 2.2 4.8-5"/></svg><div><strong>100% SEGURO</strong><span>Y CONFIABLE</span></div></div>
+        <div class="trust-item"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2.5 20v-2.5A4.5 4.5 0 0 1 7 13h2a4.5 4.5 0 0 1 4.5 4.5V20M13 14.2A4.5 4.5 0 0 1 17 12h.5a4 4 0 0 1 4 4V20"/></svg><div><strong>SIN COMISIONES</strong><span>ENTRE AMIGOS</span></div></div>
+        <div class="trust-item"><svg viewBox="0 0 24 24"><path d="m13 2-8 12h7l-1 8 8-12h-7l1-8Z"/></svg><div><strong>PAGOS AL INSTANTE</strong><span>24/7</span></div></div>
+        <div class="trust-item"><svg viewBox="0 0 24 24"><path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H4v2a4 4 0 0 0 4 4M16 6h4v2a4 4 0 0 1-4 4M12 13v5M8 22h8M9 18h6"/></svg><div><strong>RANKING Y PREMIOS</strong><span>TODAS LAS SEMANAS</span></div></div>
+        <div class="trust-item"><svg viewBox="0 0 24 24"><rect x="2" y="4" width="14" height="11" rx="1"/><path d="M7 20h4M9 15v5"/><rect x="16" y="9" width="6" height="11" rx="1"/></svg><div><strong>DISPONIBLE EN TODOS</strong><span>TUS DISPOSITIVOS</span></div></div>
       </div>
-
-      ${franjaConfianza()}
-    </div>
-  `,
-  `
-    ${bloqueActividad(act.actividad ?? [], 3)}
-    ${bloqueLigas(lig.ligas ?? [], 5)}
-    ${promoTandaBet()}
-  `));
+    </div>`));
 };
-
 
 function selectorLigaMuro(tipo, ligas, seleccionada) {
   if (!ligas.length) return '';
@@ -201,11 +156,16 @@ function tarjetaSala(s) {
       <span class="chip-tiempo">${cuando(s.inicia_en)}</span>
     </div>
 
-    <div class="match-visual match-visual-sala">
-      ${escudosPartido(s)}
+    <div class="match-visual match-visual-sala muro-match-nuevo">
+      <div class="muro-equipo muro-equipo-local">
+        <div class="muro-equipo-escudo">${escudo(s.logo_local, s.equipo_local)}</div>
+        <span class="match-nombre" title="${esc(s.equipo_local)}">${esc(s.equipo_local)}</span>
+      </div>
       <span class="match-vs" aria-hidden="true">VS</span>
-      <span class="match-nombre match-nombre-local">${esc(s.equipo_local)}</span>
-      <span class="match-nombre match-nombre-visita">${esc(s.equipo_visitante)}</span>
+      <div class="muro-equipo muro-equipo-visita">
+        <div class="muro-equipo-escudo">${escudo(s.logo_visitante, s.equipo_visitante)}</div>
+        <span class="match-nombre" title="${esc(s.equipo_visitante)}">${esc(s.equipo_visitante)}</span>
+      </div>
     </div>
 
     <div class="sala-card-info">
@@ -250,11 +210,16 @@ function tarjetaOportunidad(p) {
       <span class="chip-tiempo">${cuando(p.inicia_en)}</span>
     </div>
 
-    <div class="match-visual match-visual-partido">
-      ${escudosPartido(p)}
+    <div class="match-visual match-visual-partido muro-match-nuevo">
+      <div class="muro-equipo muro-equipo-local">
+        <div class="muro-equipo-escudo">${escudo(p.logo_local, p.equipo_local)}</div>
+        <span class="match-nombre" title="${esc(p.equipo_local)}">${esc(p.equipo_local)}</span>
+      </div>
       <span class="match-vs" aria-hidden="true">VS</span>
-      <span class="match-nombre match-nombre-local">${esc(p.equipo_local)}</span>
-      <span class="match-nombre match-nombre-visita">${esc(p.equipo_visitante)}</span>
+      <div class="muro-equipo muro-equipo-visita">
+        <div class="muro-equipo-escudo">${escudo(p.logo_visitante, p.equipo_visitante)}</div>
+        <span class="match-nombre" title="${esc(p.equipo_visitante)}">${esc(p.equipo_visitante)}</span>
+      </div>
     </div>
 
     <div class="t-pie partido-card-pie">
@@ -348,7 +313,7 @@ function bloqueActividad(lista, tope = 3) {
 
   return `
   <div class="bloque">
-    <h3><i class="side-title-icon pulse">⌁</i> Última jugada ${hay ? `<span>${totalReal}</span>` : ''}</h3>
+    <h3><i class="side-title-icon pulse" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 12h4l2.2-6 4.1 12 2.2-6H21"/></svg></i> Última jugada ${hay ? `<span>${totalReal}</span>` : ''}</h3>
     ${hay
       ? agrupada.slice(0, tope).map(filaActividad).join('')
       : `<div class="bloque-vacio">
@@ -389,7 +354,7 @@ function bloqueLigas(lista, tope) {
   const partidos = lista.reduce((t, l) => t + l.partidos, 0);
   return `
   <div class="bloque">
-    <h3><i class="side-title-icon live">◉</i> Partidos en vivo ${hay ? `<span>${partidos}</span>` : ''}</h3>
+    <h3><i class="side-title-icon live" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg></i> Partidos en vivo ${hay ? `<span>${partidos}</span>` : ''}</h3>
     ${hay
       ? lista.slice(0, tope).map(filaLiga).join('')
       : `<div class="bloque-vacio">

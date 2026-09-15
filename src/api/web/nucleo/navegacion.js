@@ -27,8 +27,6 @@ const esCasa = () => S.usuario?.es_casa_oficial === true;
 const NAV = [
   { id:'muro',      nombre:'Salas',      si: () => !esCasa(),
     icono:'<path d="M3 12h18M3 6h18M3 18h18"/>' },
-  { id:'casas',     nombre:'Casas',      si: () => S.modulos?.casa === true,
-    icono:'<path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>' },
   { id:'crear',     nombre:'Crear',      si: () => !esCasa(),
     icono:'<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>' },
   { id:'mias',      nombre:'Mis salas',  privada: true, si: () => !esCasa(),
@@ -37,6 +35,8 @@ const NAV = [
     icono:'<path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/>' },
   { id:'billetera', nombre:'Billetera',  privada: true,
     icono:'<rect x="2" y="6" width="20" height="13" rx="2"/><path d="M2 10h20M17 14h.01"/>' },
+  { id:'casas',     nombre:'Casas',      si: () => S.modulos?.casa === true,
+    icono:'<path d="M3 10l9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>' },
 ];
 
 /** Qué se le explica a un visitante que llega a una pantalla privada. */
@@ -55,8 +55,14 @@ function armazon(contenido, lateral) {
   return `
   <header class="superior">
     <div class="superior-fila">
-      <button class="marca" onclick="ir('muro')" aria-label="Inicio">
-        <img class="marca-logo-referencia" src="logo-tandabet.png" alt="TandaBet">
+      <button class="marca marca-moderna" onclick="ir('muro')" aria-label="Inicio TandaBet">
+        <span class="marca-tb" aria-hidden="true">
+          <svg viewBox="0 0 74 54" role="img">
+            <path d="M7 9h43l-4 8H31L20 47H9l11-30H4z"/>
+            <path d="M35 20h22c9 0 13 4 11 10-1 4-4 6-8 8 4 1 6 4 5 7-2 6-8 9-18 9H25l13-34zm8 8-2 6h12c3 0 5-1 6-3 0-2-2-3-5-3H43zm-5 13-2 6h13c4 0 6-1 7-3 0-2-2-3-5-3H38z"/>
+          </svg>
+        </span>
+        <span class="marca-nombre"><span>Tanda</span><strong>Bet</strong></span>
       </button>
 
       <nav class="nav-escritorio" aria-label="Navegación principal">
@@ -68,7 +74,10 @@ function armazon(contenido, lateral) {
             ${n.nombre}
           </a>`).join('')}
       </nav>
-
+      <label class="muro-header-buscador" aria-label="Buscar salas, equipos o ligas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+        <input type="search" placeholder="Buscar salas, equipos o ligas..." autocomplete="off">
+      </label>
       <div class="superior-der">
         ${haySesion() ? `
           <button class="saldo-chip saldo-chip-simple" id="saldo-chip"
@@ -219,6 +228,7 @@ function ir(id, datos) {
   S.pantalla = id;
   document.body.classList.toggle('muro-activo',
     ['muro','crear','mias','resultados','billetera','casas','casa'].includes(id));
+  document.body.classList.toggle('muro-v11-activo', id === 'muro');
   document.body.classList.toggle('crear-activa', id === 'crear');
   document.body.classList.toggle('mias-activa', id === 'mias');
   document.body.classList.toggle('resultados-activa', id === 'resultados');
